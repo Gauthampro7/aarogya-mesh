@@ -1,0 +1,79 @@
+/** English UI strings for the Tier-0 Watch Companion. Keys here define the canonical set; hi.ts must match exactly. */
+export const en = {
+  "app.title": "Aarogya Watch",
+  "lang.toggle": "हिं",
+
+  "mode.CHW_COMPANION": "CHW",
+  "mode.PATIENT_FAMILY": "Family",
+  "mode.full.CHW_COMPANION": "CHW Companion",
+  "mode.full.PATIENT_FAMILY": "Patient / Family",
+
+  "net.online": "Online",
+  "net.offline": "Offline",
+
+  "tab.danger": "Danger",
+  "tab.cards": "Cards",
+  "tab.reminders": "Remind",
+  "tab.sos": "SOS",
+  "tab.sync": "Sync",
+
+  "danger.title": "1-Tap Danger Screen",
+  "danger.subtitle": "Tap any danger sign present",
+  "danger.patientId": "Patient ID (optional)",
+  "danger.anon": "Walk-in patient",
+  "danger.submit": "Screen Now",
+  "danger.reset": "Reset",
+  "danger.redTitle": "RED - EMERGENCY",
+  "danger.redBanner": "Call 108 · Immediate hospital referral",
+  "danger.greenTitle": "GREEN - HOME CARE",
+  "danger.greenBanner": "No danger signs · Home care",
+  "danger.call108": "Call 108",
+
+  "sign.unableDrink": "Cannot drink / breastfeed",
+  "sign.vomitsAll": "Vomits everything",
+  "sign.convulsions": "Convulsions",
+  "sign.lethargic": "Lethargic / unconscious",
+  "sign.bleeding": "Severe bleeding",
+
+  "cards.title": "Action Cards",
+  "cards.empty": "No active action cards.",
+  "cards.ack": "Acknowledge",
+  "cards.acked": "Acknowledged",
+  "cards.due": "Due: {date}",
+
+  "priority.CRITICAL": "CRITICAL",
+  "priority.HIGH": "HIGH",
+  "priority.MEDIUM": "MEDIUM",
+  "priority.LOW": "LOW",
+
+  "rem.title": "Health Reminders",
+  "rem.empty": "No due vaccines or medicines.",
+  "rem.vaccines": "Vaccinations",
+  "rem.medicines": "Care & Medicines",
+  "rem.OVERDUE": "Overdue",
+  "rem.DUE_SOON": "Due soon",
+  "rem.UPCOMING": "Upcoming",
+  "rem.COMPLETED": "Completed",
+
+  "sos.title": "Emergency SOS",
+  "sos.guidance108": "Emergency: call 108 or reach PHC now.",
+  "sos.recordStart": "Record Voice SOS",
+  "sos.recordStop": "Stop & Save SOS",
+  "sos.recording": "Recording ({sec})...",
+  "sos.textPlaceholder": "Type emergency note...",
+  "sos.sendText": "Send Text SOS",
+  "sos.queued": "SOS queued offline (pending Hub analysis).",
+  "sos.micUnavailable": "Mic unavailable · Use text SOS",
+
+  "sync.title": "Hub Sync",
+  "sync.hubLabel": "Tier-2 Hub URL",
+  "sync.hubHint": "http://127.0.0.1:8000",
+  "sync.now": "Sync Now",
+  "sync.syncing": "Syncing...",
+  "sync.queued": "{count} queued",
+  "sync.success": "Synced ({sent} sent, {received} received)",
+  "sync.offlineFail": "Hub unreachable · Saved locally",
+  "sync.footer": "TIER_0_WATCH · {count} queued",
+} as const;
+
+export type Key = keyof typeof en;
