@@ -27,9 +27,20 @@ _STATIC_MEDIA_TYPES: dict[str, str] = {
     ".svg": "image/svg+xml",
 }
 
+_ALLOWED_STATIC_FILES: frozenset[str] = frozenset(
+    {
+        "index.html",
+        "app.css",
+        "app.js",
+        "showcase.html",
+        "showcase.css",
+        "showcase.js",
+    }
+)
+
 
 def _resolve_static_file(static_dir: Path, filename: str) -> Path:
-    """Safely resolve a single static asset inside ``static_dir`` with traversal guards."""
+    """Safely resolve a single allowlisted static asset inside ``static_dir``."""
     if (
         not filename
         or "\x00" in filename
@@ -38,6 +49,9 @@ def _resolve_static_file(static_dir: Path, filename: str) -> Path:
         or ".." in filename
     ):
         raise HTTPException(status_code=400, detail="Invalid static asset path.")
+
+    if filename not in _ALLOWED_STATIC_FILES:
+        raise HTTPException(status_code=404, detail="Static asset not found.")
 
     root = static_dir.resolve()
     target = (root / filename).resolve()
@@ -127,6 +141,11 @@ def create_dashboard_router(
     def serve_dashboard_index() -> HTMLResponse:
         index_path = _resolve_static_file(STATIC_DIR, "index.html")
         return HTMLResponse(content=index_path.read_text(encoding="utf-8"))
+
+    @router.get("/showcase", response_class=HTMLResponse)
+    def serve_showcase_stage() -> HTMLResponse:
+        showcase_path = _resolve_static_file(STATIC_DIR, "showcase.html")
+        return HTMLResponse(content=showcase_path.read_text(encoding="utf-8"))
 
     @router.get("/static/{filename:path}")
     def serve_static_asset(filename: str) -> FileResponse:

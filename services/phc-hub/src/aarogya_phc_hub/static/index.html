@@ -31,129 +31,231 @@
         <button id="btn-lang" class="btn btn-secondary" type="button">हिन्दी</button>
         <button id="btn-theme" class="btn btn-secondary" type="button">Light</button>
         <button id="btn-autorefresh" class="btn btn-toggle active" type="button" aria-pressed="true">Auto-Refresh: ON</button>
-        <button id="btn-refresh" class="btn btn-primary" type="button">Refresh</button>
+        <button id="btn-refresh" class="btn btn-secondary" type="button">Refresh</button>
       </div>
     </header>
 
-    <section class="telemetry-strip" aria-label="Hub Hardware Capability Manifest">
-      <div class="telemetry-item">
-        <span class="telemetry-label" data-i18n="nodeId">Node ID</span>
-        <span id="manifest-node-id" class="telemetry-value mono">--</span>
+    <section class="demo-bar" aria-label="Interactive Clinical Demo Scenarios">
+      <div class="demo-bar-left">
+        <span class="demo-bar-label" data-i18n="demoBarLabel">Live Scenarios</span>
+        <div class="demo-btn-group">
+          <button class="btn btn-scenario" type="button" data-scenario="maternal_sos" data-i18n="scenarioMaternal">Maternal Watch SOS</button>
+          <button class="btn btn-scenario" type="button" data-scenario="pediatric_voice_offload" data-i18n="scenarioVoice">Offline Voice → AI</button>
+          <button class="btn btn-scenario" type="button" data-scenario="village_outbreak" data-i18n="scenarioOutbreak">Village Outbreak</button>
+          <button class="btn btn-scenario" type="button" data-scenario="crdt_conflict_merge" data-i18n="scenarioCrdt">CRDT Merge Proof</button>
+          <button id="btn-demo-reset" class="btn btn-reset" type="button" data-i18n="demoReset">Reset</button>
+        </div>
       </div>
-      <div class="telemetry-item">
-        <span class="telemetry-label" data-i18n="ram">RAM</span>
-        <span id="manifest-ram" class="telemetry-value mono">--</span>
-      </div>
-      <div class="telemetry-item">
-        <span class="telemetry-label" data-i18n="cpu">CPU Cores</span>
-        <span id="manifest-cpu" class="telemetry-value mono">--</span>
-      </div>
-      <div class="telemetry-item">
-        <span class="telemetry-label" data-i18n="npu">NPU</span>
-        <span id="manifest-npu" class="telemetry-value mono">--</span>
-      </div>
-      <div class="telemetry-item">
-        <span class="telemetry-label" data-i18n="connectUrl">LAN Connect URL</span>
-        <span id="connect-url" class="telemetry-value mono">--</span>
-      </div>
-      <div class="telemetry-item">
-        <span class="telemetry-label" data-i18n="wsUrl">Mesh WebSocket</span>
-        <span id="connect-ws" class="telemetry-value mono">--</span>
-      </div>
-      <div class="telemetry-item telemetry-sync">
-        <span class="telemetry-label" data-i18n="lastUpdated">Last Updated</span>
-        <span id="last-updated" class="telemetry-value mono">--</span>
+      <div class="demo-bar-right">
+        <a id="link-showcase" class="btn btn-stage" href="/showcase" data-i18n="openShowcase">Open 3-Tier Live Stage →</a>
       </div>
     </section>
 
+    <div id="demo-status-banner" class="demo-status hidden" role="status" aria-live="polite"></div>
+
     <section id="outbreak-banner" class="outbreak-banner hidden" role="alert" aria-live="polite"></section>
+
+    <section class="arch-bar" aria-label="Compute-Proportional 3-Tier Mesh Architecture">
+      <div class="arch-bar-header">
+        <span class="arch-bar-title" data-i18n="archTitle">Compute-Proportional 3-Tier Autonomous Mesh</span>
+        <span class="arch-sync-meta mono" id="arch-hlc-badge">HLC: --</span>
+      </div>
+      <div class="arch-tiers">
+        <article id="arch-tier-0" class="arch-tier-card">
+          <div class="arch-tier-head">
+            <span class="arch-tier-name" data-i18n="tier0Label">Tier-0 Watch</span>
+            <span class="arch-tier-spec mono">256 MB</span>
+          </div>
+          <p class="arch-tier-desc" data-i18n="tier0Desc">Standalone SOS &amp; Reminders for Normal Public &amp; CHW</p>
+          <div class="arch-tier-foot">
+            <span class="arch-peer-pill">
+              <span class="tier-dot" aria-hidden="true"></span>
+              <span id="tier0-count" class="mono">0</span>
+              <span data-i18n="activePeersShort">active</span>
+            </span>
+            <span class="arch-cap-tag">1-Tap SOS · BLE/LAN</span>
+          </div>
+        </article>
+
+        <div class="arch-connector" aria-hidden="true">
+          <span class="connector-line"></span>
+          <span class="connector-label mono">CRDT ↔</span>
+          <span class="connector-line"></span>
+        </div>
+
+        <article id="arch-tier-1" class="arch-tier-card">
+          <div class="arch-tier-head">
+            <span class="arch-tier-name" data-i18n="tier1Label">Tier-1 Phone</span>
+            <span class="arch-tier-spec mono">4 GB</span>
+          </div>
+          <p class="arch-tier-desc" data-i18n="tier1Desc">WHO IMNCI Deterministic Triage + Offline IndexedDB</p>
+          <div class="arch-tier-foot">
+            <span class="arch-peer-pill">
+              <span class="tier-dot" aria-hidden="true"></span>
+              <span id="tier1-count" class="mono">0</span>
+              <span data-i18n="activePeersShort">active</span>
+            </span>
+            <span class="arch-cap-tag">Voice Queue · Delta Sync</span>
+          </div>
+        </article>
+
+        <div class="arch-connector" aria-hidden="true">
+          <span class="connector-line"></span>
+          <span class="connector-label mono">CRDT ↔</span>
+          <span class="connector-line"></span>
+        </div>
+
+        <article id="arch-tier-2" class="arch-tier-card arch-tier-active">
+          <div class="arch-tier-head">
+            <span class="arch-tier-name" data-i18n="tier2Label">Tier-2 Hub</span>
+            <span id="arch-hub-ram" class="arch-tier-spec mono">32 GB</span>
+          </div>
+          <p class="arch-tier-desc" data-i18n="tier2Desc">Whisper + SLM + LightGBM SHAP + EWMA Outbreak</p>
+          <div class="arch-tier-foot">
+            <span class="arch-peer-pill arch-peer-online">
+              <span class="tier-dot" aria-hidden="true"></span>
+              <span class="mono">1</span>
+              <span data-i18n="hubOnlineShort">online</span>
+            </span>
+            <span id="arch-hub-node" class="arch-cap-tag mono">phc-hub-local</span>
+          </div>
+        </article>
+      </div>
+    </section>
 
     <section class="kpi-grid" aria-label="Clinical Summary Metrics">
       <article class="kpi-card">
         <span class="kpi-label" data-i18n="patients">Registered Patients</span>
-        <strong id="kpi-patients" class="kpi-value">0</strong>
+        <strong id="kpi-patients" class="kpi-value tabular">0</strong>
       </article>
       <article class="kpi-card kpi-red">
         <span class="kpi-label" data-i18n="triageRed">RED Emergency</span>
-        <strong id="kpi-red" class="kpi-value">0</strong>
+        <strong id="kpi-red" class="kpi-value tabular">0</strong>
       </article>
       <article class="kpi-card kpi-yellow">
         <span class="kpi-label" data-i18n="triageYellow">YELLOW PHC</span>
-        <strong id="kpi-yellow" class="kpi-value">0</strong>
+        <strong id="kpi-yellow" class="kpi-value tabular">0</strong>
       </article>
       <article class="kpi-card kpi-green">
         <span class="kpi-label" data-i18n="triageGreen">GREEN Home</span>
-        <strong id="kpi-green" class="kpi-value">0</strong>
+        <strong id="kpi-green" class="kpi-value tabular">0</strong>
       </article>
       <article class="kpi-card">
         <span class="kpi-label" data-i18n="pendingEnrichments">Pending Enrichments</span>
-        <strong id="kpi-pending" class="kpi-value">0</strong>
+        <strong id="kpi-pending" class="kpi-value tabular">0</strong>
       </article>
       <article class="kpi-card">
         <span class="kpi-label" data-i18n="completedEnrichments">Completed Enrichments</span>
-        <strong id="kpi-completed" class="kpi-value">0</strong>
+        <strong id="kpi-completed" class="kpi-value tabular">0</strong>
       </article>
       <article class="kpi-card">
         <span class="kpi-label" data-i18n="totalEvents">CRDT Events</span>
-        <strong id="kpi-events" class="kpi-value">0</strong>
+        <strong id="kpi-events" class="kpi-value tabular">0</strong>
       </article>
     </section>
 
     <main class="main-grid">
-      <section class="panel" aria-labelledby="heading-topology">
+      <section class="panel panel-clinical" aria-labelledby="heading-clinical">
         <div class="panel-header">
-          <h2 id="heading-topology" class="panel-title" data-i18n="peerTopology">Live Peer Topology</h2>
-          <span id="peer-count-badge" class="badge">0</span>
-        </div>
-
-        <div class="topology-diagram" aria-label="Three-tier autonomous mesh architecture">
-          <div class="tier-box tier-0">
-            <span class="tier-tag" data-i18n="tier0Label">Tier-0 Watch</span>
-            <span id="tier0-count" class="tier-count mono">0</span>
-          </div>
-          <span class="tier-link" aria-hidden="true">↔</span>
-          <div class="tier-box tier-1">
-            <span class="tier-tag" data-i18n="tier1Label">Tier-1 Phone</span>
-            <span id="tier1-count" class="tier-count mono">0</span>
-          </div>
-          <span class="tier-link" aria-hidden="true">↔</span>
-          <div class="tier-box tier-2">
-            <span class="tier-tag" data-i18n="tier2Label">Tier-2 Hub</span>
-            <span class="tier-count mono">1</span>
-          </div>
-        </div>
-
-        <div id="peers-list" class="card-stack"></div>
-      </section>
-
-      <section class="panel" aria-labelledby="heading-clinical">
-        <div class="panel-header">
-          <h2 id="heading-clinical" class="panel-title" data-i18n="clinicalPanel">Clinical Triage &amp; Risk Alerts</h2>
+          <h2 id="heading-clinical" class="panel-title" data-i18n="clinicalPanel">Clinical Triage, Action Cards &amp; SHAP Risk</h2>
           <div class="panel-actions">
-            <button id="btn-run-enrichment" class="btn btn-accent" type="button" data-i18n="runEnrichment">Run Enrichment Now</button>
+            <button id="btn-run-enrichment" class="btn btn-primary" type="button" data-i18n="runEnrichment">Run Hub Enrichment</button>
           </div>
         </div>
         <p id="enrichment-status" class="status-note hidden" role="status"></p>
 
-        <div class="subsection">
-          <h3 class="subsection-title" data-i18n="outbreakAlerts">Outbreak Alerts</h3>
-          <div id="outbreak-list" class="card-stack"></div>
+        <div class="clinical-split">
+          <div class="subsection">
+            <div class="subsection-head">
+              <h3 class="subsection-title" data-i18n="triageFeedTitle">Active Triage Decisions</h3>
+              <span id="triage-count-badge" class="badge">0</span>
+            </div>
+            <div id="triage-list" class="card-stack"></div>
+          </div>
+
+          <div class="subsection">
+            <div class="subsection-head">
+              <h3 class="subsection-title" data-i18n="actionCards">Action Cards</h3>
+              <span id="action-count-badge" class="badge">0</span>
+            </div>
+            <div id="action-cards-list" class="card-stack"></div>
+          </div>
         </div>
 
         <div class="subsection">
-          <h3 class="subsection-title" data-i18n="shapTitle">SHAP Risk Attributions</h3>
+          <div class="subsection-head">
+            <h3 class="subsection-title" data-i18n="shapTitle">SHAP Risk Attributions</h3>
+            <span id="shap-count-badge" class="badge">0</span>
+          </div>
           <div id="shap-list" class="card-stack"></div>
         </div>
 
         <div class="subsection">
-          <h3 class="subsection-title" data-i18n="actionCards">Action Cards</h3>
-          <div id="action-cards-list" class="card-stack"></div>
+          <div class="subsection-head">
+            <h3 class="subsection-title" data-i18n="outbreakAlerts">EWMA Outbreak Alerts</h3>
+            <span id="outbreak-count-badge" class="badge">0</span>
+          </div>
+          <div id="outbreak-list" class="card-stack"></div>
+        </div>
+      </section>
+
+      <section class="panel panel-side" aria-labelledby="heading-roster">
+        <div class="panel-header">
+          <h2 id="heading-roster" class="panel-title" data-i18n="patientsRosterTitle">Synced Patient Registry &amp; Peers</h2>
+          <span id="peer-count-badge" class="badge">0</span>
+        </div>
+
+        <div class="subsection">
+          <h3 class="subsection-title" data-i18n="patients">Registered Patients</h3>
+          <div id="patients-list" class="card-stack"></div>
+        </div>
+
+        <div class="subsection">
+          <h3 class="subsection-title" data-i18n="peerTopology">Live Mesh Peers</h3>
+          <div id="peers-list" class="card-stack"></div>
+        </div>
+
+        <div class="subsection">
+          <h3 class="subsection-title" data-i18n="hubTelemetryTitle">Hub Hardware &amp; LAN Discovery</h3>
+          <div class="telemetry-grid">
+            <div class="telemetry-item">
+              <span class="telemetry-label" data-i18n="nodeId">Node ID</span>
+              <span id="manifest-node-id" class="telemetry-value mono">--</span>
+            </div>
+            <div class="telemetry-item">
+              <span class="telemetry-label" data-i18n="ram">RAM</span>
+              <span id="manifest-ram" class="telemetry-value mono">--</span>
+            </div>
+            <div class="telemetry-item">
+              <span class="telemetry-label" data-i18n="cpu">CPU Cores</span>
+              <span id="manifest-cpu" class="telemetry-value mono">--</span>
+            </div>
+            <div class="telemetry-item">
+              <span class="telemetry-label" data-i18n="npu">NPU</span>
+              <span id="manifest-npu" class="telemetry-value mono">--</span>
+            </div>
+            <div class="telemetry-item telemetry-wide">
+              <span class="telemetry-label" data-i18n="connectUrl">LAN Connect URL</span>
+              <span id="connect-url" class="telemetry-value mono">--</span>
+            </div>
+            <div class="telemetry-item telemetry-wide">
+              <span class="telemetry-label" data-i18n="wsUrl">Mesh WebSocket</span>
+              <span id="connect-ws" class="telemetry-value mono">--</span>
+            </div>
+            <div class="telemetry-item telemetry-wide">
+              <span class="telemetry-label" data-i18n="lastUpdated">Last Updated</span>
+              <span id="last-updated" class="telemetry-value mono">--</span>
+            </div>
+          </div>
         </div>
       </section>
 
       <section class="panel panel-wide" aria-labelledby="heading-events">
         <div class="panel-header">
-          <h2 id="heading-events" class="panel-title" data-i18n="eventLog">Live HLC CRDT Event Log Inspector</h2>
+          <div class="event-header-left">
+            <h2 id="heading-events" class="panel-title" data-i18n="eventLog">HLC CRDT Event Log Inspector</h2>
+            <span id="event-log-count" class="badge mono">0</span>
+          </div>
           <div class="panel-actions">
             <label for="event-type-filter" class="sr-only" data-i18n="filterEvents">Filter by event type</label>
             <select id="event-type-filter" class="select-input">
@@ -167,23 +269,26 @@
               <option value="ACTION_CARD_ISSUED">ACTION_CARD_ISSUED</option>
               <option value="OUTBREAK_ALERT_RAISED">OUTBREAK_ALERT_RAISED</option>
             </select>
+            <button id="btn-toggle-events" class="btn btn-secondary" type="button" aria-expanded="false" data-i18n="showEventLog">Show Log</button>
           </div>
         </div>
 
-        <div class="table-wrap">
-          <table class="event-table">
-            <thead>
-              <tr>
-                <th data-i18n="colHlc">HLC Timestamp</th>
-                <th data-i18n="colOrigin">Origin Node</th>
-                <th data-i18n="colType">Event Type</th>
-                <th data-i18n="colPatient">Patient ID</th>
-                <th data-i18n="colEnrichment">Enrichment</th>
-                <th data-i18n="colSummary">Payload</th>
-              </tr>
-            </thead>
-            <tbody id="events-tbody"></tbody>
-          </table>
+        <div id="events-collapsible" class="events-collapsible hidden">
+          <div class="table-wrap">
+            <table class="event-table">
+              <thead>
+                <tr>
+                  <th data-i18n="colHlc">HLC Timestamp</th>
+                  <th data-i18n="colOrigin">Origin Node</th>
+                  <th data-i18n="colType">Event Type</th>
+                  <th data-i18n="colPatient">Patient ID</th>
+                  <th data-i18n="colEnrichment">Enrichment</th>
+                  <th data-i18n="colSummary">Payload</th>
+                </tr>
+              </thead>
+              <tbody id="events-tbody"></tbody>
+            </table>
+          </div>
         </div>
       </section>
     </main>

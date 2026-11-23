@@ -11,6 +11,7 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request, Response, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
 
 from aarogya_clinical_engine import TriageInput, evaluate_triage
@@ -34,6 +35,7 @@ from aarogya_crdt_sync import (
 from aarogya_phc_hub.blob_store import BlobMetadata, LocalBlobStore
 from aarogya_phc_hub.capability_router import WorkloadKind, route_workload
 from aarogya_phc_hub.dashboard import create_dashboard_router
+from aarogya_phc_hub.demo_scenarios import create_demo_router
 from aarogya_phc_hub.discovery import (
     MdnsAdvertiser,
     PeerRegistry,
@@ -264,6 +266,32 @@ def create_app(
             ],
         )
     )
+    hub_app.include_router(
+        create_demo_router(
+            store=store,
+            blob_store=blob_store,
+            clock=clock,
+            manifest=manifest,
+            registry=peer_registry,
+            worker=enrichment_worker,
+        )
+    )
+
+    repo_root = Path(__file__).resolve().parents[4]
+    phone_dir = repo_root / "apps" / "field-pwa"
+    if phone_dir.is_dir():
+        hub_app.mount(
+            "/phone",
+            StaticFiles(directory=str(phone_dir), html=True),
+            name="field-pwa",
+        )
+    watch_dir = repo_root / "apps" / "watch-companion"
+    if watch_dir.is_dir():
+        hub_app.mount(
+            "/watch",
+            StaticFiles(directory=str(watch_dir), html=True),
+            name="watch-companion",
+        )
 
     return hub_app
 
