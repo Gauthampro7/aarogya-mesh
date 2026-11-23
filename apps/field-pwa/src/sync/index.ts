@@ -4,4 +4,5 @@ export { buildEnvelope, buildManifest, createLocalEvent, readBatteryPct, type Lo
 export { applyResponse, countPendingEnrichments, materialize, rebuildViews, isCrdtEvent, isSyncEnvelope, type ApplyResult } from "./apply";
 export { project, type Projection } from "./project";
 export { postSync, SyncTransportError } from "./transport-http";
+export { isValidBlobKey, uploadBlobIfMissing, type BlobUploadOutcome } from "./transport-blobs";
 export { MeshSocket, backoffDelay, type WsFactory, type WsLike } from "./transport-ws";
