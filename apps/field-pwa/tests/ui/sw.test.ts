@@ -5,9 +5,9 @@ import { describe, expect, it } from "vitest";
 const root = resolve(__dirname, "../..");
 const src = readFileSync(resolve(root, "sw.js"), "utf8");
 
-function load(origin = "http://127.0.0.1:5173") {
+function load(origin = "http://127.0.0.1:5173", scope = "/") {
   const listeners: Record<string, (e: any) => void> = {};
-  const self: any = { location: { origin }, addEventListener: (t: string, f: (e: any) => void) => (listeners[t] = f), skipWaiting() {}, clients: { claim: async () => {} } };
+  const self: any = { location: { origin }, registration: { scope: origin + scope }, addEventListener: (t: string, f: (e: any) => void) => (listeners[t] = f), skipWaiting() {}, clients: { claim: async () => {} } };
   const calls: string[] = [];
   const caches = { open: async () => ({ addAll: async () => {}, put: async () => {} }), match: async () => undefined, keys: async () => [], delete: async () => true };
   const fn = new Function("self", "caches", "fetch", "importScripts", `${src}\nreturn { shouldHandle, SHELL_ASSETS, CACHE_NAME };`);
@@ -47,6 +47,43 @@ describe("service worker rules", () => {
       if (a === "./" || a.startsWith("./dist/")) continue; // dist is produced by `npm run build`
       expect(existsSync(resolve(root, a)), a).toBe(true);
     }
+  });
+});
+
+describe("service worker scope", () => {
+  const o = "http://127.0.0.1:5173";
+  const { api } = load();
+  const h = (url: string, scope: string, method = "GET") => api.shouldHandle(req(url, method), o, scope);
+  it("scope /phone/ handles in-scope assets and navigations only", () => {
+    expect(h(`${o}/phone/dist/app.js`, "/phone/")).toBe(true);
+    expect(h(`${o}/phone/`, "/phone/")).toBe(true);
+    expect(h(`${o}/health`, "/phone/")).toBe(false);
+    expect(h(`${o}/showcase`, "/phone/")).toBe(false);
+    expect(h(`${o}/phone-other/x`, "/phone/")).toBe(false);
+    expect(h(`${o}/phone/api/v1/sync`, "/phone/")).toBe(false);
+    expect(h(`${o}/phone/ws/mesh`, "/phone/")).toBe(false);
+    expect(h(`${o}/api/v1/sync`, "/phone/")).toBe(false);
+    expect(h(`${o}/ws/mesh`, "/phone/")).toBe(false);
+    expect(h(`${o}/phone/x`, "/phone/", "POST")).toBe(false);
+    expect(api.shouldHandle(req("http://127.0.0.1:8000/phone/x"), o, "/phone/")).toBe(false);
+  });
+  it("scope / behaves as before except /api and /ws", () => {
+    expect(h(`${o}/dist/app.js`, "/")).toBe(true);
+    expect(h(`${o}/health`, "/")).toBe(true);
+    expect(h(`${o}/api/x`, "/")).toBe(false);
+    expect(h(`${o}/ws/x`, "/")).toBe(false);
+  });
+  it("nested scope /apps/field-pwa/", () => {
+    expect(h(`${o}/apps/field-pwa/dist/app.js`, "/apps/field-pwa/")).toBe(true);
+    expect(h(`${o}/other.js`, "/apps/field-pwa/")).toBe(false);
+  });
+  it("fetch listener uses registration scope", () => {
+    const { listeners } = load(o, "/phone/");
+    let responded = false;
+    listeners.fetch({ request: req(`${o}/health`), respondWith: () => (responded = true) });
+    expect(responded).toBe(false);
+    listeners.fetch({ request: req(`${o}/phone/dist/app.js`), respondWith: () => (responded = true) });
+    expect(responded).toBe(true);
   });
 });
 
