@@ -8,6 +8,7 @@
 
 import type { ActionCard, NodeTier, TriageSeverity, WatchMode } from "../../../../packages/contracts/ts/index";
 import { MATERNAL_ANC_RULES } from "./rules/maternal_anc";
+import { uuid } from "../core/uuid";
 import type { ChecklistDef, ChecklistItemDef } from "./rules/types";
 
 export const CHECKLIST_TYPES = [
@@ -119,7 +120,7 @@ export function evaluateChecklist(
       const severity: TriageSeverity = item.escalation_severity ?? "YELLOW_PHC";
       actionCards.push({
         ...base,
-        card_id: crypto.randomUUID(),
+        card_id: uuid(),
         title: `Missing Critical Check: ${item.label}`.slice(0, 160),
         summary: `${definition.title} — critical check pending: ${item.label}.`,
         action_steps: [String(item.recommended_action)],
@@ -134,7 +135,7 @@ export function evaluateChecklist(
   if (missingRoutine.length > 0) {
     actionCards.push({
       ...base,
-      card_id: crypto.randomUUID(),
+      card_id: uuid(),
       title: `Pending Routine Checks (${missingRoutine.length})`,
       summary: `${definition.title} has ${missingRoutine.length} routine check(s) remaining.`,
       action_steps: missingRoutine.map((i) => String(i.recommended_action)),
