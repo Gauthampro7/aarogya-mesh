@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aarogya Mesh — Tier-0 Watch Companion</title>
+    <style>
+      :root {
+        font-family: system-ui, -apple-system, sans-serif;
+        color: #f8fafc;
+        background: #020617;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+      }
+      .watch-bezel {
+        width: 360px;
+        height: 360px;
+        border-radius: 50%;
+        border: 8px solid #1e293b;
+        background: radial-gradient(circle at top, #0f172a 0%, #020617 100%);
+        box-shadow: 0 0 40px rgba(13, 148, 136, 0.25);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        padding: 28px 26px;
+        box-sizing: border-box;
+        text-align: center;
+      }
+      .mode-pill {
+        border: 1px solid #0d9488;
+        background: #042f2e;
+        color: #5eead4;
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .primary-action {
+        width: 100%;
+        border: none;
+        border-radius: 999px;
+        padding: 10px 14px;
+        font-weight: 700;
+        cursor: pointer;
+        background: #dc2626;
+        color: #ffffff;
+      }
+      .meta {
+        font-size: 0.72rem;
+        color: #94a3b8;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="watch-bezel" role="application" aria-label="Tier-0 Watch Companion 360x360">
+      <button id="mode-toggle" class="mode-pill" type="button">MODE: CHW_COMPANION</button>
+
+      <div id="watch-body">
+        <h1 id="watch-title" style="margin: 0; font-size: 1rem">1-Tap Danger Screen</h1>
+        <p id="watch-summary" style="margin: 8px 0 0; font-size: 0.8rem; color: #cbd5e1">
+          Offline Tier-0 Kernel · Ready for ASHA household screening.
+        </p>
+      </div>
+
+      <button id="primary-btn" class="primary-action" type="button">
+        Flag Danger Sign (RED)
+      </button>
+
+      <div id="watch-footer" class="meta">TIER_0_WATCH · 0 queued events</div>
+    </div>
+
+    <script>
+      let mode = "CHW_COMPANION";
+      let queued = 0;
+      const toggle = document.getElementById("mode-toggle");
+      const title = document.getElementById("watch-title");
+      const summary = document.getElementById("watch-summary");
+      const primary = document.getElementById("primary-btn");
+      const footer = document.getElementById("watch-footer");
+
+      const render = () => {
+        toggle.textContent = `MODE: ${mode}`;
+        if (mode === "CHW_COMPANION") {
+          title.textContent = "1-Tap Danger Screen";
+          summary.textContent = "ASHA quick-triage & next ActionCard alert.";
+          primary.textContent = "Flag Danger Sign (RED)";
+          primary.style.background = "#dc2626";
+        } else {
+          title.textContent = "Family Reminder";
+          summary.textContent = "Daily vaccine / medicine check & SOS trigger.";
+          primary.textContent = "Request Help (SOS)";
+          primary.style.background = "#d97706";
+        }
+        footer.textContent = `TIER_0_WATCH · ${queued} queued events`;
+      };
+
+      toggle.addEventListener("click", () => {
+        mode = mode === "CHW_COMPANION" ? "PATIENT_FAMILY" : "CHW_COMPANION";
+        render();
+      });
+      primary.addEventListener("click", () => {
+        queued += 1;
+        render();
+      });
+      render();
+    </script>
+  </body>
+</html>
