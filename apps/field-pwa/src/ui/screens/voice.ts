@@ -3,6 +3,7 @@ import { field, h } from "../dom";
 import type { Ctx } from "../ctx";
 import { putAudio } from "../audio_store";
 import { buildVoicePayload, canRecordAudio, voiceNoteValid } from "../voice_logic";
+import { uuid } from "../../core/uuid";
 
 export async function voice(ctx: Ctx): Promise<HTMLElement> {
   const patients = await ctx.store.listPatients();
@@ -48,7 +49,7 @@ export async function voice(ctx: Ctx): Promise<HTMLElement> {
   }
 
   async function save() {
-    const key = blob ? `vn-${crypto.randomUUID()}` : null;
+    const key = blob ? `vn-${uuid()}` : null;
     const payload = buildVoicePayload({ hint: hint.value, language: getLang(), blobKey: key, mime: blob?.type ?? null, durationMs });
     if (!voiceNoteValid(payload)) {
       status.className = "error";
