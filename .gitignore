@@ -31,6 +31,7 @@ apps/*/.vite/
 *.pt
 models/
 data/local/
+.data/
 
 # Environment & Secrets
 .env

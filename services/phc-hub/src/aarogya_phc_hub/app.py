@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import os
+import tempfile
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Request, Response, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import ValidationError
 
@@ -28,6 +29,7 @@ from aarogya_crdt_sync import (
     project_state,
     reconcile_envelopes,
 )
+from aarogya_phc_hub.blob_store import BlobMetadata, LocalBlobStore
 from aarogya_phc_hub.capability_router import WorkloadKind, route_workload
 
 
@@ -68,11 +70,22 @@ def detect_host_manifest(
 def create_app(
     *,
     db_path: str | Path = ":memory:",
+    blob_dir: str | Path | None = None,
     node_id: str = "phc-hub-local",
     installed_models: list[str] | None = None,
 ) -> FastAPI:
     """Create a configured Tier-2 PHC Hub FastAPI application."""
+    if str(db_path) != ":memory:":
+        Path(db_path).parent.mkdir(parents=True, exist_ok=True)
+    if blob_dir is not None:
+        resolved_blob_dir = Path(blob_dir)
+    elif str(db_path) != ":memory:":
+        resolved_blob_dir = Path(db_path).parent / "blobs"
+    else:
+        resolved_blob_dir = Path(tempfile.mkdtemp(prefix="aarogya-hub-blobs-"))
+
     store = EventStore(db_path=db_path)
+    blob_store = LocalBlobStore(root_dir=resolved_blob_dir)
     clock = HlcClock(node_id=node_id)
     manifest = detect_host_manifest(node_id=node_id, installed_models=installed_models)
 
@@ -89,6 +102,7 @@ def create_app(
     )
 
     hub_app.state.store = store
+    hub_app.state.blob_store = blob_store
     hub_app.state.clock = clock
     hub_app.state.manifest = manifest
 
@@ -142,6 +156,40 @@ def create_app(
     def list_pending_enrichments() -> list[CrdtEvent]:
         return store.get_pending_enrichments()
 
+    @hub_app.put("/api/v1/blobs/{blob_key}", response_model=BlobMetadata)
+    async def upload_blob(blob_key: str, request: Request) -> BlobMetadata:
+        data = await request.body()
+        content_type = request.headers.get("content-type", "application/octet-stream")
+        try:
+            return blob_store.put(blob_key, data, content_type=content_type)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @hub_app.head("/api/v1/blobs/{blob_key}")
+    def check_blob(blob_key: str) -> Response:
+        try:
+            exists = blob_store.exists(blob_key)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        if not exists:
+            raise HTTPException(status_code=404, detail="Blob not found.")
+        return Response(status_code=200)
+
+    @hub_app.get("/api/v1/blobs/{blob_key}")
+    def download_blob(blob_key: str) -> Response:
+        try:
+            result = blob_store.get(blob_key)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        if result is None:
+            raise HTTPException(status_code=404, detail="Blob not found.")
+        data, meta = result
+        return Response(
+            content=data,
+            media_type=meta.content_type,
+            headers={"X-Blob-Sha256": meta.sha256},
+        )
+
     @hub_app.websocket("/ws/mesh")
     async def mesh_websocket(websocket: WebSocket) -> None:
         await websocket.accept()
@@ -162,6 +210,7 @@ def create_app(
 
 
 app = create_app(
-    db_path=os.environ.get("AAROGYA_HUB_DB", ":memory:"),
+    db_path=os.environ.get("AAROGYA_HUB_DB", ".data/phc_hub.db"),
+    blob_dir=os.environ.get("AAROGYA_HUB_BLOB_DIR", ".data/blobs"),
     node_id=os.environ.get("AAROGYA_HUB_NODE_ID", "phc-hub-local"),
 )
