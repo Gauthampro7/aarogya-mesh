@@ -8,6 +8,7 @@ import {
   type SyncEnvelope,
 } from "../../../../packages/contracts/ts/index";
 import type { FieldStore } from "../core";
+import { uuid } from "../core/uuid";
 
 export interface ManifestOptions {
   ramMb?: number;
@@ -51,7 +52,7 @@ export async function buildEnvelope(store: FieldStore, opts: ManifestOptions = {
     buildManifest(store.nodeId, opts),
   ]);
   return {
-    envelope_id: crypto.randomUUID(),
+    envelope_id: uuid(),
     sender_manifest,
     sender_hlc: await store.tick(),
     since_cursor,
@@ -73,7 +74,7 @@ export interface LocalEventInput {
 /** Single place for UI/forms to create local events: durable HLC, persisted to log + outbox. */
 export async function createLocalEvent(store: FieldStore, input: LocalEventInput): Promise<CrdtEvent> {
   const event: CrdtEvent = {
-    event_id: crypto.randomUUID(),
+    event_id: uuid(),
     hlc: await store.tick(),
     origin_node_id: store.nodeId,
     patient_id: input.patient_id ?? null,
