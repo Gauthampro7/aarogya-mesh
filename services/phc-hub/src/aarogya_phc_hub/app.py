@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import os
 import tempfile
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
@@ -31,6 +33,13 @@ from aarogya_crdt_sync import (
 )
 from aarogya_phc_hub.blob_store import BlobMetadata, LocalBlobStore
 from aarogya_phc_hub.capability_router import WorkloadKind, route_workload
+from aarogya_phc_hub.dashboard import create_dashboard_router
+from aarogya_phc_hub.discovery import (
+    MdnsAdvertiser,
+    PeerRegistry,
+    create_discovery_router,
+)
+from aarogya_phc_hub.enrichment_worker import EnrichmentWorker, create_enrichment_router
 
 
 def _detect_ram_mb() -> int:
@@ -73,6 +82,10 @@ def create_app(
     blob_dir: str | Path | None = None,
     node_id: str = "phc-hub-local",
     installed_models: list[str] | None = None,
+    port: int = 8000,
+    enable_mdns: bool = False,
+    enable_enrichment_worker: bool = False,
+    enrichment_interval_sec: float = 5.0,
 ) -> FastAPI:
     """Create a configured Tier-2 PHC Hub FastAPI application."""
     if str(db_path) != ":memory:":
@@ -88,11 +101,33 @@ def create_app(
     blob_store = LocalBlobStore(root_dir=resolved_blob_dir)
     clock = HlcClock(node_id=node_id)
     manifest = detect_host_manifest(node_id=node_id, installed_models=installed_models)
+    peer_registry = PeerRegistry()
+    mdns_advertiser = MdnsAdvertiser(manifest, port=port, enabled=enable_mdns)
+    enrichment_worker = EnrichmentWorker(
+        store=store,
+        blob_store=blob_store,
+        clock=clock,
+        manifest=manifest,
+        poll_interval_sec=enrichment_interval_sec,
+    )
+
+    @asynccontextmanager
+    async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+        if enable_mdns:
+            mdns_advertiser.start()
+        if enable_enrichment_worker:
+            await enrichment_worker.start(enrichment_interval_sec)
+        try:
+            yield
+        finally:
+            await enrichment_worker.stop()
+            mdns_advertiser.stop()
 
     hub_app = FastAPI(
         title="Aarogya Mesh — Tier-2 PHC Hub",
         version="0.1.0",
         description="Autonomous offline-first Tier-2 PHC Hub with CRDT delta sync and deterministic clinical triage.",
+        lifespan=lifespan,
     )
     hub_app.add_middleware(
         CORSMiddleware,
@@ -105,6 +140,9 @@ def create_app(
     hub_app.state.blob_store = blob_store
     hub_app.state.clock = clock
     hub_app.state.manifest = manifest
+    hub_app.state.peer_registry = peer_registry
+    hub_app.state.mdns_advertiser = mdns_advertiser
+    hub_app.state.enrichment_worker = enrichment_worker
 
     def _projected() -> ProjectedState:
         return project_state(store.get_all_events())
@@ -141,6 +179,7 @@ def create_app(
 
     @hub_app.post("/api/v1/sync", response_model=SyncEnvelope)
     def sync_envelope(incoming: SyncEnvelope) -> SyncEnvelope:
+        peer_registry.record_peer(incoming.sender_manifest, source="sync_http")
         outcome = reconcile_envelopes(store, clock, manifest, incoming)
         return outcome.response_envelope
 
@@ -201,10 +240,30 @@ def create_app(
                 except ValidationError as exc:
                     await websocket.send_json({"error": "invalid_sync_envelope", "detail": exc.errors()})
                     continue
+                peer_registry.record_peer(incoming.sender_manifest, source="sync_ws")
                 outcome = reconcile_envelopes(store, clock, manifest, incoming)
                 await websocket.send_json(outcome.response_envelope.model_dump(mode="json"))
         except WebSocketDisconnect:
             return
+
+    hub_app.include_router(create_enrichment_router(enrichment_worker))
+    hub_app.include_router(
+        create_discovery_router(
+            peer_registry,
+            manifest,
+            port=port,
+            mdns_advertiser=mdns_advertiser,
+        )
+    )
+    hub_app.include_router(
+        create_dashboard_router(
+            store=store,
+            manifest=manifest,
+            get_peers=lambda: [
+                p.model_dump(mode="json") for p in peer_registry.list_peers()
+            ],
+        )
+    )
 
     return hub_app
 
@@ -213,4 +272,10 @@ app = create_app(
     db_path=os.environ.get("AAROGYA_HUB_DB", ".data/phc_hub.db"),
     blob_dir=os.environ.get("AAROGYA_HUB_BLOB_DIR", ".data/blobs"),
     node_id=os.environ.get("AAROGYA_HUB_NODE_ID", "phc-hub-local"),
+    port=int(os.environ.get("AAROGYA_HUB_PORT", "8000")),
+    enable_mdns=os.environ.get("AAROGYA_HUB_ENABLE_MDNS", "0") == "1",
+    enable_enrichment_worker=os.environ.get("AAROGYA_HUB_ENABLE_WORKER", "1") == "1",
+    enrichment_interval_sec=float(
+        os.environ.get("AAROGYA_HUB_ENRICHMENT_INTERVAL_SEC", "5.0")
+    ),
 )

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aarogya Mesh — Tier-2 PHC Command Center</title>
+  <link rel="stylesheet" href="/static/app.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-group">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 28 28" width="24" height="24" fill="none">
+            <rect x="2" y="2" width="24" height="24" rx="6" stroke="currentColor" stroke-width="2" />
+            <path d="M14 7v14M7 14h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
+          </svg>
+        </div>
+        <div>
+          <h1 id="app-title" class="app-title">Aarogya Mesh — Tier-2 PHC Command Center</h1>
+          <p id="app-subtitle" class="app-subtitle">Autonomous Offline-First Clinical Mesh Operations</p>
+        </div>
+      </div>
+
+      <div class="topbar-controls">
+        <span id="badge-tier" class="pill pill-tier">TIER-2 HUB</span>
+        <span id="badge-offline" class="pill pill-offline">
+          <span class="pulse-dot" aria-hidden="true"></span>
+          <span id="badge-offline-text">AIRPLANE-MODE SAFE</span>
+        </span>
+        <button id="btn-lang" class="btn btn-secondary" type="button">हिन्दी</button>
+        <button id="btn-theme" class="btn btn-secondary" type="button">Light</button>
+        <button id="btn-autorefresh" class="btn btn-toggle active" type="button" aria-pressed="true">Auto-Refresh: ON</button>
+        <button id="btn-refresh" class="btn btn-primary" type="button">Refresh</button>
+      </div>
+    </header>
+
+    <section class="telemetry-strip" aria-label="Hub Hardware Capability Manifest">
+      <div class="telemetry-item">
+        <span class="telemetry-label" data-i18n="nodeId">Node ID</span>
+        <span id="manifest-node-id" class="telemetry-value mono">--</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="telemetry-label" data-i18n="ram">RAM</span>
+        <span id="manifest-ram" class="telemetry-value mono">--</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="telemetry-label" data-i18n="cpu">CPU Cores</span>
+        <span id="manifest-cpu" class="telemetry-value mono">--</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="telemetry-label" data-i18n="npu">NPU</span>
+        <span id="manifest-npu" class="telemetry-value mono">--</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="telemetry-label" data-i18n="connectUrl">LAN Connect URL</span>
+        <span id="connect-url" class="telemetry-value mono">--</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="telemetry-label" data-i18n="wsUrl">Mesh WebSocket</span>
+        <span id="connect-ws" class="telemetry-value mono">--</span>
+      </div>
+      <div class="telemetry-item telemetry-sync">
+        <span class="telemetry-label" data-i18n="lastUpdated">Last Updated</span>
+        <span id="last-updated" class="telemetry-value mono">--</span>
+      </div>
+    </section>
+
+    <section id="outbreak-banner" class="outbreak-banner hidden" role="alert" aria-live="polite"></section>
+
+    <section class="kpi-grid" aria-label="Clinical Summary Metrics">
+      <article class="kpi-card">
+        <span class="kpi-label" data-i18n="patients">Registered Patients</span>
+        <strong id="kpi-patients" class="kpi-value">0</strong>
+      </article>
+      <article class="kpi-card kpi-red">
+        <span class="kpi-label" data-i18n="triageRed">RED Emergency</span>
+        <strong id="kpi-red" class="kpi-value">0</strong>
+      </article>
+      <article class="kpi-card kpi-yellow">
+        <span class="kpi-label" data-i18n="triageYellow">YELLOW PHC</span>
+        <strong id="kpi-yellow" class="kpi-value">0</strong>
+      </article>
+      <article class="kpi-card kpi-green">
+        <span class="kpi-label" data-i18n="triageGreen">GREEN Home</span>
+        <strong id="kpi-green" class="kpi-value">0</strong>
+      </article>
+      <article class="kpi-card">
+        <span class="kpi-label" data-i18n="pendingEnrichments">Pending Enrichments</span>
+        <strong id="kpi-pending" class="kpi-value">0</strong>
+      </article>
+      <article class="kpi-card">
+        <span class="kpi-label" data-i18n="completedEnrichments">Completed Enrichments</span>
+        <strong id="kpi-completed" class="kpi-value">0</strong>
+      </article>
+      <article class="kpi-card">
+        <span class="kpi-label" data-i18n="totalEvents">CRDT Events</span>
+        <strong id="kpi-events" class="kpi-value">0</strong>
+      </article>
+    </section>
+
+    <main class="main-grid">
+      <section class="panel" aria-labelledby="heading-topology">
+        <div class="panel-header">
+          <h2 id="heading-topology" class="panel-title" data-i18n="peerTopology">Live Peer Topology</h2>
+          <span id="peer-count-badge" class="badge">0</span>
+        </div>
+
+        <div class="topology-diagram" aria-label="Three-tier autonomous mesh architecture">
+          <div class="tier-box tier-0">
+            <span class="tier-tag" data-i18n="tier0Label">Tier-0 Watch</span>
+            <span id="tier0-count" class="tier-count mono">0</span>
+          </div>
+          <span class="tier-link" aria-hidden="true">↔</span>
+          <div class="tier-box tier-1">
+            <span class="tier-tag" data-i18n="tier1Label">Tier-1 Phone</span>
+            <span id="tier1-count" class="tier-count mono">0</span>
+          </div>
+          <span class="tier-link" aria-hidden="true">↔</span>
+          <div class="tier-box tier-2">
+            <span class="tier-tag" data-i18n="tier2Label">Tier-2 Hub</span>
+            <span class="tier-count mono">1</span>
+          </div>
+        </div>
+
+        <div id="peers-list" class="card-stack"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="heading-clinical">
+        <div class="panel-header">
+          <h2 id="heading-clinical" class="panel-title" data-i18n="clinicalPanel">Clinical Triage &amp; Risk Alerts</h2>
+          <div class="panel-actions">
+            <button id="btn-run-enrichment" class="btn btn-accent" type="button" data-i18n="runEnrichment">Run Enrichment Now</button>
+          </div>
+        </div>
+        <p id="enrichment-status" class="status-note hidden" role="status"></p>
+
+        <div class="subsection">
+          <h3 class="subsection-title" data-i18n="outbreakAlerts">Outbreak Alerts</h3>
+          <div id="outbreak-list" class="card-stack"></div>
+        </div>
+
+        <div class="subsection">
+          <h3 class="subsection-title" data-i18n="shapTitle">SHAP Risk Attributions</h3>
+          <div id="shap-list" class="card-stack"></div>
+        </div>
+
+        <div class="subsection">
+          <h3 class="subsection-title" data-i18n="actionCards">Action Cards</h3>
+          <div id="action-cards-list" class="card-stack"></div>
+        </div>
+      </section>
+
+      <section class="panel panel-wide" aria-labelledby="heading-events">
+        <div class="panel-header">
+          <h2 id="heading-events" class="panel-title" data-i18n="eventLog">Live HLC CRDT Event Log Inspector</h2>
+          <div class="panel-actions">
+            <label for="event-type-filter" class="sr-only" data-i18n="filterEvents">Filter by event type</label>
+            <select id="event-type-filter" class="select-input">
+              <option value="" data-i18n="allEvents">All Events</option>
+              <option value="PATIENT_REGISTERED">PATIENT_REGISTERED</option>
+              <option value="TRIAGE_COMPLETED">TRIAGE_COMPLETED</option>
+              <option value="CHECKLIST_RECORDED">CHECKLIST_RECORDED</option>
+              <option value="VACCINATION_LOGGED">VACCINATION_LOGGED</option>
+              <option value="VOICE_NOTE_RECORDED">VOICE_NOTE_RECORDED</option>
+              <option value="ENRICHMENT_COMPLETED">ENRICHMENT_COMPLETED</option>
+              <option value="ACTION_CARD_ISSUED">ACTION_CARD_ISSUED</option>
+              <option value="OUTBREAK_ALERT_RAISED">OUTBREAK_ALERT_RAISED</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="event-table">
+            <thead>
+              <tr>
+                <th data-i18n="colHlc">HLC Timestamp</th>
+                <th data-i18n="colOrigin">Origin Node</th>
+                <th data-i18n="colType">Event Type</th>
+                <th data-i18n="colPatient">Patient ID</th>
+                <th data-i18n="colEnrichment">Enrichment</th>
+                <th data-i18n="colSummary">Payload</th>
+              </tr>
+            </thead>
+            <tbody id="events-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/app.js" defer></script>
+</body>
+</html>
