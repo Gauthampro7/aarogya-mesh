@@ -23,7 +23,7 @@ const SHELL_ASSETS = [
 function shouldHandle(request, selfOrigin) {
   if (request.method !== "GET") return false;
   const url = new URL(request.url);
-  if (url.origin !== selfOrigin) return false; // hub is cross-origin: never intercept
+  if (url.origin !== selfOrigin) return false; // other origins: never intercept (hub /api/ and /ws/ are excluded below)
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/ws/")) return false;
   return true;
 }

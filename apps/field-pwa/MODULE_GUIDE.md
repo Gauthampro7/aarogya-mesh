@@ -28,6 +28,10 @@ npm test           # vitest: core, sync, clinical parity, ui
 
 Run against a hub: `make run-hub` from the repo root. Set `AAROGYA_HUB_DB=<path>` so
 events survive a hub restart (the default is in-memory). Hub URL is set in the app's Sync screen.
+The hub serves the **built** `dist/` at `/phone/` (run `npm run build` first). When opened from
+`http://<hub>:8000/phone/` the hub URL defaults to the page origin; otherwise `127.0.0.1:8000`.
+Clear the field to return to automatic. A saved loopback address is ignored on a non-loopback
+hub origin. An `http://` override is blocked on an `https://` page.
 
 ---
 
