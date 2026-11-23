@@ -98,8 +98,20 @@ Each teammate owns one isolated directory so all 4 tracks can develop, test, and
 
 ---
 
+## Sub-Task Claiming & Anti-Conflict Protocol
+
+Follow this protocol before writing any code (human developers and AI coding agents alike — see [AGENTS.md](./AGENTS.md)):
+
+1. **Assign Before Coding**: Check open GitHub Issues (`gh issue list`). **Assign** the sub-task Issue to yourself before writing code. If an Issue is already assigned, do not touch it.
+2. **Claim-by-Draft-PR**: Push your first small commit early and open a **Draft PR** immediately (`gh pr create --draft`) so everyone sees live active files.
+3. **Rebase & Merge Fast**: Rebase (`git fetch origin && git rebase origin/main`) before branching and again before marking Ready for Review. Merge small slices (**< 300 LOC**) every **2–4 hours**.
+4. **Edge-Case Escalation**: Need a `packages/contracts` schema bump or a root `pyproject.toml` dependency change? Never sneak it into a feature PR — open a **tiny standalone PR first**, run `make verify`, get `@Gauthampro7` approval, merge, and rebase your feature branch.
+
+---
+
 ## How to Claim Your Track
 
-1. Open a new GitHub Issue using the **Module Claim** template (`.github/ISSUE_TEMPLATE/module_claim.md`).
-2. Create your feature branch: `git checkout -b feat/<module>-initial`.
-3. Follow [CONTRIBUTING.md](./CONTRIBUTING.md) and run `make verify` before opening your PR.
+1. Open (or pick) a GitHub Issue using the **Module Claim** template (`.github/ISSUE_TEMPLATE/module_claim.md`) and **assign it to yourself**.
+2. Check `gh pr list` and rebase onto `origin/main`: `git fetch origin && git checkout -b feat/<module>-initial origin/main`.
+3. Push your initial commit early and open a **Draft PR** (Claim-by-Draft-PR).
+4. Follow [CONTRIBUTING.md](./CONTRIBUTING.md) and [AGENTS.md](./AGENTS.md), and run `make verify` before marking Ready for Review.
