@@ -2,6 +2,7 @@
  * Pure form-state -> TriageInput mapping. No triage logic here: flags come only
  * from the canonical rule tables and the engine alone classifies severity.
  */
+import { tx } from "../i18n";
 import { IMNCI_PEDIATRIC_RULES, MATERNAL_ANC_RULES, validateTriageInput } from "../clinical";
 import type { PatientCategory, TriageInput } from "../clinical";
 
@@ -88,7 +89,8 @@ export const hiddenTickedFlags = (s: TriageFormState): string[] => {
 
 export function flagLabel(flag: string): string {
   const all = [...pediatricDangerOptions(), ...maternalRedOptions(), ...maternalYellowOptions()];
-  return all.find((o) => o.flag === flag)?.label ?? flag.replaceAll("_", " ");
+  const found = all.find((o) => o.flag === flag);
+  return found ? tx(`flag.${flag}`, found.label) : flag.replaceAll("_", " ");
 }
 
 /**

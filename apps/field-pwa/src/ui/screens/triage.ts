@@ -125,7 +125,7 @@ export async function triage(ctx: Ctx, params: string[]): Promise<HTMLElement> {
       {},
       h("legend", {}, title),
       opts.map((o) =>
-        checkbox(o.label, o.flag, into.includes(o.flag), (c) => {
+        checkbox(tx(`flag.${o.flag}`, o.label), o.flag, into.includes(o.flag), (c) => {
           const i = into.indexOf(o.flag);
           if (c && i < 0) into.push(o.flag);
           if (!c && i >= 0) into.splice(i, 1);

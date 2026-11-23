@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { en } from "../../src/i18n/en";
 import { hi } from "../../src/i18n/hi";
-import { dehydrationFlags, maternalRedOptions, pediatricDangerOptions } from "../../src/ui/triage_map";
+import { checklistItems, checklistTypes } from "../../src/ui/checklist_logic";
+import { dehydrationFlags, maternalRedOptions, maternalYellowOptions, pediatricDangerOptions } from "../../src/ui/triage_map";
 
 const DENY = [
   // Perso-Arabic / colloquial words to avoid
@@ -74,5 +75,25 @@ describe("i18n tables", () => {
     }
     expect(pediatricDangerOptions().length).toBeGreaterThan(5);
     expect(maternalRedOptions().length).toBeGreaterThan(5);
+  });
+
+  it("covers every rule-table flag and checklist item in both languages (en = canonical label)", () => {
+    const enT = en as Record<string, string>;
+    const hiT = hi as Record<string, string>;
+    const flags = [...pediatricDangerOptions(), ...maternalRedOptions(), ...maternalYellowOptions()];
+    expect(flags.length).toBeGreaterThan(20);
+    for (const o of flags) {
+      expect(enT[`flag.${o.flag}`], `en flag.${o.flag}`).toBe(o.label);
+      expect(hiT[`flag.${o.flag}`], `hi flag.${o.flag}`).toBeTruthy();
+    }
+    const types = checklistTypes();
+    expect(types).toHaveLength(5);
+    for (const type of types) {
+      expect(checklistItems(type).length, type).toBeGreaterThan(0);
+      for (const i of checklistItems(type)) {
+        expect(enT[`cki.${i.id}`], `en cki.${i.id}`).toBe(i.label);
+        expect(hiT[`cki.${i.id}`], `hi cki.${i.id}`).toBeTruthy();
+      }
+    }
   });
 });
