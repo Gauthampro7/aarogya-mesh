@@ -19,13 +19,31 @@ const SHELL_ASSETS = [
   "./icons/icon-512.png",
 ];
 
-/** True when this worker may answer the request: same-origin GET, and not an /api/ or /ws/ path. */
-function shouldHandle(request, selfOrigin) {
+/**
+ * True when this worker may answer the request: same-origin GET inside the worker's scope
+ * (scopePath, e.g. "/" or "/phone/"), excluding api/ and ws/ under the scope root and at the
+ * origin root. Everything else (hub paths like /health) falls through to the network.
+ */
+function shouldHandle(request, selfOrigin, scopePath) {
   if (request.method !== "GET") return false;
   const url = new URL(request.url);
   if (url.origin !== selfOrigin) return false; // hub is cross-origin: never intercept
-  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/ws/")) return false;
+  let scope = scopePath || "/";
+  if (!scope.endsWith("/")) scope += "/";
+  const path = url.pathname;
+  if (!path.startsWith(scope)) return false;
+  for (const base of ["/", scope]) {
+    if (path.startsWith(base + "api/") || path.startsWith(base + "ws/")) return false;
+  }
   return true;
+}
+
+function scopePathOf() {
+  try {
+    return new URL(self.registration.scope).pathname;
+  } catch (e) {
+    return "/";
+  }
 }
 
 self.addEventListener("install", (event) => {
@@ -48,7 +66,7 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
-  if (!shouldHandle(request, self.location.origin)) return;
+  if (!shouldHandle(request, self.location.origin, scopePathOf())) return;
 
   if (request.mode === "navigate") {
     // Network first, fall back to the cached shell (works in Airplane Mode).
