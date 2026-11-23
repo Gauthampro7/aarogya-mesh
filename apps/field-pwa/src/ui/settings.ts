@@ -1,3 +1,4 @@
+import { uuid } from "../core/uuid";
 /** Persisted UI settings. localStorage may be unavailable: every access is guarded. */
 export const DEFAULT_HUB_URL = "http://127.0.0.1:8000";
 
@@ -23,7 +24,7 @@ export const setHubUrl = (url: string): void => lsSet("aarogya.hubUrl", url.trim
 export function getNodeId(): string {
   let id = lsGet("aarogya.nodeId");
   if (!id) {
-    id = `phone-${crypto.randomUUID().slice(0, 8)}`;
+    id = `phone-${uuid().slice(0, 8)}`;
     lsSet("aarogya.nodeId", id);
   }
   return id;
