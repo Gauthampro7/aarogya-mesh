@@ -55,4 +55,3 @@ ANC/PNC checklists, offline voice notes, hub delta sync, action cards and enrich
 - **Rule tables** are generated copies; `tests/clinical/rules_parity.test.ts` fails if they drift from `packages/clinical-engine/rules/`. Regenerate them when the engine rules change.
 - **Python engine aliases:** some natural phrasings (e.g. `not_able_to_drink`) have no alias in the Python engine; the UI offers canonical flags only.
 - **Multi-tab:** two tabs on one database could mint duplicate HLCs (HLC read-compute-write is not one transaction).
-- `src/sync_client.ts` is the legacy client, unused by the bundle; remove once nothing references it.
