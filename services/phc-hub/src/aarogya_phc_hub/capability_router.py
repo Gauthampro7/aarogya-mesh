@@ -24,7 +24,7 @@ class WorkloadKind(StrEnum):
 
 _MIN_TINY_ML_BATTERY_PCT = 20
 _MIN_PHONE_TINY_ML_RAM_MB = 2048
-_MIN_HUB_RAM_MB = 8192
+_MIN_HUB_RAM_MB = 4096
 
 
 def route_workload(
