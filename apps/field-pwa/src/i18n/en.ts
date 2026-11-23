@@ -158,6 +158,7 @@ export const en = {
   "sync.title": "Sync and alerts",
   "sync.hubUrl": "Health centre hub address",
   "sync.hubHint": "Example: http://127.0.0.1:8000",
+  "sync.hubAuto": "Using this health centre: {u}",
   "sync.now": "Sync with PHC Hub",
   "sync.running": "Syncing...",
   "sync.badUrl": "Address is invalid.",
