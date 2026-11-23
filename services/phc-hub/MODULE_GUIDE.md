@@ -3,6 +3,8 @@
 **Track**: Tier-2 PHC Laptop Hub Transport, Capability Router & Delta-Sync Server  
 **Package**: `aarogya-phc-hub` (importable as `aarogya_phc_hub`)
 
+> **Atomic Starter Prompts**: Pick one independent slice from [`prompts/track-1-phc-hub/`](../../prompts/track-1-phc-hub/) (see the dependency DAG in [`prompts/README.md`](../../prompts/README.md)) and read only that file before coding.
+
 ---
 
 ## 1. Responsibilities

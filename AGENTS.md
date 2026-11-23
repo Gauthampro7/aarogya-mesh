@@ -17,7 +17,8 @@ gh pr list --state open
 
 1. **Check Issue Assignment**: Never work on an open GitHub Issue that is already assigned to another developer. Have your user assign the Issue to themselves first.
 2. **Check Open PRs**: Inspect open Draft and Ready PRs (`gh pr list`) to see which files and sub-tasks are actively in flight.
-3. **Sync Before Branching**: Always branch from up-to-date `origin/main` (`git checkout -b feat/<module>-<slug> origin/main`). Never commit directly to `main`.
+3. **Read Your Single Atomic Starter Prompt**: Open [`prompts/README.md`](./prompts/README.md) to find the track index and dependency DAG, then read **ONLY** the single atomic slice prompt under `prompts/track-N-*/` matching your claimed Issue before writing code. Do not load or execute other tracks' prompts.
+4. **Sync Before Branching**: Always branch from up-to-date `origin/main` (`git checkout -b feat/<module>-<slug> origin/main`). Never commit directly to `main`.
 
 ---
 
