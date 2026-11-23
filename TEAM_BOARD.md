@@ -12,9 +12,9 @@ Each teammate owns one isolated directory so all 4 tracks can develop, test, and
 | Track | Module Directory | Owner | Status | Primary Stack |
 | --- | --- | --- | --- | --- |
 | **Track 1** | `packages/contracts`, `packages/clinical-engine`, `packages/crdt-sync`, `services/phc-hub` | **Core Bedrock (`@Gauthampro7`)** | Built & Verified | Python 3.12, Pydantic v2, SQLite, FastAPI |
-| **Track 2** | `apps/field-pwa` | **`@Akarshx-x`** | Merged (#2–#7) · Polish | TypeScript, Offline PWA, Service Worker, IndexedDB |
-| **Track 3** | `apps/watch-companion` | **`@aril-travass`** | Claimed (#8) · In Progress | TypeScript, Dual-Mode 360x360 Watch UI |
-| **Track 4** | `services/ml-pipeline` | **`@Krishnanand-10`** | Assigned · Ready to Claim | Python 3.12, `whisper.cpp`, `Qwen2.5-3B` GBNF, `LightGBM+SHAP`, `EWMA` |
+| **Track 2** | `apps/field-pwa` | **`@Akarshx-x`** | Complete & Merged (#2–#7, #15–#17) | TypeScript, Offline PWA, Service Worker, IndexedDB |
+| **Track 3** | `apps/watch-companion` | **`@aril-travass`** | Complete & Merged (#18–#21) | TypeScript, Dual-Mode 360x360 Watch UI |
+| **Track 4** | `services/ml-pipeline` | **`@Krishnanand-10`** | Claimed (#12) · In Review (Draft PR #22) | Python 3.12, `whisper.cpp`, `Qwen2.5-3B` GBNF, `LightGBM+SHAP`, `EWMA` |
 
 ### Atomic Starter Prompts (`prompts/`)
 
@@ -43,6 +43,7 @@ Use [`prompts/README.md`](./prompts/README.md) to grab a decoupled, contract-loc
   - `GET /manifest` -> `HardwareCapabilityManifest`
   - `POST /api/v1/triage` -> `TriageAssessment`
   - `POST /api/v1/sync` -> accepts & returns `SyncEnvelope`
+  - `PUT / HEAD / GET /api/v1/blobs/{blob_key}` -> idempotent voice-note / media blob storage
   - `GET /api/v1/patients`
   - `GET /api/v1/action-cards`
   - `GET /api/v1/enrichment/pending`
@@ -57,7 +58,7 @@ Use [`prompts/README.md`](./prompts/README.md) to grab a decoupled, contract-loc
 
 **Interface Entrypoints**:
 - `packages/contracts/ts/index.ts` (strict TypeScript types for `CrdtEvent`, `SyncEnvelope`, `PatientRecord`, `TriageAssessment`, `ActionCard`, `HardwareCapabilityManifest`)
-- `apps/field-pwa/src/sync_client.ts` (typed sync client talking to Hub `POST /api/v1/sync` and `WS /ws/mesh`)
+- `apps/field-pwa/src/sync/` (`SyncEngine` + `transport-blobs.ts` talking to `POST /api/v1/sync`, `PUT/HEAD /api/v1/blobs/{blob_key}`, and `WS /ws/mesh`)
 - `apps/field-pwa/sw.js` & `apps/field-pwa/manifest.webmanifest`
 
 **Definition of Done**:
