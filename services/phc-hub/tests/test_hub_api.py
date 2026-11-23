@@ -1,7 +1,9 @@
 """Integration tests for the Tier-2 PHC Hub FastAPI service and capability router."""
 
+import sys
 from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
 
 from aarogya_contracts import (
@@ -252,7 +254,11 @@ def test_persistent_db_survives_hub_restart(tmp_path: Path) -> None:
     assert client_v2.get("/health").json()["event_count"] == 1
 
 
-def test_unified_hub_enrichment_discovery_and_dashboard_e2e(tmp_path: Path) -> None:
+def test_unified_hub_enrichment_discovery_and_dashboard_e2e(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(sys.modules["aarogya_phc_hub.app"], "_detect_ram_mb", lambda: 16384)
     hub_app = create_app(
         db_path=tmp_path / "hub_e2e.db",
         blob_dir=tmp_path / "blobs_e2e",
@@ -362,7 +368,11 @@ def test_unified_hub_enrichment_discovery_and_dashboard_e2e(tmp_path: Path) -> N
     assert connect_resp.json()["hub_node_id"] == "hub-e2e-01"
 
 
-def test_hub_showcase_mounts_and_demo_router_integration(tmp_path: Path) -> None:
+def test_hub_showcase_mounts_and_demo_router_integration(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(sys.modules["aarogya_phc_hub.app"], "_detect_ram_mb", lambda: 16384)
     hub_app = create_app(
         db_path=tmp_path / "hub_showcase.db",
         blob_dir=tmp_path / "blobs_showcase",
