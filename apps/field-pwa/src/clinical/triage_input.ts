@@ -3,7 +3,6 @@
  *
  * Mirrors `TriageInput` / `_FLAG_ALIASES` / `_normalize_flag` in
  * `packages/clinical-engine/src/aarogya_clinical_engine/triage.py` (commit 53c61b2).
- * Same shape as `TriageRequestPayload` in `src/sync_client.ts`.
  */
 
 export type TriageMode = "FULL_ASSESSMENT" | "WATCH_RAPID";
