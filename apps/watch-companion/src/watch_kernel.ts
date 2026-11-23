@@ -6,6 +6,7 @@
 
 import {
   ActionCard,
+  ActionCardPriority,
   ActionCardStatus,
   CONTRACT_SCHEMA_VERSION,
   CrdtEvent,
@@ -16,6 +17,15 @@ import {
   WatchMode,
 } from "../../../packages/contracts/ts/index";
 import { resolveDefaultStorage, WatchStorage } from "./storage";
+
+const PRIORITY_RANK: Record<ActionCardPriority, number> = {
+  CRITICAL: 0,
+  HIGH: 1,
+  MEDIUM: 2,
+  LOW: 3,
+};
+
+const CLOSED_CARD_STATUSES = new Set<ActionCardStatus>(["COMPLETED", "DISMISSED"]);
 
 export interface WatchDangerCheckInput {
   patientId: string;
@@ -199,10 +209,47 @@ export class WatchKernel {
     return { severity, event };
   }
 
-  public getVisibleActionCards(): ActionCard[] {
-    return this.actionCards.filter(
-      (card) => card.watch_mode === null || card.watch_mode === this.watchMode,
-    );
+  public getVisibleActionCards(includeClosed = false): ActionCard[] {
+    return this.actionCards
+      .filter(
+        (card) =>
+          (card.watch_mode === null || card.watch_mode === this.watchMode) &&
+          (includeClosed || !CLOSED_CARD_STATUSES.has(card.status)),
+      )
+      .sort((a, b) => {
+        const priDiff = PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority];
+        if (priDiff !== 0) return priDiff;
+        if (a.status !== b.status) return a.status === "OPEN" ? -1 : 1;
+        return a.card_id.localeCompare(b.card_id);
+      });
+  }
+
+  public updateActionCardStatus(
+    cardId: string,
+    status: ActionCardStatus,
+  ): CrdtEvent | null {
+    const idx = this.actionCards.findIndex((card) => card.card_id === cardId);
+    if (idx === -1) return null;
+
+    const current = this.actionCards[idx];
+    this.actionCards[idx] = { ...current, status };
+
+    const event: CrdtEvent = {
+      event_id: crypto.randomUUID(),
+      hlc: this.tickHlc(),
+      origin_node_id: this.nodeId,
+      patient_id: current.patient_id,
+      event_type: "CHECKLIST_RECORDED",
+      payload: {
+        card_id: current.card_id,
+        status,
+      },
+      enrichment_state: "NOT_NEEDED",
+      ref_event_id: current.source_event_id,
+    };
+    this.eventQueue.push(event);
+    this.persist();
+    return event;
   }
 
   public buildSyncEnvelope(
