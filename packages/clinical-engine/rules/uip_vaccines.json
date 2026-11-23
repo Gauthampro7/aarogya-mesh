@@ -1,0 +1,230 @@
+{
+  "protocol_id": "INDIA_UIP_MOHFW_2024",
+  "version": "1.0.0",
+  "description": "India Universal Immunization Programme (UIP) pediatric vaccination schedule (Birth through 24 months).",
+  "defaults": {
+    "due_soon_window_days": 14
+  },
+  "vaccines": [
+    {
+      "code": "BCG",
+      "name": "BCG (Bacillus Calmette-Guerin)",
+      "milestone": "Birth",
+      "due_age_days": 0,
+      "due_soon_lead_days": 7,
+      "max_catchup_age_days": 365,
+      "route": "Intra-dermal (Left upper arm)",
+      "aliases": ["bcg", "bcg-0", "bcg_birth"]
+    },
+    {
+      "code": "OPV-0",
+      "name": "Oral Polio Vaccine (Zero Dose)",
+      "milestone": "Birth",
+      "due_age_days": 0,
+      "due_soon_lead_days": 7,
+      "max_catchup_age_days": 15,
+      "route": "Oral (2 drops)",
+      "aliases": ["opv0", "opv-0", "opv_0", "opv-birth"]
+    },
+    {
+      "code": "HepB-Birth",
+      "name": "Hepatitis B (Birth Dose)",
+      "milestone": "Birth",
+      "due_age_days": 0,
+      "due_soon_lead_days": 1,
+      "max_catchup_age_days": 1,
+      "route": "Intra-muscular (Antero-lateral mid-thigh)",
+      "aliases": ["hepb", "hepb-0", "hepb-birth", "hepb_birth", "hep-b-0"]
+    },
+    {
+      "code": "OPV-1",
+      "name": "Oral Polio Vaccine (Dose 1)",
+      "milestone": "6 Weeks",
+      "due_age_days": 42,
+      "due_soon_lead_days": 14,
+      "max_catchup_age_days": 1825,
+      "route": "Oral (2 drops)",
+      "aliases": ["opv1", "opv-1", "opv_1"]
+    },
+    {
+      "code": "Pentavalent-1",
+      "name": "Pentavalent-1 (DPT + HepB + Hib)",
+      "milestone": "6 Weeks",
+      "due_age_days": 42,
+      "due_soon_lead_days": 14,
+      "max_catchup_age_days": 365,
+      "route": "Intra-muscular (Left mid-thigh)",
+      "aliases": ["penta-1", "penta1", "pentavalent-1", "pentavalent_1"]
+    },
+    {
+      "code": "Rotavirus-1",
+      "name": "Rotavirus Vaccine (Dose 1)",
+      "milestone": "6 Weeks",
+      "due_age_days": 42,
+      "due_soon_lead_days": 14,
+      "max_catchup_age_days": 365,
+      "route": "Oral",
+      "aliases": ["rvv-1", "rvv1", "rotavirus-1", "rotavirus_1"]
+    },
+    {
+      "code": "fIPV-1",
+      "name": "Fractional Inactivated Polio Vaccine (Dose 1)",
+      "milestone": "6 Weeks",
+      "due_age_days": 42,
+      "due_soon_lead_days": 14,
+      "max_catchup_age_days": 365,
+      "route": "Intra-dermal (Right upper arm)",
+      "aliases": ["fipv-1", "fipv1", "ipv-1", "fipv_1"]
+    },
+    {
+      "code": "PCV-1",
+      "name": "Pneumococcal Conjugate Vaccine (Dose 1)",
+      "milestone": "6 Weeks",
+      "due_age_days": 42,
+      "due_soon_lead_days": 14,
+      "max_catchup_age_days": 365,
+      "route": "Intra-muscular (Right mid-thigh)",
+      "aliases": ["pcv-1", "pcv1", "pcv_1"]
+    },
+    {
+      "code": "OPV-2",
+      "name": "Oral Polio Vaccine (Dose 2)",
+      "milestone": "10 Weeks",
+      "due_age_days": 70,
+      "due_soon_lead_days": 14,
+      "max_catchup_age_days": 1825,
+      "route": "Oral (2 drops)",
+      "aliases": ["opv2", "opv-2", "opv_2"]
+    },
+    {
+      "code": "Pentavalent-2",
+      "name": "Pentavalent-2 (DPT + HepB + Hib)",
+      "milestone": "10 Weeks",
+      "due_age_days": 70,
+      "due_soon_lead_days": 14,
+      "max_catchup_age_days": 365,
+      "route": "Intra-muscular (Left mid-thigh)",
+      "aliases": ["penta-2", "penta2", "pentavalent-2", "pentavalent_2"]
+    },
+    {
+      "code": "Rotavirus-2",
+      "name": "Rotavirus Vaccine (Dose 2)",
+      "milestone": "10 Weeks",
+      "due_age_days": 70,
+      "due_soon_lead_days": 14,
+      "max_catchup_age_days": 365,
+      "route": "Oral",
+      "aliases": ["rvv-2", "rvv2", "rotavirus-2", "rotavirus_2"]
+    },
+    {
+      "code": "OPV-3",
+      "name": "Oral Polio Vaccine (Dose 3)",
+      "milestone": "14 Weeks",
+      "due_age_days": 98,
+      "due_soon_lead_days": 14,
+      "max_catchup_age_days": 1825,
+      "route": "Oral (2 drops)",
+      "aliases": ["opv3", "opv-3", "opv_3"]
+    },
+    {
+      "code": "Pentavalent-3",
+      "name": "Pentavalent-3 (DPT + HepB + Hib)",
+      "milestone": "14 Weeks",
+      "due_age_days": 98,
+      "due_soon_lead_days": 14,
+      "max_catchup_age_days": 365,
+      "route": "Intra-muscular (Left mid-thigh)",
+      "aliases": ["penta-3", "penta3", "pentavalent-3", "pentavalent_3"]
+    },
+    {
+      "code": "Rotavirus-3",
+      "name": "Rotavirus Vaccine (Dose 3)",
+      "milestone": "14 Weeks",
+      "due_age_days": 98,
+      "due_soon_lead_days": 14,
+      "max_catchup_age_days": 365,
+      "route": "Oral",
+      "aliases": ["rvv-3", "rvv3", "rotavirus-3", "rotavirus_3"]
+    },
+    {
+      "code": "fIPV-2",
+      "name": "Fractional Inactivated Polio Vaccine (Dose 2)",
+      "milestone": "14 Weeks",
+      "due_age_days": 98,
+      "due_soon_lead_days": 14,
+      "max_catchup_age_days": 365,
+      "route": "Intra-dermal (Right upper arm)",
+      "aliases": ["fipv-2", "fipv2", "ipv-2", "fipv_2"]
+    },
+    {
+      "code": "PCV-2",
+      "name": "Pneumococcal Conjugate Vaccine (Dose 2)",
+      "milestone": "14 Weeks",
+      "due_age_days": 98,
+      "due_soon_lead_days": 14,
+      "max_catchup_age_days": 365,
+      "route": "Intra-muscular (Right mid-thigh)",
+      "aliases": ["pcv-2", "pcv2", "pcv_2"]
+    },
+    {
+      "code": "MR-1",
+      "name": "Measles-Rubella (Dose 1)",
+      "milestone": "9 Months",
+      "due_age_days": 270,
+      "due_soon_lead_days": 14,
+      "max_catchup_age_days": 1825,
+      "route": "Sub-cutaneous (Right upper arm)",
+      "aliases": ["mr-1", "mr1", "mr_1", "measles-1"]
+    },
+    {
+      "code": "JE-1",
+      "name": "Japanese Encephalitis (Dose 1, endemic districts)",
+      "milestone": "9 Months",
+      "due_age_days": 270,
+      "due_soon_lead_days": 14,
+      "max_catchup_age_days": 5475,
+      "route": "Sub-cutaneous (Left upper arm)",
+      "aliases": ["je-1", "je1", "je_1"]
+    },
+    {
+      "code": "PCV-Booster",
+      "name": "Pneumococcal Conjugate Vaccine (Booster)",
+      "milestone": "9 Months",
+      "due_age_days": 270,
+      "due_soon_lead_days": 14,
+      "max_catchup_age_days": 365,
+      "route": "Intra-muscular (Right mid-thigh)",
+      "aliases": ["pcv-booster", "pcv_booster", "pcv-b"]
+    },
+    {
+      "code": "DPT-Booster-1",
+      "name": "DPT Booster (Dose 1)",
+      "milestone": "16-24 Months",
+      "due_age_days": 480,
+      "due_soon_lead_days": 14,
+      "max_catchup_age_days": 2555,
+      "route": "Intra-muscular (Antero-lateral mid-thigh)",
+      "aliases": ["dpt-booster-1", "dpt-b1", "dpt_booster_1", "dpt-booster"]
+    },
+    {
+      "code": "OPV-Booster",
+      "name": "Oral Polio Vaccine (Booster)",
+      "milestone": "16-24 Months",
+      "due_age_days": 480,
+      "due_soon_lead_days": 14,
+      "max_catchup_age_days": 1825,
+      "route": "Oral (2 drops)",
+      "aliases": ["opv-booster", "opv_booster", "opv-b"]
+    },
+    {
+      "code": "MR-2",
+      "name": "Measles-Rubella (Dose 2)",
+      "milestone": "16-24 Months",
+      "due_age_days": 480,
+      "due_soon_lead_days": 14,
+      "max_catchup_age_days": 1825,
+      "route": "Sub-cutaneous (Right upper arm)",
+      "aliases": ["mr-2", "mr2", "mr_2", "measles-2"]
+    }
+  ]
+}

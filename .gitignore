@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Node / Frontend apps
+node_modules/
+apps/*/dist/
+apps/*/.vite/
+*.tsbuildinfo
+
+# Local runtime state & edge ML weights (never commit large weights or patient data)
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.gguf
+*.bin
+*.onnx
+*.pt
+models/
+data/local/
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+
+# OS & Editors
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/*
+!.vscode/extensions.json

@@ -1,0 +1,10 @@
+{
+  "name": "Aarogya Mesh — CHW Field Assistant",
+  "short_name": "Aarogya CHW",
+  "description": "Offline-first Community Health Worker assistant with deterministic WHO IMNCI triage and CRDT Hub sync.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0d9488",
+  "orientation": "portrait"
+}

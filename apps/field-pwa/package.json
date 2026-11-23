@@ -1,0 +1,14 @@
+{
+  "name": "@aarogya-mesh/field-pwa",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tier-1 CHW offline-first field PWA for Aarogya Mesh",
+  "type": "module",
+  "scripts": {
+    "dev": "python3 -m http.server 5173",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}
