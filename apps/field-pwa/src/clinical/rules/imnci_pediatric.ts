@@ -1,0 +1,286 @@
+/**
+ * AUTO-GENERATED exact copy of `packages/clinical-engine/rules/imnci_pediatric.json` (repo commit 53c61b2).
+ * Bundled so triage runs fully offline on the phone. DO NOT hand-edit values;
+ * regenerate from the source JSON. Parity is enforced by tests/clinical/rules_parity.test.ts.
+ */
+
+import type { ImnciPediatricRules } from "./types";
+
+export const IMNCI_PEDIATRIC_RULES: ImnciPediatricRules = {
+  "protocol_id": "WHO_IMNCI_INDIA_2024",
+  "version": "1.0.0",
+  "description": "Deterministic WHO IMNCI & NHM ASHA pediatric triage rules (0-59 months) for offline edge execution.",
+  "watch_tier0_danger_flags": [
+    "not_able_to_drink_or_breastfeed",
+    "vomits_everything",
+    "convulsions",
+    "lethargic_or_unconscious",
+    "severe_breathing_difficulty",
+    "cyanosis",
+    "very_high_fever",
+    "severe_bleeding"
+  ],
+  "general_danger_signs": [
+    {
+      "id": "IMNCI_GDS_01",
+      "flag": "not_able_to_drink_or_breastfeed",
+      "label": "Unable to drink or breastfeed",
+      "severity": "RED_EMERGENCY",
+      "immediate_actions": [
+        "Urgent referral to nearest FRU/PHC immediately (call 108/102 ambulance)",
+        "Keep child warm and prevent hypoglycemia during transport"
+      ],
+      "rationale": "WHO IMNCI General Danger Sign: inability to drink or breastfeed indicates critical systemic illness."
+    },
+    {
+      "id": "IMNCI_GDS_02",
+      "flag": "vomits_everything",
+      "label": "Vomits everything",
+      "severity": "RED_EMERGENCY",
+      "immediate_actions": [
+        "Urgent referral to nearest FRU/PHC immediately",
+        "Offer small frequent sips of ORS if conscious during transport"
+      ],
+      "rationale": "WHO IMNCI General Danger Sign: persistent vomiting prevents oral rehydration and medication."
+    },
+    {
+      "id": "IMNCI_GDS_03",
+      "flag": "convulsions",
+      "label": "Convulsions (current or history in this illness)",
+      "severity": "RED_EMERGENCY",
+      "immediate_actions": [
+        "Place child in left lateral recovery position and keep airway clear",
+        "Do NOT put anything in the mouth",
+        "Urgent emergency referral to FRU/District Hospital (call 108)"
+      ],
+      "rationale": "WHO IMNCI General Danger Sign: convulsions indicate possible meningitis, cerebral malaria, or severe metabolic emergency."
+    },
+    {
+      "id": "IMNCI_GDS_04",
+      "flag": "lethargic_or_unconscious",
+      "label": "Lethargic, abnormally sleepy, or unconscious",
+      "severity": "RED_EMERGENCY",
+      "immediate_actions": [
+        "Check airway and breathing; position safely on side",
+        "Urgent emergency referral to FRU/PHC (call 108)",
+        "Prevent hypothermia with skin-to-skin warmth or blanket"
+      ],
+      "rationale": "WHO IMNCI General Danger Sign: altered consciousness indicates critical neurological or circulatory compromise."
+    },
+    {
+      "id": "IMNCI_GDS_05",
+      "flag": "severe_breathing_difficulty",
+      "label": "Severe breathing difficulty / gasping / severe chest indrawing",
+      "severity": "RED_EMERGENCY",
+      "immediate_actions": [
+        "Keep child calm and upright; clear nasal passages gently",
+        "Urgent referral to FRU/PHC with oxygen capability (call 108)"
+      ],
+      "rationale": "WHO IMNCI Severe Respiratory Distress: high risk of hypoxemia and respiratory failure."
+    },
+    {
+      "id": "IMNCI_GDS_06",
+      "flag": "cyanosis",
+      "label": "Central cyanosis (bluish lips or tongue)",
+      "severity": "RED_EMERGENCY",
+      "immediate_actions": [
+        "Immediate emergency referral to oxygen-equipped FRU/PHC (call 108)",
+        "Maintain open airway and keep child calm and warm"
+      ],
+      "rationale": "Central cyanosis indicates life-threatening hypoxemia."
+    },
+    {
+      "id": "IMNCI_GDS_07",
+      "flag": "stridor_in_calm_child",
+      "label": "Stridor in a calm child",
+      "severity": "RED_EMERGENCY",
+      "immediate_actions": [
+        "Keep child calm in caregiver's lap; avoid unnecessary agitation",
+        "Urgent referral to FRU/PHC for airway management"
+      ],
+      "rationale": "WHO IMNCI Severe Pneumonia / Upper Airway Obstruction: stridor at rest risks acute airway closure."
+    },
+    {
+      "id": "IMNCI_GDS_08",
+      "flag": "stiff_neck",
+      "label": "Stiff neck or bulging fontanelle",
+      "severity": "RED_EMERGENCY",
+      "immediate_actions": [
+        "Urgent referral to FRU/District Hospital for suspected meningitis (call 108)",
+        "Give first pre-referral dose of antibiotic per ANM/MO standing order if available"
+      ],
+      "rationale": "WHO IMNCI Very Severe Febrile Disease: stiff neck is a hallmark sign of acute meningitis."
+    },
+    {
+      "id": "IMNCI_GDS_09",
+      "flag": "severe_bleeding",
+      "label": "Active severe bleeding or petechial rash with bleeding",
+      "severity": "RED_EMERGENCY",
+      "immediate_actions": [
+        "Apply direct clean pressure if external bleeding",
+        "Immediate emergency referral to FRU/District Hospital (call 108)"
+      ],
+      "rationale": "Active hemorrhage or hemorrhagic fever requires urgent hospital stabilization."
+    },
+    {
+      "id": "IMNCI_GDS_10",
+      "flag": "very_high_fever",
+      "label": "Very high fever (hyperpyrexia)",
+      "severity": "RED_EMERGENCY",
+      "immediate_actions": [
+        "Begin tepid sponging and administer age-appropriate paracetamol if able to swallow",
+        "Urgent referral to PHC/FRU for severe febrile illness evaluation"
+      ],
+      "rationale": "Hyperpyrexia carries high risk of febrile seizures, sepsis, or cerebral malaria."
+    }
+  ],
+  "vital_thresholds": {
+    "spo2_critical_below_pct": 90,
+    "spo2_borderline_below_pct": 94,
+    "temp_hypothermia_below_c": 35.5,
+    "temp_very_high_fever_c": 39.5,
+    "temp_young_infant_fever_c": 37.5,
+    "temp_moderate_fever_c": 38.0,
+    "fast_breathing_bpm_by_age_months": [
+      {
+        "min_months": 0,
+        "max_months_exclusive": 2,
+        "threshold_bpm": 60
+      },
+      {
+        "min_months": 2,
+        "max_months_exclusive": 12,
+        "threshold_bpm": 50
+      },
+      {
+        "min_months": 12,
+        "max_months_exclusive": 61,
+        "threshold_bpm": 40
+      }
+    ],
+    "muac_sam_below_cm": 11.5,
+    "muac_mam_below_cm": 12.5
+  },
+  "syndromes": {
+    "respiratory": {
+      "red_rules": [
+        {
+          "id": "IMNCI_RESP_RED_01",
+          "condition": "spo2_critical",
+          "label": "Severe Pneumonia / Hypoxemia (SpO2 < 90%)",
+          "severity": "RED_EMERGENCY",
+          "immediate_actions": [
+            "Urgent referral to oxygen-equipped PHC/FRU (call 108)",
+            "Administer pre-referral antibiotic per ANM standing protocol"
+          ],
+          "rationale": "SpO2 below 90% defines critical hypoxemia requiring immediate supplemental oxygen."
+        },
+        {
+          "id": "IMNCI_RESP_RED_02",
+          "condition": "young_infant_chest_indrawing",
+          "label": "Very Severe Disease in Young Infant (<2 months with chest indrawing or grunting)",
+          "severity": "RED_EMERGENCY",
+          "immediate_actions": [
+            "Keep infant warm (skin-to-skin KMC)",
+            "Urgent referral to SNCU/FRU immediately (call 108)"
+          ],
+          "rationale": "Young infants (<2 months) with severe chest indrawing or grunting deteriorate rapidly."
+        }
+      ],
+      "yellow_rules": [
+        {
+          "id": "IMNCI_RESP_YELLOW_01",
+          "condition": "fast_breathing_or_chest_indrawing",
+          "label": "Pneumonia (Fast breathing for age or lower chest wall indrawing)",
+          "severity": "YELLOW_PHC",
+          "immediate_actions": [
+            "Refer to PHC/ANM today for oral Amoxicillin and clinical assessment",
+            "Advise caregiver on danger signs requiring immediate return",
+            "Schedule ASHA follow-up visit in 2 days"
+          ],
+          "rationale": "WHO IMNCI Pneumonia classification: age-specific tachypnea or chest indrawing requires antibiotic therapy."
+        },
+        {
+          "id": "IMNCI_RESP_YELLOW_02",
+          "condition": "spo2_borderline",
+          "label": "Borderline Oxygen Saturation (SpO2 90-93%)",
+          "severity": "YELLOW_PHC",
+          "immediate_actions": [
+            "Refer to PHC today for pulse oximetry re-check and respiratory evaluation"
+          ],
+          "rationale": "SpO2 between 90% and 93% warrants timely clinical review."
+        }
+      ],
+      "green_rule": {
+        "id": "IMNCI_RESP_GREEN_01",
+        "label": "No Pneumonia: Cough or Cold",
+        "severity": "GREEN_HOME",
+        "immediate_actions": [
+          "Continue breastfeeding and age-appropriate fluids/feeding",
+          "Soothe throat with safe home remedies (warm fluids if >6 months)",
+          "Return immediately if breathing becomes fast/difficult or child cannot drink"
+        ],
+        "rationale": "Cough without fast breathing, chest indrawing, or danger signs can be managed safely at home."
+      }
+    },
+    "diarrhea": {
+      "severe_dehydration_signs": [
+        "lethargic_or_unconscious",
+        "sunken_eyes",
+        "not_able_to_drink_or_breastfeed",
+        "skin_pinch_very_slow"
+      ],
+      "some_dehydration_signs": [
+        "restless_or_irritable",
+        "sunken_eyes",
+        "drinks_eagerly_thirsty",
+        "skin_pinch_slow"
+      ],
+      "min_signs_for_classification": 2,
+      "persistent_diarrhea_days": 14,
+      "red_actions": [
+        "Urgent referral to FRU/PHC for IV rehydration (Plan C)",
+        "Give frequent sips of ORS on the way if child can drink; continue breastfeeding"
+      ],
+      "yellow_actions": [
+        "Initiate ORS Plan B under ANM/PHC supervision",
+        "Start Zinc supplementation (10 mg/day if <6m, 20 mg/day if >=6m) for 14 days",
+        "Refer to PHC if blood in stool (dysentery) or diarrhea >=14 days"
+      ],
+      "green_actions": [
+        "Give ORS Plan A at home after every loose stool",
+        "Give Zinc supplementation for 14 days and continue full feeding/breastfeeding",
+        "Return immediately if child develops sunken eyes, lethargy, blood in stool, or inability to drink"
+      ]
+    },
+    "fever": {
+      "yellow_duration_days": 3,
+      "red_actions": [
+        "Urgent referral to FRU/PHC immediately",
+        "Give age-appropriate paracetamol and tepid sponging if fever >=38.5C"
+      ],
+      "yellow_actions": [
+        "Refer to PHC/ANM for Malaria RDT / Dengue screening and medical evaluation",
+        "Administer paracetamol for comfort and encourage oral fluids",
+        "Follow up in 2 days if fever persists"
+      ],
+      "green_actions": [
+        "Encourage fluids, light clothing, and tepid sponging",
+        "Monitor temperature every 4-6 hours and escalate if fever rises >=38.0C or lasts >=3 days"
+      ]
+    },
+    "malnutrition": {
+      "red_actions": [
+        "Urgent referral to Nutrition Rehabilitation Centre (NRC) / PHC for Severe Acute Malnutrition (SAM)",
+        "Screen immediately for hypothermia, hypoglycemia, and infection"
+      ],
+      "yellow_actions": [
+        "Refer to PHC/Anganwadi Centre for Moderate Acute Malnutrition (MAM) or anemia workup",
+        "Provide IYCF nutritional counseling, IFA/deworming evaluation, and bi-weekly MUAC follow-up"
+      ],
+      "green_actions": [
+        "Continue age-appropriate IYCF nutrition and routine growth monitoring at Anganwadi"
+      ]
+    }
+  }
+};
