@@ -1,7 +1,8 @@
 /**
  * Autonomous Tier-0 Watch Kernel with dual-mode UX (CHW_COMPANION / PATIENT_FAMILY).
  *
- * Strictly typed against `packages/contracts/ts/index.ts`.
+ * Strictly typed against `packages/contracts/ts/index.ts` and backed by
+ * `WatchStore` + HLC under `src/core/`.
  */
 
 import {
@@ -11,152 +12,151 @@ import {
   HardwareCapabilityManifest,
   HlcTimestamp,
   SyncEnvelope,
+  TriageAssessment,
   TriageSeverity,
   WatchMode,
 } from "../../../packages/contracts/ts/index";
+import {
+  evaluateWatchDangerScreen,
+  type WatchDangerScreenInput,
+} from "./clinical/index";
+import { WatchStore, type StorageLike } from "./core/index";
 
 export interface WatchDangerCheckInput {
   patientId: string;
-  unableToDrinkOrBreastfeed: boolean;
-  vomitsEverything: boolean;
-  convulsions: boolean;
-  lethargicOrUnconscious: boolean;
+  unableToDrinkOrBreastfeed?: boolean;
+  vomitsEverything?: boolean;
+  convulsions?: boolean;
+  lethargicOrUnconscious?: boolean;
+  severeRespiratoryDistress?: boolean;
   severeBleeding?: boolean;
+  vaginalBleeding?: boolean;
+  severeHeadacheOrBlurredVision?: boolean;
+  convulsionsOrFits?: boolean;
+  dangerSigns?: readonly string[];
+  language?: "en" | "hi";
+}
+
+export interface WatchScreenDangerOptions {
+  persistActionCard?: boolean;
+}
+
+export interface WatchKernelOptions {
+  storage?: StorageLike;
+  storageKey?: string;
+  store?: WatchStore;
+  nowMs?: () => number;
 }
 
 export class WatchKernel {
-  private watchMode: WatchMode = "CHW_COMPANION";
-  private hlc: HlcTimestamp;
-  private eventQueue: CrdtEvent[] = [];
-  private actionCards: ActionCard[] = [];
+  private readonly store: WatchStore;
 
   constructor(
-    private readonly nodeId: string,
+    nodeId: string,
     initialMode: WatchMode = "CHW_COMPANION",
+    options: WatchKernelOptions = {},
   ) {
-    this.watchMode = initialMode;
-    this.hlc = { wall_ms: Date.now(), logical: 0, node_id: nodeId };
+    this.store =
+      options.store ??
+      new WatchStore({
+        nodeId,
+        initialMode,
+        storage: options.storage,
+        storageKey: options.storageKey,
+        nowMs: options.nowMs,
+      });
+  }
+
+  public getNodeId(): string {
+    return this.store.getNodeId();
+  }
+
+  public getStore(): WatchStore {
+    return this.store;
   }
 
   public getWatchMode(): WatchMode {
-    return this.watchMode;
+    return this.store.getWatchMode();
   }
 
   public setWatchMode(mode: WatchMode): WatchMode {
-    this.watchMode = mode;
-    return this.watchMode;
+    return this.store.setWatchMode(mode);
   }
 
   public toggleWatchMode(): WatchMode {
-    this.watchMode =
-      this.watchMode === "CHW_COMPANION" ? "PATIENT_FAMILY" : "CHW_COMPANION";
-    return this.watchMode;
+    return this.store.toggleWatchMode();
   }
 
   public getManifest(batteryPct = 100): HardwareCapabilityManifest {
     return {
-      node_id: this.nodeId,
+      node_id: this.store.getNodeId(),
       tier: "TIER_0_WATCH",
       ram_mb: 256,
       cpu_cores: 2,
       battery_pct: batteryPct,
       has_npu: false,
       installed_models: [],
-      watch_mode: this.watchMode,
+      watch_mode: this.store.getWatchMode(),
     };
   }
 
   public tickHlc(): HlcTimestamp {
-    const now = Date.now();
-    if (now > this.hlc.wall_ms) {
-      this.hlc = { wall_ms: now, logical: 0, node_id: this.nodeId };
-    } else {
-      this.hlc = {
-        wall_ms: this.hlc.wall_ms,
-        logical: this.hlc.logical + 1,
-        node_id: this.nodeId,
-      };
-    }
-    return this.hlc;
+    return this.store.tickHlc();
   }
 
   /**
    * Deterministic Tier-0 danger-sign check: any single red flag forces RED_EMERGENCY.
-   * Emits a strict TriageAssessment payload validated by `aarogya_crdt_sync.project_state`.
+   * Delegates to `evaluateWatchDangerScreen` and persists emitted CRDT events in `WatchStore`.
    */
-  public screenDangerSigns(input: WatchDangerCheckInput): {
+  public screenDangerSigns(
+    input: WatchDangerCheckInput | WatchDangerScreenInput,
+    options: WatchScreenDangerOptions = {},
+  ): {
     severity: TriageSeverity;
     event: CrdtEvent;
+    assessment: TriageAssessment;
+    actionCard: ActionCard | null;
+    actionCardEvent: CrdtEvent | null;
   } {
-    const matchedRules: string[] = [];
-    if (input.unableToDrinkOrBreastfeed) matchedRules.push("not_able_to_drink_or_breastfeed");
-    if (input.vomitsEverything) matchedRules.push("vomits_everything");
-    if (input.convulsions) matchedRules.push("convulsions");
-    if (input.lethargicOrUnconscious) matchedRules.push("lethargic_or_unconscious");
-    if (input.severeBleeding) matchedRules.push("vaginal_bleeding");
-
-    const hasDangerSign = matchedRules.length > 0;
-    const severity: TriageSeverity = hasDangerSign
-      ? "RED_EMERGENCY"
-      : "GREEN_HOME";
-
-    const hlc = this.tickHlc();
-    const event: CrdtEvent = {
-      event_id: crypto.randomUUID(),
-      hlc,
-      origin_node_id: this.nodeId,
-      patient_id: input.patientId,
-      event_type: "TRIAGE_COMPLETED",
-      payload: {
-        assessment_id: crypto.randomUUID(),
-        patient_id: input.patientId,
-        severity,
-        matched_rules: hasDangerSign ? matchedRules : ["WATCH_RAPID_NO_DANGER_SIGNS"],
-        immediate_actions: hasDangerSign
-          ? ["Immediate 108 emergency referral to PHC/FRU"]
-          : ["Continue home monitoring and routine ASHA follow-up"],
-        referral_required: hasDangerSign,
-        rationale: hasDangerSign
-          ? `Tier-0 Watch danger sign detected (${matchedRules.join(", ")}).`
-          : "No immediate danger signs detected on Tier-0 Watch screen.",
-        confidence: 1.0,
-        protocol_source: "WHO_IMNCI_ASHA_WATCH_RAPID",
-        execution_target: "LOCAL_DETERMINISTIC",
-        assessed_at_ms: hlc.wall_ms,
-      },
-      enrichment_state: "NOT_NEEDED",
-      ref_event_id: null,
+    const result = evaluateWatchDangerScreen({
+      ...input,
+      nodeId: this.store.getNodeId(),
+      tickHlc: () => this.tickHlc(),
+      watchMode: this.store.getWatchMode(),
+    });
+    this.store.appendEvent(result.triageEvent, { enqueueOutbox: true });
+    if (options.persistActionCard && result.actionCardEvent) {
+      this.store.appendEvent(result.actionCardEvent, { enqueueOutbox: true });
+    }
+    return {
+      severity: result.severity,
+      event: result.triageEvent,
+      assessment: result.assessment,
+      actionCard: result.actionCard,
+      actionCardEvent: result.actionCardEvent,
     };
-    this.eventQueue.push(event);
-    return { severity, event };
   }
 
   public getVisibleActionCards(): ActionCard[] {
-    return this.actionCards.filter(
-      (card) => card.watch_mode === null || card.watch_mode === this.watchMode,
-    );
+    return this.store.getVisibleActionCards();
   }
 
-  public buildSyncEnvelope(sinceCursor: string | null = null): SyncEnvelope {
+  public buildSyncEnvelope(
+    sinceCursor: string | null = this.store.getSyncCursor(),
+  ): SyncEnvelope {
     return {
       envelope_id: crypto.randomUUID(),
       sender_manifest: this.getManifest(),
       sender_hlc: this.tickHlc(),
       since_cursor: sinceCursor,
       next_cursor: null,
-      events: [...this.eventQueue],
+      events: this.store.getOutboxEvents(),
       ack_event_ids: [],
       schema_version: CONTRACT_SCHEMA_VERSION,
     };
   }
 
   public applySyncResponse(delta: SyncEnvelope): void {
-    const acked = new Set(delta.ack_event_ids);
-    this.eventQueue = this.eventQueue.filter((evt) => !acked.has(evt.event_id));
-    for (const evt of delta.events) {
-      if (evt.event_type === "ACTION_CARD_ISSUED") {
-        this.actionCards.push(evt.payload as unknown as ActionCard);
-      }
-    }
+    this.store.applySyncResponse(delta);
   }
 }
