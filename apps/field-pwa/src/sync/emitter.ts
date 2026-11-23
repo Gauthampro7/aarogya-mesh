@@ -4,8 +4,11 @@ import type { ActionCard } from "../../../../packages/contracts/ts/index";
 export type SyncState = "idle" | "syncing" | "offline" | "error";
 
 export interface SyncEvents {
-  /** `rejected`: malformed events in the last hub reply (cursor held back so they are re-offered). */
-  status: { state: SyncState; pendingCount: number; error?: string; rejected?: number };
+  /**
+   * `rejected`: malformed events in the last hub reply (cursor held back so they are re-offered).
+   * `heldClips`: voice notes kept back from the last push until their clip reaches the hub.
+   */
+  status: { state: SyncState; pendingCount: number; error?: string; rejected?: number; heldClips?: number };
   cards: { cards: ActionCard[] };
   enrichment: { pending: number };
 }

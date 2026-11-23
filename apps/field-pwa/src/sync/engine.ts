@@ -4,9 +4,14 @@
  *
  * Voice clips: before every push, clips referenced by outbox VOICE_NOTE_RECORDED
  * events are uploaded (HEAD, then PUT if missing) so the hub worker can read them.
- * A clip that fails transiently never blocks the push: the event is still sent,
- * but its ack is ignored so it stays in the outbox and the clip is retried on the
- * next sync (retry state = outbox + HEAD; nothing new is persisted).
+ * A note whose clip fails transiently is WITHHELD from the envelope (the hub would
+ * otherwise finish it from the typed hint and never revisit the audio). It stays
+ * in the outbox and is retried next sync, HEAD first (retry state = outbox + HEAD;
+ * nothing new is persisted). Outbox events that reference a withheld event via
+ * ref_event_id are withheld with it, so the hub never sees a dependent before its
+ * note; they go out together, in HLC order, once the clip lands. Every other event
+ * is still sent, and the envelope is POSTed even if empty (pulls remote events and
+ * advances the cursor). Acks are honoured only for ids actually sent.
  */
 import type { CrdtEvent, SyncEnvelope } from "../../../../packages/contracts/ts/index";
 import type { FieldStore } from "../core";
@@ -32,7 +37,7 @@ export interface SyncEngineOptions {
 }
 
 interface BlobPass {
-  /** Events whose clip is still not on the hub: sent, but their acks are ignored. */
+  /** Voice notes whose clip is still not on the hub: not sent this round. */
   held: Set<string>;
   failure?: SyncTransportError;
 }
@@ -53,6 +58,7 @@ export class SyncEngine {
   private viewsReady: Promise<void> | null = null;
   /** Event ids sent over WS and not yet acked; WS replies may only ack these. */
   private wsSent = new Set<string>();
+  private held = 0;
 
   constructor(readonly store: FieldStore, private readonly opts: SyncEngineOptions = {}) {
     this.hubUrl = opts.hubUrl ?? "http://127.0.0.1:8000";
@@ -60,6 +66,11 @@ export class SyncEngine {
 
   get status(): SyncState {
     return this.state;
+  }
+
+  /** Voice notes withheld by the last push because their clip has not reached the hub yet. */
+  get heldClips(): number {
+    return this.held;
   }
 
   async pendingCount(): Promise<number> {
@@ -89,11 +100,9 @@ export class SyncEngine {
       await this.setState("syncing");
       try {
         await this.ensureViews();
-        const env = await buildEnvelope(this.store, this.opts.manifest);
-        const blobs = await this.uploadPendingBlobs(env.events);
+        const { env, failure } = await this.prepareEnvelope();
         const reply = await postSync(this.hubUrl, env, this.fetchImpl);
-        const ids = env.events.map((e) => e.event_id).filter((id) => !blobs.held.has(id));
-        return await this.applyReply(reply, ids, blobs.failure);
+        return await this.applyReply(reply, env.events.map((e) => e.event_id), failure);
       } catch (err) {
         const kind = err instanceof SyncTransportError ? err.kind : "error";
         await this.setState(kind, String(err instanceof Error ? err.message : err));
@@ -125,13 +134,24 @@ export class SyncEngine {
   private pushViaMesh(): Promise<void> {
     return this.serial(async () => {
       await this.ensureViews();
-      const env = await buildEnvelope(this.store, this.opts.manifest);
       if (!this.mesh?.connected) return void (await this.setState("offline"));
-      const blobs = await this.uploadPendingBlobs(env.events);
+      const { env, failure } = await this.prepareEnvelope();
       if (!this.mesh?.send(env)) return void (await this.setState("offline"));
-      env.events.forEach((e) => blobs.held.has(e.event_id) || this.wsSent.add(e.event_id));
-      if (blobs.failure) await this.setState(blobs.failure.kind, blobFailureMessage(blobs.failure));
+      env.events.forEach((e) => this.wsSent.add(e.event_id));
+      if (failure) await this.setState(failure.kind, blobFailureMessage(failure));
     });
+  }
+
+  /** Outbox envelope minus voice notes whose clip is not on the hub (and their dependents). */
+  private async prepareEnvelope(): Promise<{ env: SyncEnvelope; failure?: SyncTransportError }> {
+    const env = await buildEnvelope(this.store, this.opts.manifest);
+    const { held, failure } = await this.uploadPendingBlobs(env.events);
+    this.held = held.size;
+    const withheld = new Set(held);
+    // Outbox is HLC-sorted, so a referenced event precedes its dependents: one pass is transitive.
+    for (const e of env.events) if (e.ref_event_id && withheld.has(e.ref_event_id)) withheld.add(e.event_id);
+    env.events = env.events.filter((e) => !withheld.has(e.event_id));
+    return { env, failure };
   }
 
   /**
@@ -204,6 +224,7 @@ export class SyncEngine {
       pendingCount: await this.pendingCount(),
       ...(error ? { error } : {}),
       ...(rejected ? { rejected } : {}),
+      ...(this.held ? { heldClips: this.held } : {}),
     });
   }
 

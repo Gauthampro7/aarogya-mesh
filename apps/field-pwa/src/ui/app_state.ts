@@ -4,13 +4,21 @@ import { setLastSync } from "./settings";
 
 export const SYNC_INTERVAL_MS = 30_000;
 
+/** lastSync.detail when the exchange worked but voice notes were withheld for their clips. */
+const HELD_PREFIX = "heldClips:";
+
+/** Number of withheld voice clips encoded in a lastSync detail, or 0. */
+export const heldClipsFromDetail = (detail: string): number =>
+  detail.startsWith(HELD_PREFIX) ? Number(detail.slice(HELD_PREFIX.length)) || 0 : 0;
+
 export function runSync(engine: SyncEngine): Promise<void> {
   return engine.syncNow().then((res) => {
     const st = engine.status;
+    const held = engine.heldClips;
     setLastSync({
       at: Date.now(),
-      ok: res !== null,
-      detail: res === null ? st : "ok",
+      ok: res !== null && held === 0, // clips still waiting is not plain success
+      detail: res === null ? st : held ? `${HELD_PREFIX}${held}` : "ok",
     });
   }, () => undefined);
 }
