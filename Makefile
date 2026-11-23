@@ -1,4 +1,4 @@
-.PHONY: setup lint test verify schemas run-hub
+.PHONY: setup lint test verify schemas build-ui run-hub
 
 setup:
 	uv sync
@@ -17,5 +17,9 @@ verify:
 	uv run ruff check .
 	uv run pytest -v
 
-run-hub:
+build-ui:
+	@[ -f apps/field-pwa/dist/app.js ] || (cd apps/field-pwa && npm install --no-audit --no-fund --package-lock=false && npm run build)
+	@[ -f apps/watch-companion/dist/watch.js ] || (cd apps/watch-companion && npm ci && npm run build)
+
+run-hub: build-ui
 	uv run uvicorn aarogya_phc_hub.app:app --host 0.0.0.0 --port 8000 --reload

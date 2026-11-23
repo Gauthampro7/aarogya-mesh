@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import unicodedata
 from typing import Any
 
 from fastapi import FastAPI
@@ -83,6 +84,14 @@ def test_dashboard_static_assets_and_zero_cdn() -> None:
     html = index_resp.text
     assert "/static/app.css" in html
     assert "/static/app.js" in html
+    assert 'href="/showcase"' in html
+    for scenario_id in (
+        "maternal_sos",
+        "pediatric_voice_offload",
+        "village_outbreak",
+        "crdt_conflict_merge",
+    ):
+        assert scenario_id in html
     assert "http://" not in html.lower()
     assert "https://" not in html.lower()
 
@@ -93,6 +102,49 @@ def test_dashboard_static_assets_and_zero_cdn() -> None:
     assert "https://" not in css_resp.text.lower()
 
     js_resp = client.get("/static/app.js")
+    assert js_resp.status_code == 200
+    assert "javascript" in js_resp.headers["content-type"]
+    js_text = js_resp.text
+    assert "http://" not in js_text.lower()
+    assert "https://" not in js_text.lower()
+    assert "innerHTML" not in js_text
+    assert "outerHTML" not in js_text
+    assert "insertAdjacentHTML" not in js_text
+
+
+def test_showcase_stage_and_static_assets_zero_cdn() -> None:
+    client, _ = _build_test_client()
+
+    stage_resp = client.get("/showcase")
+    assert stage_resp.status_code == 200
+    assert "text/html" in stage_resp.headers["content-type"]
+    html = stage_resp.text
+    assert "/static/showcase.css" in html
+    assert "/static/showcase.js" in html
+    assert 'src="/watch/"' in html
+    assert 'src="/phone/"' in html
+    assert 'href="/"' in html
+    for scenario_id in (
+        "maternal_sos",
+        "pediatric_voice_offload",
+        "village_outbreak",
+        "crdt_conflict_merge",
+    ):
+        assert scenario_id in html
+    assert "http://" not in html.lower()
+    assert "https://" not in html.lower()
+
+    static_html_resp = client.get("/static/showcase.html")
+    assert static_html_resp.status_code == 200
+    assert "text/html" in static_html_resp.headers["content-type"]
+
+    css_resp = client.get("/static/showcase.css")
+    assert css_resp.status_code == 200
+    assert "text/css" in css_resp.headers["content-type"]
+    assert "http://" not in css_resp.text.lower()
+    assert "https://" not in css_resp.text.lower()
+
+    js_resp = client.get("/static/showcase.js")
     assert js_resp.status_code == 200
     assert "javascript" in js_resp.headers["content-type"]
     js_text = js_resp.text
@@ -346,17 +398,21 @@ def test_events_endpoint_sorted_newest_first_and_filterable() -> None:
 
 
 def test_shuddh_tatsama_hindi_purity() -> None:
-    html_text = (STATIC_DIR / "index.html").read_text(encoding="utf-8")
-    js_text = (STATIC_DIR / "app.js").read_text(encoding="utf-8")
-    combined = f"{html_text}\n{js_text}"
+    asset_names = ("index.html", "app.js", "showcase.html", "showcase.js")
+    combined = "\n".join(
+        (STATIC_DIR / name).read_text(encoding="utf-8") for name in asset_names
+    )
 
-    # Verify authentic Shuddh Tatsama Hindi strings exist
+    # Verify authentic Shuddh Tatsama Hindi strings exist across dashboard and showcase
     assert "प्राथमिक स्वास्थ्य केन्द्र" in combined
     assert "आपातकाल" in combined
     assert "संक्रमण प्रकोप चेतावनी" in combined
+    assert "त्रि-स्तरीय जीवन्त मंच" in combined
 
-    # Zero nukta characters anywhere in static assets
+    # Zero nukta characters anywhere in static assets (including NFD-decomposed forms)
+    normalized = unicodedata.normalize("NFD", combined)
     assert _FORBIDDEN_NUKTA_RE.search(combined) is None
+    assert _FORBIDDEN_NUKTA_RE.search(normalized) is None
 
     # Zero Perso-Arabic / Urdu / Hinglish loanwords
     for word in _FORBIDDEN_LOANWORDS:
