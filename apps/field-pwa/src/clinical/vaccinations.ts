@@ -14,6 +14,7 @@ import type {
 } from "../../../../packages/contracts/ts/index";
 import { UIP_VACCINE_RULES } from "./rules/uip_vaccines";
 import type { UipVaccineEntry } from "./rules/types";
+import { uuid } from "../core/uuid";
 
 const DAY_MS = 86_400_000;
 const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -181,7 +182,7 @@ export function vaccinationItemsToActionCards(
     if (item.status === "OVERDUE") {
       cards.push({
         ...base,
-        card_id: crypto.randomUUID(),
+        card_id: uuid(),
         title: `Overdue Vaccine: ${item.vaccine_code} (${item.dose_label})`.slice(0, 160),
         summary: item.reminder_text,
         action_steps: [
@@ -195,7 +196,7 @@ export function vaccinationItemsToActionCards(
     } else if (item.status === "DUE_SOON") {
       cards.push({
         ...base,
-        card_id: crypto.randomUUID(),
+        card_id: uuid(),
         title: `Vaccine Due Soon: ${item.vaccine_code} (${item.dose_label})`.slice(0, 160),
         summary: item.reminder_text,
         action_steps: [`Plan VHND/Sub-Centre visit on or before ${item.due_date} with MCP Card.`],
