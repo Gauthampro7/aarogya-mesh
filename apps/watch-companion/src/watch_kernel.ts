@@ -1,7 +1,8 @@
 /**
  * Autonomous Tier-0 Watch Kernel with dual-mode UX (CHW_COMPANION / PATIENT_FAMILY).
  *
- * Strictly typed against `packages/contracts/ts/index.ts`.
+ * Strictly typed against `packages/contracts/ts/index.ts` and backed by
+ * `WatchStore` + HLC under `src/core/`.
  */
 
 import {
@@ -14,6 +15,7 @@ import {
   TriageSeverity,
   WatchMode,
 } from "../../../packages/contracts/ts/index";
+import { WatchStore, type StorageLike } from "./core/index";
 
 export interface WatchDangerCheckInput {
   patientId: string;
@@ -24,60 +26,67 @@ export interface WatchDangerCheckInput {
   severeBleeding?: boolean;
 }
 
+export interface WatchKernelOptions {
+  storage?: StorageLike;
+  storageKey?: string;
+  store?: WatchStore;
+  nowMs?: () => number;
+}
+
 export class WatchKernel {
-  private watchMode: WatchMode = "CHW_COMPANION";
-  private hlc: HlcTimestamp;
-  private eventQueue: CrdtEvent[] = [];
-  private actionCards: ActionCard[] = [];
+  private readonly store: WatchStore;
 
   constructor(
-    private readonly nodeId: string,
+    nodeId: string,
     initialMode: WatchMode = "CHW_COMPANION",
+    options: WatchKernelOptions = {},
   ) {
-    this.watchMode = initialMode;
-    this.hlc = { wall_ms: Date.now(), logical: 0, node_id: nodeId };
+    this.store =
+      options.store ??
+      new WatchStore({
+        nodeId,
+        initialMode,
+        storage: options.storage,
+        storageKey: options.storageKey,
+        nowMs: options.nowMs,
+      });
+  }
+
+  public getNodeId(): string {
+    return this.store.getNodeId();
+  }
+
+  public getStore(): WatchStore {
+    return this.store;
   }
 
   public getWatchMode(): WatchMode {
-    return this.watchMode;
+    return this.store.getWatchMode();
   }
 
   public setWatchMode(mode: WatchMode): WatchMode {
-    this.watchMode = mode;
-    return this.watchMode;
+    return this.store.setWatchMode(mode);
   }
 
   public toggleWatchMode(): WatchMode {
-    this.watchMode =
-      this.watchMode === "CHW_COMPANION" ? "PATIENT_FAMILY" : "CHW_COMPANION";
-    return this.watchMode;
+    return this.store.toggleWatchMode();
   }
 
   public getManifest(batteryPct = 100): HardwareCapabilityManifest {
     return {
-      node_id: this.nodeId,
+      node_id: this.store.getNodeId(),
       tier: "TIER_0_WATCH",
       ram_mb: 256,
       cpu_cores: 2,
       battery_pct: batteryPct,
       has_npu: false,
       installed_models: [],
-      watch_mode: this.watchMode,
+      watch_mode: this.store.getWatchMode(),
     };
   }
 
   public tickHlc(): HlcTimestamp {
-    const now = Date.now();
-    if (now > this.hlc.wall_ms) {
-      this.hlc = { wall_ms: now, logical: 0, node_id: this.nodeId };
-    } else {
-      this.hlc = {
-        wall_ms: this.hlc.wall_ms,
-        logical: this.hlc.logical + 1,
-        node_id: this.nodeId,
-      };
-    }
-    return this.hlc;
+    return this.store.tickHlc();
   }
 
   /**
@@ -104,7 +113,7 @@ export class WatchKernel {
     const event: CrdtEvent = {
       event_id: crypto.randomUUID(),
       hlc,
-      origin_node_id: this.nodeId,
+      origin_node_id: this.store.getNodeId(),
       patient_id: input.patientId,
       event_type: "TRIAGE_COMPLETED",
       payload: {
@@ -127,36 +136,30 @@ export class WatchKernel {
       enrichment_state: "NOT_NEEDED",
       ref_event_id: null,
     };
-    this.eventQueue.push(event);
+    this.store.appendEvent(event, { enqueueOutbox: true });
     return { severity, event };
   }
 
   public getVisibleActionCards(): ActionCard[] {
-    return this.actionCards.filter(
-      (card) => card.watch_mode === null || card.watch_mode === this.watchMode,
-    );
+    return this.store.getVisibleActionCards();
   }
 
-  public buildSyncEnvelope(sinceCursor: string | null = null): SyncEnvelope {
+  public buildSyncEnvelope(
+    sinceCursor: string | null = this.store.getSyncCursor(),
+  ): SyncEnvelope {
     return {
       envelope_id: crypto.randomUUID(),
       sender_manifest: this.getManifest(),
       sender_hlc: this.tickHlc(),
       since_cursor: sinceCursor,
       next_cursor: null,
-      events: [...this.eventQueue],
+      events: this.store.getOutboxEvents(),
       ack_event_ids: [],
       schema_version: CONTRACT_SCHEMA_VERSION,
     };
   }
 
   public applySyncResponse(delta: SyncEnvelope): void {
-    const acked = new Set(delta.ack_event_ids);
-    this.eventQueue = this.eventQueue.filter((evt) => !acked.has(evt.event_id));
-    for (const evt of delta.events) {
-      if (evt.event_type === "ACTION_CARD_ISSUED") {
-        this.actionCards.push(evt.payload as unknown as ActionCard);
-      }
-    }
+    this.store.applySyncResponse(delta);
   }
 }
