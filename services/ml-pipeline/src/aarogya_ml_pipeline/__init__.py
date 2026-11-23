@@ -15,9 +15,18 @@ from aarogya_ml_pipeline.interfaces import (
     VoiceTranscriber,
     enrich_voice_note_event,
 )
+from aarogya_ml_pipeline.outbreak_detector import EwmaOutbreakDetector
+from aarogya_ml_pipeline.pipeline import EnrichmentPipeline
+from aarogya_ml_pipeline.risk_scorer import LightGbmRiskScorer
+from aarogya_ml_pipeline.slm_structurer import LlamaCppSlmStructurer
+from aarogya_ml_pipeline.whisper_asr import WhisperVoiceTranscriber
 
 __all__ = [
     "ClinicalSlmStructurer",
+    "EnrichmentPipeline",
+    "EwmaOutbreakDetector",
+    "LightGbmRiskScorer",
+    "LlamaCppSlmStructurer",
     "OutbreakDetector",
     "OutbreakSignal",
     "RiskScoreResult",
@@ -29,5 +38,6 @@ __all__ = [
     "StubVoiceTranscriber",
     "TranscriptionResult",
     "VoiceTranscriber",
+    "WhisperVoiceTranscriber",
     "enrich_voice_note_event",
 ]

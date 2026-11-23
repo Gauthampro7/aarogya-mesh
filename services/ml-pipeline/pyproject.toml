@@ -9,7 +9,19 @@ description = "Contract-locked local edge ML protocols and deterministic stubs f
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "aarogya-contracts",
+    "aarogya-clinical-engine",
     "pydantic>=2.9",
+]
+
+[project.optional-dependencies]
+asr = [
+    "faster-whisper>=1.0.0",
+]
+slm = [
+    "llama-cpp-python>=0.2.90",
+]
+risk = [
+    "lightgbm>=4.0.0",
 ]
 
 [tool.hatch.build.targets.wheel]
