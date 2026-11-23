@@ -27,7 +27,7 @@
         flex-direction: column;
         align-items: center;
         justify-content: space-between;
-        padding: 28px 26px;
+        padding: 26px 26px;
         box-sizing: border-box;
         text-align: center;
       }
@@ -41,6 +41,12 @@
         font-weight: 700;
         cursor: pointer;
       }
+      .actions {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
       .primary-action {
         width: 100%;
         border: none;
@@ -50,6 +56,17 @@
         cursor: pointer;
         background: #dc2626;
         color: #ffffff;
+      }
+      .secondary-action {
+        width: 100%;
+        border: 1px solid #0f766e;
+        border-radius: 999px;
+        padding: 7px 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        background: #042f2e;
+        color: #ccfbf1;
       }
       .meta {
         font-size: 0.72rem;
@@ -68,47 +85,18 @@
         </p>
       </div>
 
-      <button id="primary-btn" class="primary-action" type="button">
-        Flag Danger Sign (RED)
-      </button>
+      <div class="actions">
+        <button id="primary-btn" class="primary-action" type="button">
+          Flag Danger Sign (RED)
+        </button>
+        <button id="safe-btn" class="secondary-action" type="button">
+          No Danger Signs (GREEN)
+        </button>
+      </div>
 
       <div id="watch-footer" class="meta">TIER_0_WATCH · 0 queued events</div>
     </div>
 
-    <script>
-      let mode = "CHW_COMPANION";
-      let queued = 0;
-      const toggle = document.getElementById("mode-toggle");
-      const title = document.getElementById("watch-title");
-      const summary = document.getElementById("watch-summary");
-      const primary = document.getElementById("primary-btn");
-      const footer = document.getElementById("watch-footer");
-
-      const render = () => {
-        toggle.textContent = `MODE: ${mode}`;
-        if (mode === "CHW_COMPANION") {
-          title.textContent = "1-Tap Danger Screen";
-          summary.textContent = "ASHA quick-triage & next ActionCard alert.";
-          primary.textContent = "Flag Danger Sign (RED)";
-          primary.style.background = "#dc2626";
-        } else {
-          title.textContent = "Family Reminder";
-          summary.textContent = "Daily vaccine / medicine check & SOS trigger.";
-          primary.textContent = "Request Help (SOS)";
-          primary.style.background = "#d97706";
-        }
-        footer.textContent = `TIER_0_WATCH · ${queued} queued events`;
-      };
-
-      toggle.addEventListener("click", () => {
-        mode = mode === "CHW_COMPANION" ? "PATIENT_FAMILY" : "CHW_COMPANION";
-        render();
-      });
-      primary.addEventListener("click", () => {
-        queued += 1;
-        render();
-      });
-      render();
-    </script>
+    <script type="module" src="./dist/watch.js"></script>
   </body>
 </html>

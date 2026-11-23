@@ -6,6 +6,7 @@
 
 import {
   ActionCard,
+  ActionCardStatus,
   CONTRACT_SCHEMA_VERSION,
   CrdtEvent,
   HardwareCapabilityManifest,
@@ -14,6 +15,7 @@ import {
   TriageSeverity,
   WatchMode,
 } from "../../../packages/contracts/ts/index";
+import { resolveDefaultStorage, WatchStorage } from "./storage";
 
 export interface WatchDangerCheckInput {
   patientId: string;
@@ -29,27 +31,73 @@ export class WatchKernel {
   private hlc: HlcTimestamp;
   private eventQueue: CrdtEvent[] = [];
   private actionCards: ActionCard[] = [];
+  private sinceCursor: string | null = null;
+  private readonly storage: WatchStorage;
 
   constructor(
     private readonly nodeId: string,
     initialMode: WatchMode = "CHW_COMPANION",
+    storage: WatchStorage = resolveDefaultStorage(nodeId),
   ) {
-    this.watchMode = initialMode;
-    this.hlc = { wall_ms: Date.now(), logical: 0, node_id: nodeId };
+    this.storage = storage;
+    const saved = this.storage.load();
+    if (saved) {
+      this.watchMode = saved.watchMode;
+      this.hlc = saved.hlc;
+      this.eventQueue = saved.eventQueue;
+      this.actionCards = saved.actionCards;
+      this.sinceCursor = saved.sinceCursor;
+    } else {
+      this.watchMode = initialMode;
+      this.hlc = { wall_ms: Date.now(), logical: 0, node_id: nodeId };
+      this.persist();
+    }
+  }
+
+  private persist(): void {
+    this.storage.save({
+      watchMode: this.watchMode,
+      hlc: this.hlc,
+      eventQueue: this.eventQueue,
+      actionCards: this.actionCards,
+      sinceCursor: this.sinceCursor,
+    });
+  }
+
+  public getNodeId(): string {
+    return this.nodeId;
   }
 
   public getWatchMode(): WatchMode {
     return this.watchMode;
   }
 
+  public getHlc(): HlcTimestamp {
+    return this.hlc;
+  }
+
+  public getQueuedCount(): number {
+    return this.eventQueue.length;
+  }
+
+  public getQueuedEvents(): readonly CrdtEvent[] {
+    return this.eventQueue;
+  }
+
+  public getSinceCursor(): string | null {
+    return this.sinceCursor;
+  }
+
   public setWatchMode(mode: WatchMode): WatchMode {
     this.watchMode = mode;
+    this.persist();
     return this.watchMode;
   }
 
   public toggleWatchMode(): WatchMode {
     this.watchMode =
       this.watchMode === "CHW_COMPANION" ? "PATIENT_FAMILY" : "CHW_COMPANION";
+    this.persist();
     return this.watchMode;
   }
 
@@ -66,10 +114,9 @@ export class WatchKernel {
     };
   }
 
-  public tickHlc(): HlcTimestamp {
-    const now = Date.now();
-    if (now > this.hlc.wall_ms) {
-      this.hlc = { wall_ms: now, logical: 0, node_id: this.nodeId };
+  public tickHlc(nowMs: number = Date.now()): HlcTimestamp {
+    if (nowMs > this.hlc.wall_ms) {
+      this.hlc = { wall_ms: nowMs, logical: 0, node_id: this.nodeId };
     } else {
       this.hlc = {
         wall_ms: this.hlc.wall_ms,
@@ -77,6 +124,26 @@ export class WatchKernel {
         node_id: this.nodeId,
       };
     }
+    this.persist();
+    return this.hlc;
+  }
+
+  /** Merge a remote HLC timestamp so causal order advances monotonically. */
+  public receiveHlc(
+    remote: HlcTimestamp,
+    nowMs: number = Date.now(),
+  ): HlcTimestamp {
+    const wall = Math.max(this.hlc.wall_ms, remote.wall_ms, nowMs);
+    let logical = 0;
+    if (wall === this.hlc.wall_ms && wall === remote.wall_ms) {
+      logical = Math.max(this.hlc.logical, remote.logical) + 1;
+    } else if (wall === this.hlc.wall_ms) {
+      logical = this.hlc.logical + 1;
+    } else if (wall === remote.wall_ms) {
+      logical = remote.logical + 1;
+    }
+    this.hlc = { wall_ms: wall, logical, node_id: this.nodeId };
+    this.persist();
     return this.hlc;
   }
 
@@ -128,6 +195,7 @@ export class WatchKernel {
       ref_event_id: null,
     };
     this.eventQueue.push(event);
+    this.persist();
     return { severity, event };
   }
 
@@ -137,7 +205,9 @@ export class WatchKernel {
     );
   }
 
-  public buildSyncEnvelope(sinceCursor: string | null = null): SyncEnvelope {
+  public buildSyncEnvelope(
+    sinceCursor: string | null = this.sinceCursor,
+  ): SyncEnvelope {
     return {
       envelope_id: crypto.randomUUID(),
       sender_manifest: this.getManifest(),
@@ -151,12 +221,36 @@ export class WatchKernel {
   }
 
   public applySyncResponse(delta: SyncEnvelope): void {
+    this.receiveHlc(delta.sender_hlc);
     const acked = new Set(delta.ack_event_ids);
     this.eventQueue = this.eventQueue.filter((evt) => !acked.has(evt.event_id));
+    if (delta.next_cursor) {
+      this.sinceCursor = delta.next_cursor;
+    }
+
+    const cardsById = new Map(this.actionCards.map((c) => [c.card_id, c]));
     for (const evt of delta.events) {
+      this.receiveHlc(evt.hlc);
       if (evt.event_type === "ACTION_CARD_ISSUED") {
-        this.actionCards.push(evt.payload as unknown as ActionCard);
+        const card = evt.payload as unknown as ActionCard;
+        if (card.card_id) {
+          cardsById.set(card.card_id, card);
+        }
+      } else if (
+        evt.event_type === "CHECKLIST_RECORDED" &&
+        typeof evt.payload.card_id === "string" &&
+        typeof evt.payload.status === "string"
+      ) {
+        const existing = cardsById.get(evt.payload.card_id);
+        if (existing) {
+          cardsById.set(existing.card_id, {
+            ...existing,
+            status: evt.payload.status as ActionCardStatus,
+          });
+        }
       }
     }
+    this.actionCards = Array.from(cardsById.values());
+    this.persist();
   }
 }
