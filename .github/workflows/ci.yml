@@ -57,3 +57,31 @@ jobs:
               print(f'Validated schema: {p.name}')
           "
           uv run pytest -v packages/contracts/tests/
+
+  field-pwa:
+    name: Field PWA Typecheck, Test & Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/field-pwa
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Run Vitest suite
+        run: npm test
+
+      - name: Build production PWA bundle
+        run: npm run build

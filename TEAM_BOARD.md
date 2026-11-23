@@ -11,10 +11,10 @@ Each teammate owns one isolated directory so all 4 tracks can develop, test, and
 
 | Track | Module Directory | Owner | Status | Primary Stack |
 | --- | --- | --- | --- | --- |
-| **Track 1** | `packages/contracts`, `packages/clinical-engine`, `packages/crdt-sync`, `services/phc-hub` | **Core Bedrock (Gautham)** | Built & Verified | Python 3.12, Pydantic v2, SQLite, FastAPI |
-| **Track 2** | `apps/field-pwa` | **Teammate A** | Ready to Claim | TypeScript, Offline PWA, Service Worker, IndexedDB |
-| **Track 3** | `apps/watch-companion` | **Teammate B** | Ready to Claim | TypeScript, Dual-Mode 360x360 Watch UI |
-| **Track 4** | `services/ml-pipeline` | **Teammate C** | Ready to Claim | Python 3.12, `whisper.cpp`, `Qwen2.5-3B` GBNF, `LightGBM+SHAP`, `EWMA` |
+| **Track 1** | `packages/contracts`, `packages/clinical-engine`, `packages/crdt-sync`, `services/phc-hub` | **Core Bedrock (`@Gauthampro7`)** | Built & Verified | Python 3.12, Pydantic v2, SQLite, FastAPI |
+| **Track 2** | `apps/field-pwa` | **`@Akarshx-x`** | Merged (#2–#7) · Polish | TypeScript, Offline PWA, Service Worker, IndexedDB |
+| **Track 3** | `apps/watch-companion` | **`@aril-travass`** | Claimed (#8) · In Progress | TypeScript, Dual-Mode 360x360 Watch UI |
+| **Track 4** | `services/ml-pipeline` | **`@Krishnanand-10`** | Assigned · Ready to Claim | Python 3.12, `whisper.cpp`, `Qwen2.5-3B` GBNF, `LightGBM+SHAP`, `EWMA` |
 
 ---
 

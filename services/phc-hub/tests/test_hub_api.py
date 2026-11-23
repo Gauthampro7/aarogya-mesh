@@ -183,3 +183,70 @@ def test_crdt_sync_roundtrip_and_websocket(tmp_path: Path) -> None:
         ws_reply = SyncEnvelope.model_validate(ws.receive_json())
         assert ws_reply.sender_manifest.node_id == "hub-sync-01"
         assert len(ws_reply.events) >= 3
+
+
+def test_voice_blob_upload_download_head_and_safety(tmp_path: Path) -> None:
+    hub_app = create_app(
+        db_path=tmp_path / "hub_blobs.db",
+        blob_dir=tmp_path / "blobs",
+        node_id="hub-blob-01",
+    )
+    client = TestClient(hub_app)
+
+    # Missing blob returns 404 on HEAD and GET
+    assert client.head("/api/v1/blobs/vn-missing").status_code == 404
+    assert client.get("/api/v1/blobs/vn-missing").status_code == 404
+
+    # Empty upload rejected
+    assert client.put("/api/v1/blobs/vn-empty", content=b"").status_code == 400
+
+    # Invalid / traversal keys rejected
+    assert client.put("/api/v1/blobs/..badkey", content=b"audio").status_code == 400
+
+    # Upload WebM audio clip and verify idempotent PUT + HEAD + GET roundtrip
+    sample_audio = b"\x1a\x45\xdf\xa3mock-webm-opus-voice-note"
+    put_resp = client.put(
+        "/api/v1/blobs/vn-1234-abc",
+        content=sample_audio,
+        headers={"Content-Type": "audio/webm;codecs=opus"},
+    )
+    assert put_resp.status_code == 200
+    meta = put_resp.json()
+    assert meta["blob_key"] == "vn-1234-abc"
+    assert meta["content_type"] == "audio/webm"
+    assert meta["size_bytes"] == len(sample_audio)
+    assert len(meta["sha256"]) == 64
+
+    # Idempotent re-upload succeeds with identical hash
+    put_again = client.put(
+        "/api/v1/blobs/vn-1234-abc",
+        content=sample_audio,
+        headers={"Content-Type": "audio/webm"},
+    )
+    assert put_again.status_code == 200
+    assert put_again.json()["sha256"] == meta["sha256"]
+
+    assert client.head("/api/v1/blobs/vn-1234-abc").status_code == 200
+    get_resp = client.get("/api/v1/blobs/vn-1234-abc")
+    assert get_resp.status_code == 200
+    assert get_resp.content == sample_audio
+    assert get_resp.headers["content-type"].startswith("audio/webm")
+    assert get_resp.headers["x-blob-sha256"] == meta["sha256"]
+
+
+def test_persistent_db_survives_hub_restart(tmp_path: Path) -> None:
+    db_file = tmp_path / "nested" / "phc_hub.db"
+    hub_v1 = create_app(db_path=db_file, node_id="hub-persist-01")
+    client_v1 = TestClient(hub_v1)
+
+    triage_resp = client_v1.post(
+        "/api/v1/triage",
+        json={"patient_id": "pat-persist-1", "age_months": 10, "danger_signs": ["convulsions"]},
+    )
+    assert triage_resp.status_code == 200
+    assert client_v1.get("/health").json()["event_count"] == 1
+
+    # Simulate Hub process restart against the same persistent SQLite path
+    hub_v2 = create_app(db_path=db_file, node_id="hub-persist-01")
+    client_v2 = TestClient(hub_v2)
+    assert client_v2.get("/health").json()["event_count"] == 1

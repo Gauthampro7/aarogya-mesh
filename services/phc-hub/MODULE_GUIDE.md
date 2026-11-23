@@ -17,6 +17,13 @@
   - `GET /api/v1/patients` — CRDT-projected patient roster
   - `GET /api/v1/action-cards` — CRDT-projected action cards for Phone/Watch
   - `GET /api/v1/enrichment/pending` — Pending `VOICE_NOTE_RECORDED` events queued for `services/ml-pipeline`
+- **Voice Blob Transport (`blob_store.py`)**:
+  - `PUT /api/v1/blobs/{blob_key}` — Idempotent raw audio upload (`audio/webm`, `audio/ogg`, `audio/wav`, max 25 MiB) referenced by `VOICE_NOTE_RECORDED.payload["audio_blob_key"]`
+  - `HEAD /api/v1/blobs/{blob_key}` — Fast existence check so Watch/Phone skip re-uploading synced audio
+  - `GET /api/v1/blobs/{blob_key}` — Raw audio retrieval for Hub playback and `services/ml-pipeline` (`VoiceTranscriber`)
+- **Persistent Local State**:
+  - `AAROGYA_HUB_DB` defaults to `.data/phc_hub.db` (survives restarts; gitignored).
+  - `AAROGYA_HUB_BLOB_DIR` defaults to `.data/blobs` (gitignored).
 
 ---
 
