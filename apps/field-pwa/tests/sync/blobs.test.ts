@@ -157,25 +157,88 @@ describe("SyncEngine voice blob sync", () => {
     expect(hub.calls.map((c) => c.method)).toEqual(["HEAD", "POST"]);
   });
 
-  it("blob failure still pushes events, keeps the voice event in the outbox, retries next sync", async () => {
+  it("transient clip failure withholds the voice event from the POST, sends the rest, retries until the clip lands", async () => {
     const s = await freshStore();
     const hub = fakeHub();
     const eng = new SyncEngine(s, { fetchImpl: hub.fn, getAudioBlob: async () => clip() });
     const v = await voice(eng, "vn-a");
     const other = await eng.enqueue({ event_type: "CHECKLIST_RECORDED", payload: {} });
+    const held: number[] = [];
+    eng.events.on("status", (st) => held.push(st.heldClips ?? 0));
     for (const mode of ["offline", 500] as const) {
       hub.blobMode = mode;
-      expect(await eng.syncNow()).not.toBeNull(); // never throws, event push not blocked
+      hub.calls.length = 0;
+      expect(await eng.syncNow()).not.toBeNull(); // never throws, other events not blocked
       expect(eng.status).toBe(mode === "offline" ? "offline" : "error");
-      expect(hub.syncs.at(-1)!.events.map((e) => e.event_id)).toContain(v.event_id);
+      expect(eng.heldClips).toBe(1);
+      expect(hub.calls.at(-1)!.method).toBe("POST"); // still POSTs (pull + cursor), even if empty
+      expect(hub.syncs.at(-1)!.events.map((e) => e.event_id)).not.toContain(v.event_id); // old code sent it
       expect((await s.getPendingEvents()).map((e) => e.event_id)).toEqual([v.event_id]);
     }
-    expect((await s.getAllEvents()).map((e) => e.event_id)).toContain(other.event_id);
+    expect(hub.syncs[0].events.map((e) => e.event_id)).toEqual([other.event_id]);
+    expect(hub.syncs[1].events).toEqual([]);
+    expect(held.at(-1)).toBe(1);
     hub.blobMode = "ok";
+    hub.calls.length = 0;
     await eng.syncNow();
+    expect(hub.calls.map((c) => c.method)).toEqual(["HEAD", "PUT", "POST"]);
+    expect(hub.syncs.at(-1)!.events.map((e) => e.event_id)).toEqual([v.event_id]);
     expect(hub.blobs.has("vn-a")).toBe(true);
     expect(await s.getPendingEvents()).toHaveLength(0);
     expect(eng.status).toBe("idle");
+    expect(eng.heldClips).toBe(0);
+    expect(held.at(-1)).toBe(0);
+    // Every event reached the hub exactly once.
+    expect(hub.syncs.flatMap((e) => e.events.map((x) => x.event_id)).sort()).toEqual([v.event_id, other.event_id].sort());
+  });
+
+  it("acks are honoured only for ids actually sent (a hub acking a withheld id is ignored)", async () => {
+    const s = await freshStore();
+    const hub = fakeHub();
+    hub.blobMode = 500;
+    const v = { id: "" };
+    const fn = (async (url: string, init: RequestInit = {}) => {
+      if (!url.endsWith("/api/v1/sync")) return hub.fn(url, init);
+      const env = JSON.parse(String(init.body)) as SyncEnvelope;
+      hub.syncs.push(env);
+      return new Response(JSON.stringify(reply({ ack_event_ids: [v.id, ...env.events.map((e) => e.event_id)], next_cursor: "c1" })), { status: 200 });
+    }) as unknown as typeof fetch;
+    const eng = new SyncEngine(s, { fetchImpl: fn, getAudioBlob: async () => clip() });
+    v.id = (await voice(eng, "vn-a")).event_id;
+    await eng.syncNow();
+    expect((await s.getPendingEvents()).map((e) => e.event_id)).toEqual([v.id]);
+    expect(await s.getCursor()).toBe("c1"); // cursor still advances on the (empty) exchange
+  });
+
+  it("dependents of a withheld note wait with it and are sent after it; unrelated events go now", async () => {
+    const s = await freshStore();
+    const hub = fakeHub();
+    hub.blobMode = 500;
+    const eng = new SyncEngine(s, { fetchImpl: hub.fn, getAudioBlob: async () => clip() });
+    const v = await voice(eng, "vn-a");
+    const dep = await eng.enqueue({ event_type: "ENRICHMENT_COMPLETED", payload: {}, ref_event_id: v.event_id });
+    const dep2 = await eng.enqueue({ event_type: "ACTION_CARD_ISSUED", payload: {}, ref_event_id: dep.event_id });
+    const free = await eng.enqueue({ event_type: "ENRICHMENT_COMPLETED", payload: {}, ref_event_id: "acked-elsewhere" });
+    await eng.syncNow();
+    expect(hub.syncs[0].events.map((e) => e.event_id)).toEqual([free.event_id]);
+    expect(eng.heldClips).toBe(1); // only voice notes count as waiting clips
+    expect((await s.getPendingEvents()).map((e) => e.event_id)).toEqual([v.event_id, dep.event_id, dep2.event_id]);
+    hub.blobMode = "ok";
+    await eng.syncNow();
+    expect(hub.syncs[1].events.map((e) => e.event_id)).toEqual([v.event_id, dep.event_id, dep2.event_id]);
+    expect(await s.getPendingEvents()).toHaveLength(0);
+  });
+
+  it("permanent outcomes (hub 4xx) still release the note in the same push", async () => {
+    const s = await freshStore();
+    const hub = fakeHub();
+    hub.blobMode = 400;
+    const eng = new SyncEngine(s, { fetchImpl: hub.fn, getAudioBlob: async () => clip() });
+    const v = await voice(eng, "vn-a");
+    await eng.syncNow();
+    expect(hub.syncs[0].events.map((e) => e.event_id)).toEqual([v.event_id]);
+    expect(await s.getPendingEvents()).toHaveLength(0);
+    expect(eng.heldClips).toBe(0);
   });
 
   it("offline hub: blob + sync both fail soft, outbox intact", async () => {
@@ -195,10 +258,11 @@ describe("SyncEngine voice blob sync", () => {
     const s = await freshStore();
     const hub = fakeHub();
     const eng = new SyncEngine(s, { fetchImpl: hub.fn, getAudioBlob: async () => undefined });
-    await voice(eng, "vn-gone");
-    await voice(eng, "../bad");
+    const a = await voice(eng, "vn-gone");
+    const b = await voice(eng, "../bad");
     expect(await eng.syncNow()).not.toBeNull();
     expect(blobCalls(hub.calls)).toEqual(["HEAD"]);
+    expect(hub.syncs[0].events.map((e) => e.event_id)).toEqual([a.event_id, b.event_id]);
     expect(await s.getPendingEvents()).toHaveLength(0);
     expect(eng.status).toBe("idle");
   });
@@ -216,6 +280,7 @@ describe("SyncEngine voice blob sync", () => {
     });
     const v = await voice(eng, "vn-a");
     expect(await eng.syncNow()).not.toBeNull();
+    expect(hub.syncs[0].events).toEqual([]);
     expect((await s.getPendingEvents()).map((e) => e.event_id)).toEqual([v.event_id]);
     fail = false;
     await eng.syncNow();
@@ -231,7 +296,7 @@ describe("SyncEngine voice blob sync", () => {
     expect(await s.getEvent(e.event_id)).toBeDefined();
   });
 
-  it("mesh push uploads clips first and only tracks acks for events whose clip landed", async () => {
+  it("mesh push uploads clips first, withholds notes whose clip failed, and tracks acks only for sent ids", async () => {
     const s = await freshStore();
     const hub = fakeHub();
     hub.blobMode = 500;
@@ -241,18 +306,58 @@ describe("SyncEngine voice blob sync", () => {
       sockets.push(ws);
       return ws;
     };
-    const eng = new SyncEngine(s, { fetchImpl: hub.fn, wsFactory, getAudioBlob: async () => clip() });
+    const eng = new SyncEngine(s, { fetchImpl: hub.fn, wsFactory, wsBaseDelayMs: 1, getAudioBlob: async () => clip() });
     const v = await voice(eng, "vn-a");
+    const other = await eng.enqueue({ event_type: "CHECKLIST_RECORDED", payload: {} });
     eng.startMesh();
     sockets[0].open();
     await flush();
     expect(sockets[0].sent).toHaveLength(1);
-    expect(sockets[0].sent[0].events.map((e) => e.event_id)).toEqual([v.event_id]);
+    expect(sockets[0].sent[0].events.map((e) => e.event_id)).toEqual([other.event_id]); // old code also sent v
     expect(hub.calls.map((c) => c.method)).toEqual(["HEAD", "PUT"]); // before the WS send
     expect(eng.status).toBe("error");
-    sockets[0].onmessage?.({ data: JSON.stringify(reply({ ack_event_ids: [v.event_id] })) });
+    expect(eng.heldClips).toBe(1);
+    sockets[0].onmessage?.({ data: JSON.stringify(reply({ ack_event_ids: [v.event_id, other.event_id] })) });
     await flush();
-    expect(await s.getPendingEvents()).toHaveLength(1); // ack ignored: clip not on hub yet
+    expect((await s.getPendingEvents()).map((e) => e.event_id)).toEqual([v.event_id]); // never sent: ack ignored
+    hub.blobMode = "ok";
+    sockets[0].close();
+    sockets[0].onclose?.({});
+    await new Promise((r) => setTimeout(r, 30));
+    sockets.at(-1)!.open();
+    await flush();
+    expect(sockets.at(-1)!.sent.at(-1)!.events.map((e) => e.event_id)).toEqual([v.event_id]);
+    expect(hub.calls.map((c) => c.method).slice(-2)).toEqual(["HEAD", "PUT"]);
+    expect(eng.heldClips).toBe(0);
+    sockets.at(-1)!.onmessage?.({ data: JSON.stringify(reply({ ack_event_ids: [v.event_id] })) });
+    await flush();
+    expect(await s.getPendingEvents()).toHaveLength(0);
     eng.stopMesh();
+  });
+});
+
+describe("runSync last-sync record", () => {
+  it("records held clips as not-ok (not plain success) and clears once they land", async () => {
+    const mem = new Map<string, string>();
+    (globalThis as { localStorage?: unknown }).localStorage = {
+      getItem: (k: string) => mem.get(k) ?? null,
+      setItem: (k: string, v: string) => void mem.set(k, v),
+    };
+    const { runSync, heldClipsFromDetail } = await import("../../src/ui/app_state");
+    const { getLastSync } = await import("../../src/ui/settings");
+    const s = await freshStore();
+    const hub = fakeHub();
+    hub.blobMode = 500;
+    const eng = new SyncEngine(s, { fetchImpl: hub.fn, getAudioBlob: async () => clip() });
+    await voice(eng, "vn-a");
+    await voice(eng, "vn-b");
+    await runSync(eng);
+    const last = getLastSync()!;
+    expect(last.ok).toBe(false);
+    expect(heldClipsFromDetail(last.detail)).toBe(2);
+    hub.blobMode = "ok";
+    await runSync(eng);
+    expect(getLastSync()).toMatchObject({ ok: true, detail: "ok" });
+    delete (globalThis as { localStorage?: unknown }).localStorage;
   });
 });
