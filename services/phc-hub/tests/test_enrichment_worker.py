@@ -8,6 +8,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from aarogya_clinical_engine import TriageInput, evaluate_triage
 from aarogya_contracts import (
     ActionCard,
     ActionCardPriority,
@@ -146,38 +147,79 @@ def test_voice_note_with_uploaded_blob_enriches_and_drains_pending(tmp_path: Pat
     assert card.target_tier == NodeTier.TIER_0_WATCH
 
 
-def test_missing_blob_fails_soft_with_transcript_hint(tmp_path: Path) -> None:
+def test_hinted_voice_note_with_missing_blob_defers_until_audio_arrives(tmp_path: Path) -> None:
+    """Issue A regression: hinted note with audio_blob_key waits for real audio instead of
+    permanently completing on the preliminary hint; hint-only notes (no blob key) run immediately.
+    """
     store = EventStore(":memory:")
     blob_store = LocalBlobStore(tmp_path / "blobs")
     clock = HlcClock("phc-hub-01")
     manifest = _make_hub_manifest()
 
-    voice_evt = CrdtEvent(
-        event_id="evt-voice-fallback",
-        hlc=HlcTimestamp(wall_ms=_BASE_DAY_MS + 2_000, logical=0, node_id="phone-asha-01"),
-        origin_node_id="phone-asha-01",
-        patient_id="pat-002",
-        event_type=EventType.VOICE_NOTE_RECORDED,
-        enrichment_state=EnrichmentState.PENDING,
-        payload={
-            "audio_blob_key": "vn-missing-blob",
-            "transcript_hint": "Patient reports mild fever and cough.",
-            "language": "en",
-        },
+    # 1) Voice note with BOTH audio_blob_key and preliminary transcript_hint (audio not uploaded yet).
+    store.append(
+        CrdtEvent(
+            event_id="evt-voice-hinted-waiting",
+            hlc=HlcTimestamp(wall_ms=_BASE_DAY_MS + 2_000, logical=0, node_id="phone-asha-01"),
+            origin_node_id="phone-asha-01",
+            patient_id="pat-002",
+            event_type=EventType.VOICE_NOTE_RECORDED,
+            enrichment_state=EnrichmentState.PENDING,
+            payload={
+                "audio_blob_key": "vn-arrives-after-sync",
+                "transcript_hint": "Preliminary note before audio upload.",
+                "language": "en",
+            },
+        )
     )
-    store.append(voice_evt)
+    # 2) Typed-only note with NO audio_blob_key — should process transcript_hint immediately.
+    store.append(
+        CrdtEvent(
+            event_id="evt-voice-typed-only",
+            hlc=HlcTimestamp(wall_ms=_BASE_DAY_MS + 2_500, logical=0, node_id="phone-asha-01"),
+            origin_node_id="phone-asha-01",
+            patient_id="pat-002b",
+            event_type=EventType.VOICE_NOTE_RECORDED,
+            enrichment_state=EnrichmentState.PENDING,
+            payload={
+                "transcript_hint": "Patient reports mild fever and cough.",
+                "language": "en",
+            },
+        )
+    )
 
     worker = EnrichmentWorker(store, blob_store, clock, manifest)
-    summary = worker.run_once()
+    first_run = worker.run_once()
 
-    assert summary.processed == 1
-    assert summary.skipped_missing_blob == 0
-    assert summary.pending_remaining == 0
+    assert first_run.processed == 1
+    assert first_run.processed_event_ids == ["evt-voice-typed-only"]
+    assert first_run.skipped_missing_blob == 1
+    assert first_run.pending_remaining == 1
 
-    projected = project_state(store.get_all_events())
-    enrichment_evt = projected.enrichments["evt-voice-fallback"]
-    assert enrichment_evt.payload["audio_source"] == "transcript_hint_fallback"
-    assert "fever" in enrichment_evt.payload["structured_note"]["extracted_symptoms"]
+    state_after_first = project_state(store.get_all_events())
+    assert "evt-voice-typed-only" in state_after_first.enrichments
+    assert state_after_first.enrichments["evt-voice-typed-only"].payload["audio_source"] == "transcript_hint"
+    assert "evt-voice-hinted-waiting" not in state_after_first.enrichments
+
+    # Real audio blob finishes uploading — next sweep must enrich from real audio, NOT the stale hint.
+    blob_store.put(
+        "vn-arrives-after-sync",
+        b"Child had a convulsion and high fever.",
+        content_type="audio/webm",
+    )
+    second_run = worker.run_once()
+    assert second_run.processed == 1
+    assert second_run.processed_event_ids == ["evt-voice-hinted-waiting"]
+    assert second_run.skipped_missing_blob == 0
+    assert second_run.pending_remaining == 0
+
+    state_after_second = project_state(store.get_all_events())
+    enrichment_evt = state_after_second.enrichments["evt-voice-hinted-waiting"]
+    assert enrichment_evt.payload["audio_source"] == "blob"
+    assert enrichment_evt.payload["audio_blob_key"] == "vn-arrives-after-sync"
+    triage = TriageAssessment.model_validate(enrichment_evt.payload["triage_assessment"])
+    assert triage.severity == TriageSeverity.RED_EMERGENCY
+    assert triage.referral_required is True
 
 
 def test_missing_blob_without_hint_defers_gracefully_until_uploaded(tmp_path: Path) -> None:
@@ -552,3 +594,178 @@ def test_enrichment_router_and_background_loop(tmp_path: Path) -> None:
     asyncio.run(_exercise_loop())
     assert store.get_pending_enrichments() == []
     assert "evt-voice-loop-1" in project_state(store.get_all_events()).enrichments
+
+
+def test_voice_enrichment_preserves_existing_red_and_yellow_triage_floor(tmp_path: Path) -> None:
+    """Issue B regression: enriching a routine voice note must never emit a GREEN card
+    for a patient already triaged RED_EMERGENCY or YELLOW_PHC.
+    """
+    store = EventStore(":memory:")
+    blob_store = LocalBlobStore(tmp_path / "blobs")
+    clock = HlcClock("phc-hub-01")
+    manifest = _make_hub_manifest()
+
+    # Patient 1: Child just triaged RED_EMERGENCY for convulsions.
+    _register_patient(store, patient_id="pat-active-red", age_months=14)
+    red_triage = evaluate_triage(
+        TriageInput(
+            patient_id="pat-active-red",
+            age_months=14,
+            danger_signs=["convulsions"],
+            assessed_at_ms=_BASE_DAY_MS + 1_000,
+        )
+    )
+    assert red_triage.severity == TriageSeverity.RED_EMERGENCY
+    store.append(
+        CrdtEvent(
+            event_id="evt-triage-active-red",
+            hlc=HlcTimestamp(wall_ms=_BASE_DAY_MS + 1_000, logical=0, node_id="phone-asha-01"),
+            origin_node_id="phone-asha-01",
+            patient_id="pat-active-red",
+            event_type=EventType.TRIAGE_COMPLETED,
+            payload=red_triage.model_dump(mode="json"),
+        )
+    )
+    # Subsequent benign voice note with no danger keywords.
+    store.append(
+        CrdtEvent(
+            event_id="evt-voice-after-red",
+            hlc=HlcTimestamp(wall_ms=_BASE_DAY_MS + 5_000, logical=0, node_id="phone-asha-01"),
+            origin_node_id="phone-asha-01",
+            patient_id="pat-active-red",
+            event_type=EventType.VOICE_NOTE_RECORDED,
+            enrichment_state=EnrichmentState.PENDING,
+            payload={
+                "transcript_hint": "Child resting quietly while waiting for ambulance.",
+                "language": "en",
+            },
+        )
+    )
+
+    # Patient 2: Child triaged YELLOW_PHC (fast breathing / pneumonia), followed by routine note.
+    _register_patient(store, patient_id="pat-active-yellow", age_months=20)
+    yellow_triage = evaluate_triage(
+        TriageInput(
+            patient_id="pat-active-yellow",
+            age_months=20,
+            respiratory_rate_bpm=48,
+            assessed_at_ms=_BASE_DAY_MS + 2_000,
+        )
+    )
+    assert yellow_triage.severity == TriageSeverity.YELLOW_PHC
+    store.append(
+        CrdtEvent(
+            event_id="evt-triage-active-yellow",
+            hlc=HlcTimestamp(wall_ms=_BASE_DAY_MS + 2_000, logical=0, node_id="phone-asha-01"),
+            origin_node_id="phone-asha-01",
+            patient_id="pat-active-yellow",
+            event_type=EventType.TRIAGE_COMPLETED,
+            payload=yellow_triage.model_dump(mode="json"),
+        )
+    )
+    store.append(
+        CrdtEvent(
+            event_id="evt-voice-after-yellow",
+            hlc=HlcTimestamp(wall_ms=_BASE_DAY_MS + 6_000, logical=0, node_id="phone-asha-01"),
+            origin_node_id="phone-asha-01",
+            patient_id="pat-active-yellow",
+            event_type=EventType.VOICE_NOTE_RECORDED,
+            enrichment_state=EnrichmentState.PENDING,
+            payload={
+                "transcript_hint": "Mother preparing to visit clinic.",
+                "language": "en",
+            },
+        )
+    )
+
+    worker = EnrichmentWorker(store, blob_store, clock, manifest)
+    summary = worker.run_once()
+    assert summary.processed == 2
+
+    projected = project_state(store.get_all_events())
+
+    red_enr = projected.enrichments["evt-voice-after-red"]
+    red_enr_triage = TriageAssessment.model_validate(red_enr.payload["triage_assessment"])
+    assert red_enr_triage.severity == TriageSeverity.RED_EMERGENCY
+    assert red_enr_triage.referral_required is True
+    assert "IMNCI_GDS_03" in red_enr_triage.matched_rules
+    assert "CLINICAL_ROUTINE_GREEN" not in red_enr_triage.matched_rules
+
+    red_cards = projected.action_cards_for_patient("pat-active-red")
+    assert len(red_cards) == 1
+    assert red_cards[0].severity == TriageSeverity.RED_EMERGENCY
+    assert red_cards[0].priority == ActionCardPriority.CRITICAL
+    assert red_cards[0].title.startswith("RED EMERGENCY")
+    assert all("No danger signs" not in step for step in red_cards[0].action_steps)
+
+    yellow_cards = projected.action_cards_for_patient("pat-active-yellow")
+    assert len(yellow_cards) == 1
+    assert yellow_cards[0].severity == TriageSeverity.YELLOW_PHC
+    assert yellow_cards[0].priority == ActionCardPriority.HIGH
+
+
+def test_three_notes_and_stub_binary_audio_do_not_spam_outbreak_alerts(tmp_path: Path) -> None:
+    """Issue C regression: 3 routine voice notes (including binary WebM clips hitting
+    StubVoiceTranscriber's placeholder text) must NOT trigger false outbreak alerts.
+    """
+    store = EventStore(":memory:")
+    blob_store = LocalBlobStore(tmp_path / "blobs")
+    clock = HlcClock("phc-hub-01")
+    manifest = _make_hub_manifest()
+
+    # Case 1: 3 distinct patients with opaque binary WebM audio on the same day.
+    for idx in range(3):
+        pid = f"pat-bin-{idx}"
+        blob_key = f"vn-bin-{idx}"
+        _register_patient(store, patient_id=pid, village_id="demo-village-a", wall_ms=_BASE_DAY_MS)
+        blob_store.put(blob_key, b"\x1a\x45\xdf\xa3\x00\xff\xfe\xfd-webm-audio", content_type="audio/webm")
+        store.append(
+            CrdtEvent(
+                event_id=f"evt-voice-bin-{idx}",
+                hlc=HlcTimestamp(wall_ms=_BASE_DAY_MS + (idx + 1) * 1_000, logical=0, node_id="phone-asha-01"),
+                origin_node_id="phone-asha-01",
+                patient_id=pid,
+                event_type=EventType.VOICE_NOTE_RECORDED,
+                enrichment_state=EnrichmentState.PENDING,
+                payload={"audio_blob_key": blob_key, "language": "en"},
+            )
+        )
+
+    # Case 2: 3 distinct patients with real printable text mentioning fever & cough on 1 day.
+    for idx in range(3):
+        pid = f"pat-txt-{idx}"
+        _register_patient(store, patient_id=pid, village_id="demo-village-b", wall_ms=_BASE_DAY_MS)
+        store.append(
+            CrdtEvent(
+                event_id=f"evt-voice-txt-{idx}",
+                hlc=HlcTimestamp(wall_ms=_BASE_DAY_MS + (idx + 10) * 1_000, logical=0, node_id="phone-asha-01"),
+                origin_node_id="phone-asha-01",
+                patient_id=pid,
+                event_type=EventType.VOICE_NOTE_RECORDED,
+                enrichment_state=EnrichmentState.PENDING,
+                payload={"transcript_hint": "Patient reports fever and cough.", "language": "en"},
+            )
+        )
+
+    # Case 3: 5 voice notes for the SAME patient on the same day -> deduplicated to 1 case.
+    _register_patient(store, patient_id="pat-repeat", village_id="demo-village-c", wall_ms=_BASE_DAY_MS)
+    for idx in range(5):
+        store.append(
+            CrdtEvent(
+                event_id=f"evt-voice-repeat-{idx}",
+                hlc=HlcTimestamp(wall_ms=_BASE_DAY_MS + (idx + 20) * 1_000, logical=0, node_id="phone-asha-01"),
+                origin_node_id="phone-asha-01",
+                patient_id="pat-repeat",
+                event_type=EventType.VOICE_NOTE_RECORDED,
+                enrichment_state=EnrichmentState.PENDING,
+                payload={"transcript_hint": "Patient still has fever.", "language": "en"},
+            )
+        )
+
+    worker = EnrichmentWorker(store, blob_store, clock, manifest)
+    summary = worker.run_once()
+
+    assert summary.processed == 11
+    assert summary.outbreak_alerts == 0
+    assert project_state(store.get_all_events()).outbreak_alerts == []
+

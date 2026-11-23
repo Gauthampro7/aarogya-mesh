@@ -18,7 +18,7 @@ verify:
 	uv run pytest -v
 
 build-ui:
-	@[ -f apps/field-pwa/dist/app.js ] || (cd apps/field-pwa && npm install --no-audit --no-fund --package-lock=false && npm run build)
+	@[ -f apps/field-pwa/dist/app.js ] || (cd apps/field-pwa && npm ci && npm run build)
 	@[ -f apps/watch-companion/dist/watch.js ] || (cd apps/watch-companion && npm ci && npm run build)
 
 run-hub: build-ui

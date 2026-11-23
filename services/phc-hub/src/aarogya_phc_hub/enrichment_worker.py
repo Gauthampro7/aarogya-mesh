@@ -61,7 +61,19 @@ logger = logging.getLogger(__name__)
 
 _MS_PER_DAY = 86_400_000
 _OUTBREAK_WINDOW_DAYS = 30
+_MIN_OUTBREAK_TOTAL_CASES = 5
+_MIN_OUTBREAK_MULTI_DAY_LATEST_CASES = 4
+_MIN_OUTBREAK_SINGLE_DAY_CASES = 5
+_STUB_BINARY_AUDIO_PREFIX = "[stub-audio-"
 _IGNORED_OUTBREAK_SYNDROMES = frozenset({"general_checkup"})
+
+_SEVERITY_RANK: dict[TriageSeverity, int] = {
+    TriageSeverity.GREEN_HOME: 0,
+    TriageSeverity.YELLOW_PHC: 1,
+    TriageSeverity.RED_EMERGENCY: 2,
+}
+
+_GREEN_DEFAULT_RULES = frozenset({"CLINICAL_ROUTINE_GREEN", "WATCH_RAPID_NO_DANGER_SIGNS"})
 
 _SLM_FLAG_TO_CLINICAL_FLAG: dict[str, str] = {
     "lethargy": "lethargic_or_unconscious",
@@ -234,6 +246,70 @@ def _build_triage_input(
     return triage_input, features
 
 
+def _dedupe_preserve_order(items: list[str]) -> list[str]:
+    seen: set[str] = set()
+    result: list[str] = []
+    for item in items:
+        if item not in seen:
+            seen.add(item)
+            result.append(item)
+    return result
+
+
+def _highest_severity_triage(
+    assessments: list[TriageAssessment],
+) -> TriageAssessment | None:
+    """Return the highest-severity TriageAssessment (ties broken by latest)."""
+    best: TriageAssessment | None = None
+    best_rank = -1
+    for assessment in assessments:
+        rank = _SEVERITY_RANK[assessment.severity]
+        if rank >= best_rank:
+            best = assessment
+            best_rank = rank
+    return best
+
+
+def _apply_monotonic_severity_floor(
+    new_triage: TriageAssessment,
+    existing_triage: TriageAssessment | None,
+) -> TriageAssessment:
+    """Ensure voice-note enrichment never downgrades an active higher-severity patient triage."""
+    if existing_triage is None:
+        return new_triage
+    if _SEVERITY_RANK[existing_triage.severity] <= _SEVERITY_RANK[new_triage.severity]:
+        return new_triage
+
+    merged_rules = _dedupe_preserve_order(
+        [
+            *existing_triage.matched_rules,
+            *[r for r in new_triage.matched_rules if r not in _GREEN_DEFAULT_RULES],
+        ]
+    )
+    if new_triage.severity == TriageSeverity.GREEN_HOME:
+        merged_actions = _dedupe_preserve_order(list(existing_triage.immediate_actions))
+    else:
+        merged_actions = _dedupe_preserve_order(
+            [*existing_triage.immediate_actions, *new_triage.immediate_actions]
+        )
+
+    merged_rationale = (
+        f"Preserved active {existing_triage.severity.value} triage floor: "
+        f"{existing_triage.rationale} (Voice note screen: {new_triage.rationale})"
+    )
+    return TriageAssessment.model_validate(
+        new_triage.model_copy(
+            update={
+                "severity": existing_triage.severity,
+                "referral_required": True,
+                "matched_rules": merged_rules,
+                "immediate_actions": merged_actions,
+                "rationale": merged_rationale,
+            }
+        ).model_dump(mode="json")
+    )
+
+
 def _card_from_deterministic_triage(
     *,
     patient_id: str | None,
@@ -341,11 +417,14 @@ class EnrichmentWorker:
         self,
         voice_event: CrdtEvent,
     ) -> tuple[bytes, str, str | None] | None:
-        """Resolve raw audio bytes from ``LocalBlobStore`` with fail-soft fallback.
+        """Resolve raw audio bytes from ``LocalBlobStore`` with blob-first deferral.
 
-        Returns ``(audio_bytes, audio_source, blob_key)``, or ``None`` if an
-        ``audio_blob_key`` is specified, not yet present on disk, and no
-        ``transcript_hint`` / ``audio_text`` fallback is available.
+        - When ``audio_blob_key`` is set and present on disk, returns the raw blob bytes.
+        - When ``audio_blob_key`` is set and NOT yet on disk (or invalid), returns ``None``
+          so the event remains ``PENDING`` until the real audio blob arrives (never
+          permanently completing on a preliminary ``transcript_hint``).
+        - When ``audio_blob_key`` is omitted/empty (typed or hint-only note), processes
+          ``audio_text`` / ``transcript_hint`` immediately.
         """
         payload = voice_event.payload
         raw_blob_key = payload.get("audio_blob_key")
@@ -360,23 +439,44 @@ class EnrichmentWorker:
                 blob_result = self._blob_store.get(blob_key)
             except ValueError:
                 logger.warning(
-                    "Invalid audio_blob_key %r on event %s; falling back safely.",
+                    "Invalid audio_blob_key %r on event %s; deferring safely.",
                     blob_key,
                     voice_event.event_id,
                 )
             if blob_result is not None:
                 return blob_result[0], "blob", blob_key
-            if fallback_text:
-                return fallback_text.encode("utf-8"), "transcript_hint_fallback", blob_key
             return None
 
         return fallback_text.encode("utf-8"), "transcript_hint", None
+
+    @staticmethod
+    def _existing_patient_triage(
+        patient_id: str | None,
+        projected: ProjectedState,
+        in_batch_triages: dict[str, TriageAssessment],
+    ) -> TriageAssessment | None:
+        """Return the highest-severity deterministic triage already recorded for ``patient_id``."""
+        if not patient_id:
+            return None
+        candidates: list[TriageAssessment] = list(projected.triage_for_patient(patient_id))
+        for enr_evt in projected.enrichments.values():
+            if enr_evt.patient_id != patient_id:
+                continue
+            raw_triage = enr_evt.payload.get("triage_assessment")
+            if isinstance(raw_triage, dict):
+                with contextlib.suppress(Exception):
+                    candidates.append(TriageAssessment.model_validate(raw_triage))
+        batch_triage = in_batch_triages.get(patient_id)
+        if batch_triage is not None:
+            candidates.append(batch_triage)
+        return _highest_severity_triage(candidates)
 
     def _enrich_single_voice_event(
         self,
         voice_event: CrdtEvent,
         projected: ProjectedState,
-    ) -> list[CrdtEvent] | None:
+        in_batch_triages: dict[str, TriageAssessment],
+    ) -> tuple[list[CrdtEvent], TriageAssessment] | None:
         resolved = self._resolve_audio_payload(voice_event)
         if resolved is None:
             return None
@@ -396,9 +496,16 @@ class EnrichmentWorker:
             language=asr_result.language,
         )
 
-        # Mandatory Clinical Safety Floor: deterministic engine owns TriageSeverity.
+        # Mandatory Clinical Safety Floor: deterministic engine owns TriageSeverity and
+        # never downgrades an active higher-severity triage for the same patient.
         triage_input, risk_features = _build_triage_input(voice_event, structured, patient)
-        triage_assessment = evaluate_triage(triage_input)
+        raw_triage = evaluate_triage(triage_input)
+        existing_triage = self._existing_patient_triage(
+            voice_event.patient_id,
+            projected,
+            in_batch_triages,
+        )
+        triage_assessment = _apply_monotonic_severity_floor(raw_triage, existing_triage)
 
         risk_features["has_danger_sign"] = (
             triage_assessment.severity == TriageSeverity.RED_EMERGENCY
@@ -446,10 +553,10 @@ class EnrichmentWorker:
             ref_event_id=voice_event.event_id,
             payload=card.model_dump(mode="json"),
         )
-        return [enrichment_event, card_event]
+        return [enrichment_event, card_event], triage_assessment
 
     def _run_outbreak_sweep(self) -> list[CrdtEvent]:
-        """Aggregate village daily syndrome counts and emit deduplicated outbreak alerts."""
+        """Aggregate unique village daily syndrome cases and emit deduplicated outbreak alerts."""
         if (
             route_workload(self._manifest, WorkloadKind.OUTBREAK_DETECTION)
             == ExecutionTarget.DEFER_TO_HUB
@@ -475,7 +582,11 @@ class EnrichmentWorker:
                 if v_id and syn and day is not None:
                     existing_alert_keys.add(f"{v_id}:{syn}:{day}")
 
-        counts: dict[tuple[str, str], dict[int, int]] = defaultdict(lambda: defaultdict(int))
+        # Deduplicate cases per (village_id, syndrome, day_bucket) by patient_id so multiple
+        # notes or triage+voice pairs for the same patient on one day count as a single case.
+        case_keys: dict[tuple[str, str], dict[int, set[str]]] = defaultdict(
+            lambda: defaultdict(set)
+        )
 
         def _resolve_village(event: CrdtEvent, source_event: CrdtEvent | None = None) -> str | None:
             for candidate in (event, source_event):
@@ -496,6 +607,13 @@ class EnrichmentWorker:
                 village_id = _resolve_village(event, source_evt)
                 if not village_id:
                     continue
+                transcription_raw = event.payload.get("transcription")
+                if isinstance(transcription_raw, dict):
+                    transcript_text = str(transcription_raw.get("transcript", ""))
+                    if transcript_text.startswith(_STUB_BINARY_AUDIO_PREFIX):
+                        # Placeholder stub-ASR text for opaque binary audio must not fabricate
+                        # village-level outbreak clusters before real Whisper ASR is installed.
+                        continue
                 structured_raw = event.payload.get("structured_note")
                 if not isinstance(structured_raw, dict):
                     continue
@@ -504,13 +622,19 @@ class EnrichmentWorker:
                     continue
                 event_ms = source_evt.hlc.wall_ms if source_evt is not None else event.hlc.wall_ms
                 day_bucket = event_ms // _MS_PER_DAY
+                case_id = (
+                    event.patient_id
+                    or (source_evt.patient_id if source_evt is not None else None)
+                    or event.ref_event_id
+                    or event.event_id
+                )
                 for raw_sym in extracted:
                     if not isinstance(raw_sym, str):
                         continue
                     sym = raw_sym.strip().lower()
                     if not sym or sym in _IGNORED_OUTBREAK_SYNDROMES:
                         continue
-                    counts[(village_id, sym)][day_bucket] += 1
+                    case_keys[(village_id, sym)][day_bucket].add(case_id)
 
             elif event.event_type == EventType.TRIAGE_COMPLETED:
                 village_id = _resolve_village(event)
@@ -526,17 +650,29 @@ class EnrichmentWorker:
                     else event.hlc.wall_ms
                 )
                 day_bucket = event_ms // _MS_PER_DAY
+                case_id = event.patient_id or event.event_id
                 for sym in _syndromes_from_triage_rules(
                     [r for r in matched_rules if isinstance(r, str)]
                 ):
-                    counts[(village_id, sym)][day_bucket] += 1
+                    case_keys[(village_id, sym)][day_bucket].add(case_id)
 
         emitted_alerts: list[CrdtEvent] = []
-        for village_id, syndrome in sorted(counts):
-            day_map = counts[(village_id, syndrome)]
+        for village_id, syndrome in sorted(case_keys):
+            day_map = case_keys[(village_id, syndrome)]
             latest_day = max(day_map)
             start_day = max(min(day_map), latest_day - (_OUTBREAK_WINDOW_DAYS - 1))
-            daily_counts = [day_map.get(day, 0) for day in range(start_day, latest_day + 1)]
+            daily_counts = [
+                len(day_map.get(day, ())) for day in range(start_day, latest_day + 1)
+            ]
+
+            total_cases = sum(daily_counts)
+            min_latest_cases = (
+                _MIN_OUTBREAK_SINGLE_DAY_CASES
+                if len(daily_counts) == 1
+                else _MIN_OUTBREAK_MULTI_DAY_LATEST_CASES
+            )
+            if total_cases < _MIN_OUTBREAK_TOTAL_CASES or daily_counts[-1] < min_latest_cases:
+                continue
 
             signal = self._outbreak_detector.detect_outbreak(village_id, syndrome, daily_counts)
             if not signal.alert_triggered:
@@ -585,16 +721,29 @@ class EnrichmentWorker:
                 offloadable = select_offloadable_jobs(self._manifest, pending)
                 if offloadable:
                     projected = project_state(self._store.get_all_events())
+                    in_batch_triages: dict[str, TriageAssessment] = {}
                     for job in offloadable:
                         if job.event_type != EventType.VOICE_NOTE_RECORDED:
                             continue
-                        emitted = self._enrich_single_voice_event(job, projected)
-                        if emitted is None:
+                        enriched = self._enrich_single_voice_event(
+                            job,
+                            projected,
+                            in_batch_triages,
+                        )
+                        if enriched is None:
                             skipped_missing_blob += 1
                             continue
+                        emitted, triage_assessment = enriched
                         for evt in emitted:
                             if self._store.append(evt):
                                 emitted_events += 1
+                        if job.patient_id is not None:
+                            prior = in_batch_triages.get(job.patient_id)
+                            if prior is None or (
+                                _SEVERITY_RANK[triage_assessment.severity]
+                                >= _SEVERITY_RANK[prior.severity]
+                            ):
+                                in_batch_triages[job.patient_id] = triage_assessment
                         processed += 1
                         processed_event_ids.append(job.event_id)
 
