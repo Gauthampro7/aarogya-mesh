@@ -95,11 +95,44 @@ Demonstrate full offline autonomy and opportunistic CRDT convergence without int
 
 ## Team Onboarding Guide
 
-1. Read [TEAM_BOARD.md](./TEAM_BOARD.md) and claim your track (`apps/field-pwa`, `apps/watch-companion`, or `services/ml-pipeline`) using the **Module Claim** GitHub issue template.
-2. Read [CONTRIBUTING.md](./CONTRIBUTING.md) for Trunk-Based Development, Conventional Commits, Contract-First rules, and zero-bloat hardware guidelines.
-3. Read [ARCHITECTURE.md](./ARCHITECTURE.md) and your module's `MODULE_GUIDE.md` before creating your branch:
+1. Read [AGENTS.md](./AGENTS.md) (if using an AI coding agent), [TEAM_BOARD.md](./TEAM_BOARD.md), and [CONTRIBUTING.md](./CONTRIBUTING.md).
+2. Claim your track (`apps/field-pwa`, `apps/watch-companion`, or `services/ml-pipeline`) via the **Module Claim** GitHub issue template and **assign the Issue to yourself**.
+3. Read [ARCHITECTURE.md](./ARCHITECTURE.md) and your module's `MODULE_GUIDE.md` before branching from `origin/main`:
    ```bash
-   git checkout -b feat/<module>-<short-slug>
+   git fetch origin
+   git checkout -b feat/<module>-<short-slug> origin/main
    ```
 4. Never edit files outside your assigned module without coordinating first (see [.github/CODEOWNERS](./.github/CODEOWNERS)).
-5. Run `make verify` before opening a Pull Request.
+5. Run `make verify` before marking your Pull Request Ready for Review.
+
+---
+
+## How We Proceed: Maintainer & Contributor Playbook
+
+### How Gautham (Core Bedrock Maintainer / Coordinator) Proceeds
+
+1. **Protect `main` on GitHub**: Enable branch protection rules on `main` requiring Pull Requests, passing `CI` workflow checks, and CODEOWNERS/peer review (zero direct pushes to `main`).
+2. **Fast-Track Contract & Dependency PRs**: Prioritize and review tiny standalone `packages/contracts` schema bumps or root `pyproject.toml` dependency PRs immediately so no teammate track is ever blocked.
+3. **Rapid PR Review & Merge Cadence**: Review and merge small (< 300 LOC) teammate PRs every **2–4 hours** to keep `main` moving smoothly with minimal rebase friction.
+4. **Integration & Airplane-Mode Rehearsals**: Coordinate cross-tier integration (Tier-0 Watch -> Tier-1 Field PWA -> Tier-2 PHC Hub + ML Pipeline) and run full Airplane-Mode demo rehearsals leading up to Thursday's final demo.
+
+### Step-by-Step Onboarding & Daily Workflow (Teammates + AI Agents)
+
+1. **One-Time Setup**:
+   ```bash
+   git clone https://github.com/Gauthampro7/aarogya-mesh.git
+   cd aarogya-mesh
+   uv sync
+   make verify
+   ```
+2. **Pre-Flight Check (Every Session / Before AI Agent Prompting)**:
+   - Run `gh issue list`, `gh pr list`, and `git fetch origin`.
+   - Ensure your AI agent reads [AGENTS.md](./AGENTS.md) and works strictly inside your claimed track directory.
+3. **Claim & Build Loop (Every 2–4 Hours)**:
+   - **Assign** the sub-task GitHub Issue to yourself (never touch an already-assigned Issue).
+   - Branch from `origin/main` (`feat/<module>-<slug>`), push your first small commit early, and open a **Draft PR** (**Claim-by-Draft-PR**) so active files are visible to everyone.
+   - Implement a focused slice (< 300 LOC) while honoring contract schemas and zero-bloat rules.
+   - Escalate any needed contract/dependency change via a tiny standalone PR first.
+4. **Verify & Merge**:
+   - Run `make verify` locally and rebase onto `origin/main` (`git fetch origin && git rebase origin/main`).
+   - Mark the PR **Ready for Review**, merge once CI is green, and delete the short-lived branch.
