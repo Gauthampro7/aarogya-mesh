@@ -1,0 +1,4095 @@
+{
+ "cases": [
+  {
+   "name": "anc_trimester_1_none",
+   "checklist_type": "anc_trimester_1",
+   "completed": [],
+   "opts": {},
+   "expected": {
+    "checklist_type": "anc_trimester_1",
+    "title": "ANC Trimester 1 Checklist (0-12 Weeks)",
+    "protocol": "NHM_ANC_T1",
+    "patient_id": null,
+    "total_items": 8,
+    "completed_items": [],
+    "missing_items": [
+     "anc_t1_mcp_registration",
+     "anc_t1_bp_check",
+     "anc_t1_hb_blood_group",
+     "anc_t1_urine_test",
+     "anc_t1_folic_acid",
+     "anc_t1_td1_vaccine",
+     "anc_t1_infection_screen",
+     "anc_t1_danger_signs_counseling"
+    ],
+    "missing_critical_checks": [
+     "anc_t1_mcp_registration",
+     "anc_t1_bp_check",
+     "anc_t1_hb_blood_group",
+     "anc_t1_folic_acid",
+     "anc_t1_td1_vaccine"
+    ],
+    "missing_critical_labels": [
+     "Early pregnancy registration and MCP Card issued",
+     "Baseline blood pressure measured",
+     "Hemoglobin, blood group, and Rh typing completed",
+     "Daily Folic Acid (400 mcg) started",
+     "Td-1 (or Td-Booster) vaccination administered"
+    ],
+    "completion_score": 0.0,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Early pregnancy registration and MCP Card issued",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) — critical check pending: Early pregnancy registration and MCP Card issued.",
+      "action_steps": [
+       "Register pregnancy at Sub-Centre/AWC and issue Mother & Child Protection (MCP) Card immediately."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Baseline blood pressure measured",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) — critical check pending: Baseline blood pressure measured.",
+      "action_steps": [
+       "Measure baseline BP at PHC/ANM to establish pre-eclampsia reference."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Hemoglobin, blood group, and Rh typing completed",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) — critical check pending: Hemoglobin, blood group, and Rh typing completed.",
+      "action_steps": [
+       "Refer to PHC/ANM for baseline Hb and blood group/Rh typing."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Daily Folic Acid (400 mcg) started",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) — critical check pending: Daily Folic Acid (400 mcg) started.",
+      "action_steps": [
+       "Provide Folic Acid 400 mcg daily supply to prevent neural tube defects."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Td-1 (or Td-Booster) vaccination administered",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) — critical check pending: Td-1 (or Td-Booster) vaccination administered.",
+      "action_steps": [
+       "Schedule Td-1 or Td-Booster dose at VHND/Sub-Centre."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (3)",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) has 3 routine check(s) remaining.",
+      "action_steps": [
+       "Complete dipstick urine albumin and sugar test at next ANM clinic.",
+       "Complete mandatory antenatal infection screening at PHC.",
+       "Counsel mother and family on emergency warning signs and 108 transport."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "anc_trimester_1_all",
+   "checklist_type": "anc_trimester_1",
+   "completed": [
+    "anc_t1_mcp_registration",
+    "anc_t1_bp_check",
+    "anc_t1_hb_blood_group",
+    "anc_t1_urine_test",
+    "anc_t1_folic_acid",
+    "anc_t1_td1_vaccine",
+    "anc_t1_infection_screen",
+    "anc_t1_danger_signs_counseling"
+   ],
+   "opts": {},
+   "expected": {
+    "checklist_type": "anc_trimester_1",
+    "title": "ANC Trimester 1 Checklist (0-12 Weeks)",
+    "protocol": "NHM_ANC_T1",
+    "patient_id": null,
+    "total_items": 8,
+    "completed_items": [
+     "anc_t1_mcp_registration",
+     "anc_t1_bp_check",
+     "anc_t1_hb_blood_group",
+     "anc_t1_urine_test",
+     "anc_t1_folic_acid",
+     "anc_t1_td1_vaccine",
+     "anc_t1_infection_screen",
+     "anc_t1_danger_signs_counseling"
+    ],
+    "missing_items": [],
+    "missing_critical_checks": [],
+    "missing_critical_labels": [],
+    "completion_score": 1.0,
+    "is_complete": true,
+    "has_critical_gaps": false,
+    "action_cards": []
+   }
+  },
+  {
+   "name": "anc_trimester_1_all_critical_only",
+   "checklist_type": "anc_trimester_1",
+   "completed": [
+    "anc_t1_mcp_registration",
+    "anc_t1_bp_check",
+    "anc_t1_hb_blood_group",
+    "anc_t1_folic_acid",
+    "anc_t1_td1_vaccine"
+   ],
+   "opts": {},
+   "expected": {
+    "checklist_type": "anc_trimester_1",
+    "title": "ANC Trimester 1 Checklist (0-12 Weeks)",
+    "protocol": "NHM_ANC_T1",
+    "patient_id": null,
+    "total_items": 8,
+    "completed_items": [
+     "anc_t1_mcp_registration",
+     "anc_t1_bp_check",
+     "anc_t1_hb_blood_group",
+     "anc_t1_folic_acid",
+     "anc_t1_td1_vaccine"
+    ],
+    "missing_items": [
+     "anc_t1_urine_test",
+     "anc_t1_infection_screen",
+     "anc_t1_danger_signs_counseling"
+    ],
+    "missing_critical_checks": [],
+    "missing_critical_labels": [],
+    "completion_score": 0.625,
+    "is_complete": false,
+    "has_critical_gaps": false,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (3)",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) has 3 routine check(s) remaining.",
+      "action_steps": [
+       "Complete dipstick urine albumin and sugar test at next ANM clinic.",
+       "Complete mandatory antenatal infection screening at PHC.",
+       "Counsel mother and family on emergency warning signs and 108 transport."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "anc_trimester_1_all_routine_only",
+   "checklist_type": "anc_trimester_1",
+   "completed": [
+    "anc_t1_urine_test",
+    "anc_t1_infection_screen",
+    "anc_t1_danger_signs_counseling"
+   ],
+   "opts": {
+    "patient_id": "m-9",
+    "due_by": "2026-12-01"
+   },
+   "expected": {
+    "checklist_type": "anc_trimester_1",
+    "title": "ANC Trimester 1 Checklist (0-12 Weeks)",
+    "protocol": "NHM_ANC_T1",
+    "patient_id": "m-9",
+    "total_items": 8,
+    "completed_items": [
+     "anc_t1_urine_test",
+     "anc_t1_infection_screen",
+     "anc_t1_danger_signs_counseling"
+    ],
+    "missing_items": [
+     "anc_t1_mcp_registration",
+     "anc_t1_bp_check",
+     "anc_t1_hb_blood_group",
+     "anc_t1_folic_acid",
+     "anc_t1_td1_vaccine"
+    ],
+    "missing_critical_checks": [
+     "anc_t1_mcp_registration",
+     "anc_t1_bp_check",
+     "anc_t1_hb_blood_group",
+     "anc_t1_folic_acid",
+     "anc_t1_td1_vaccine"
+    ],
+    "missing_critical_labels": [
+     "Early pregnancy registration and MCP Card issued",
+     "Baseline blood pressure measured",
+     "Hemoglobin, blood group, and Rh typing completed",
+     "Daily Folic Acid (400 mcg) started",
+     "Td-1 (or Td-Booster) vaccination administered"
+    ],
+    "completion_score": 0.375,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": "m-9",
+      "title": "Missing Critical Check: Early pregnancy registration and MCP Card issued",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) — critical check pending: Early pregnancy registration and MCP Card issued.",
+      "action_steps": [
+       "Register pregnancy at Sub-Centre/AWC and issue Mother & Child Protection (MCP) Card immediately."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": "2026-12-01",
+      "language": "en"
+     },
+     {
+      "patient_id": "m-9",
+      "title": "Missing Critical Check: Baseline blood pressure measured",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) — critical check pending: Baseline blood pressure measured.",
+      "action_steps": [
+       "Measure baseline BP at PHC/ANM to establish pre-eclampsia reference."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": "2026-12-01",
+      "language": "en"
+     },
+     {
+      "patient_id": "m-9",
+      "title": "Missing Critical Check: Hemoglobin, blood group, and Rh typing completed",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) — critical check pending: Hemoglobin, blood group, and Rh typing completed.",
+      "action_steps": [
+       "Refer to PHC/ANM for baseline Hb and blood group/Rh typing."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": "2026-12-01",
+      "language": "en"
+     },
+     {
+      "patient_id": "m-9",
+      "title": "Missing Critical Check: Daily Folic Acid (400 mcg) started",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) — critical check pending: Daily Folic Acid (400 mcg) started.",
+      "action_steps": [
+       "Provide Folic Acid 400 mcg daily supply to prevent neural tube defects."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": "2026-12-01",
+      "language": "en"
+     },
+     {
+      "patient_id": "m-9",
+      "title": "Missing Critical Check: Td-1 (or Td-Booster) vaccination administered",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) — critical check pending: Td-1 (or Td-Booster) vaccination administered.",
+      "action_steps": [
+       "Schedule Td-1 or Td-Booster dose at VHND/Sub-Centre."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": "2026-12-01",
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "anc_trimester_1_first_half",
+   "checklist_type": "anc_trimester_1",
+   "completed": [
+    "anc_t1_mcp_registration",
+    "anc_t1_bp_check",
+    "anc_t1_hb_blood_group",
+    "anc_t1_urine_test"
+   ],
+   "opts": {
+    "target_tier": "TIER_1_PHONE"
+   },
+   "expected": {
+    "checklist_type": "anc_trimester_1",
+    "title": "ANC Trimester 1 Checklist (0-12 Weeks)",
+    "protocol": "NHM_ANC_T1",
+    "patient_id": null,
+    "total_items": 8,
+    "completed_items": [
+     "anc_t1_mcp_registration",
+     "anc_t1_bp_check",
+     "anc_t1_hb_blood_group",
+     "anc_t1_urine_test"
+    ],
+    "missing_items": [
+     "anc_t1_folic_acid",
+     "anc_t1_td1_vaccine",
+     "anc_t1_infection_screen",
+     "anc_t1_danger_signs_counseling"
+    ],
+    "missing_critical_checks": [
+     "anc_t1_folic_acid",
+     "anc_t1_td1_vaccine"
+    ],
+    "missing_critical_labels": [
+     "Daily Folic Acid (400 mcg) started",
+     "Td-1 (or Td-Booster) vaccination administered"
+    ],
+    "completion_score": 0.5,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Daily Folic Acid (400 mcg) started",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) — critical check pending: Daily Folic Acid (400 mcg) started.",
+      "action_steps": [
+       "Provide Folic Acid 400 mcg daily supply to prevent neural tube defects."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_1_PHONE",
+      "watch_mode": null,
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Td-1 (or Td-Booster) vaccination administered",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) — critical check pending: Td-1 (or Td-Booster) vaccination administered.",
+      "action_steps": [
+       "Schedule Td-1 or Td-Booster dose at VHND/Sub-Centre."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_1_PHONE",
+      "watch_mode": null,
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (2)",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) has 2 routine check(s) remaining.",
+      "action_steps": [
+       "Complete mandatory antenatal infection screening at PHC.",
+       "Counsel mother and family on emergency warning signs and 108 transport."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_1_PHONE",
+      "watch_mode": null,
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "anc_trimester_1_one_whitespace_and_unknown",
+   "checklist_type": "anc_trimester_1",
+   "completed": [
+    "  anc_t1_mcp_registration  ",
+    "unknown_item",
+    ""
+   ],
+   "opts": {
+    "watch_mode": "PATIENT_FAMILY"
+   },
+   "expected": {
+    "checklist_type": "anc_trimester_1",
+    "title": "ANC Trimester 1 Checklist (0-12 Weeks)",
+    "protocol": "NHM_ANC_T1",
+    "patient_id": null,
+    "total_items": 8,
+    "completed_items": [
+     "anc_t1_mcp_registration"
+    ],
+    "missing_items": [
+     "anc_t1_bp_check",
+     "anc_t1_hb_blood_group",
+     "anc_t1_urine_test",
+     "anc_t1_folic_acid",
+     "anc_t1_td1_vaccine",
+     "anc_t1_infection_screen",
+     "anc_t1_danger_signs_counseling"
+    ],
+    "missing_critical_checks": [
+     "anc_t1_bp_check",
+     "anc_t1_hb_blood_group",
+     "anc_t1_folic_acid",
+     "anc_t1_td1_vaccine"
+    ],
+    "missing_critical_labels": [
+     "Baseline blood pressure measured",
+     "Hemoglobin, blood group, and Rh typing completed",
+     "Daily Folic Acid (400 mcg) started",
+     "Td-1 (or Td-Booster) vaccination administered"
+    ],
+    "completion_score": 0.125,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Baseline blood pressure measured",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) — critical check pending: Baseline blood pressure measured.",
+      "action_steps": [
+       "Measure baseline BP at PHC/ANM to establish pre-eclampsia reference."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "PATIENT_FAMILY",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Hemoglobin, blood group, and Rh typing completed",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) — critical check pending: Hemoglobin, blood group, and Rh typing completed.",
+      "action_steps": [
+       "Refer to PHC/ANM for baseline Hb and blood group/Rh typing."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "PATIENT_FAMILY",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Daily Folic Acid (400 mcg) started",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) — critical check pending: Daily Folic Acid (400 mcg) started.",
+      "action_steps": [
+       "Provide Folic Acid 400 mcg daily supply to prevent neural tube defects."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "PATIENT_FAMILY",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Td-1 (or Td-Booster) vaccination administered",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) — critical check pending: Td-1 (or Td-Booster) vaccination administered.",
+      "action_steps": [
+       "Schedule Td-1 or Td-Booster dose at VHND/Sub-Centre."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "PATIENT_FAMILY",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (3)",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) has 3 routine check(s) remaining.",
+      "action_steps": [
+       "Complete dipstick urine albumin and sugar test at next ANM clinic.",
+       "Complete mandatory antenatal infection screening at PHC.",
+       "Counsel mother and family on emergency warning signs and 108 transport."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "PATIENT_FAMILY",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "anc_trimester_1_mapping",
+   "checklist_type": "anc_trimester_1",
+   "completed": {
+    "anc_t1_mcp_registration": true,
+    "anc_t1_bp_check": false,
+    "anc_t1_danger_signs_counseling": true
+   },
+   "opts": {},
+   "expected": {
+    "checklist_type": "anc_trimester_1",
+    "title": "ANC Trimester 1 Checklist (0-12 Weeks)",
+    "protocol": "NHM_ANC_T1",
+    "patient_id": null,
+    "total_items": 8,
+    "completed_items": [
+     "anc_t1_mcp_registration",
+     "anc_t1_danger_signs_counseling"
+    ],
+    "missing_items": [
+     "anc_t1_bp_check",
+     "anc_t1_hb_blood_group",
+     "anc_t1_urine_test",
+     "anc_t1_folic_acid",
+     "anc_t1_td1_vaccine",
+     "anc_t1_infection_screen"
+    ],
+    "missing_critical_checks": [
+     "anc_t1_bp_check",
+     "anc_t1_hb_blood_group",
+     "anc_t1_folic_acid",
+     "anc_t1_td1_vaccine"
+    ],
+    "missing_critical_labels": [
+     "Baseline blood pressure measured",
+     "Hemoglobin, blood group, and Rh typing completed",
+     "Daily Folic Acid (400 mcg) started",
+     "Td-1 (or Td-Booster) vaccination administered"
+    ],
+    "completion_score": 0.25,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Baseline blood pressure measured",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) — critical check pending: Baseline blood pressure measured.",
+      "action_steps": [
+       "Measure baseline BP at PHC/ANM to establish pre-eclampsia reference."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Hemoglobin, blood group, and Rh typing completed",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) — critical check pending: Hemoglobin, blood group, and Rh typing completed.",
+      "action_steps": [
+       "Refer to PHC/ANM for baseline Hb and blood group/Rh typing."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Daily Folic Acid (400 mcg) started",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) — critical check pending: Daily Folic Acid (400 mcg) started.",
+      "action_steps": [
+       "Provide Folic Acid 400 mcg daily supply to prevent neural tube defects."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Td-1 (or Td-Booster) vaccination administered",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) — critical check pending: Td-1 (or Td-Booster) vaccination administered.",
+      "action_steps": [
+       "Schedule Td-1 or Td-Booster dose at VHND/Sub-Centre."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (2)",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) has 2 routine check(s) remaining.",
+      "action_steps": [
+       "Complete dipstick urine albumin and sugar test at next ANM clinic.",
+       "Complete mandatory antenatal infection screening at PHC."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "anc_trimester_1_one_item",
+   "checklist_type": "anc_trimester_1",
+   "completed": [
+    "anc_t1_hb_blood_group"
+   ],
+   "opts": {},
+   "expected": {
+    "checklist_type": "anc_trimester_1",
+    "title": "ANC Trimester 1 Checklist (0-12 Weeks)",
+    "protocol": "NHM_ANC_T1",
+    "patient_id": null,
+    "total_items": 8,
+    "completed_items": [
+     "anc_t1_hb_blood_group"
+    ],
+    "missing_items": [
+     "anc_t1_mcp_registration",
+     "anc_t1_bp_check",
+     "anc_t1_urine_test",
+     "anc_t1_folic_acid",
+     "anc_t1_td1_vaccine",
+     "anc_t1_infection_screen",
+     "anc_t1_danger_signs_counseling"
+    ],
+    "missing_critical_checks": [
+     "anc_t1_mcp_registration",
+     "anc_t1_bp_check",
+     "anc_t1_folic_acid",
+     "anc_t1_td1_vaccine"
+    ],
+    "missing_critical_labels": [
+     "Early pregnancy registration and MCP Card issued",
+     "Baseline blood pressure measured",
+     "Daily Folic Acid (400 mcg) started",
+     "Td-1 (or Td-Booster) vaccination administered"
+    ],
+    "completion_score": 0.125,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Early pregnancy registration and MCP Card issued",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) — critical check pending: Early pregnancy registration and MCP Card issued.",
+      "action_steps": [
+       "Register pregnancy at Sub-Centre/AWC and issue Mother & Child Protection (MCP) Card immediately."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Baseline blood pressure measured",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) — critical check pending: Baseline blood pressure measured.",
+      "action_steps": [
+       "Measure baseline BP at PHC/ANM to establish pre-eclampsia reference."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Daily Folic Acid (400 mcg) started",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) — critical check pending: Daily Folic Acid (400 mcg) started.",
+      "action_steps": [
+       "Provide Folic Acid 400 mcg daily supply to prevent neural tube defects."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Td-1 (or Td-Booster) vaccination administered",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) — critical check pending: Td-1 (or Td-Booster) vaccination administered.",
+      "action_steps": [
+       "Schedule Td-1 or Td-Booster dose at VHND/Sub-Centre."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (3)",
+      "summary": "ANC Trimester 1 Checklist (0-12 Weeks) has 3 routine check(s) remaining.",
+      "action_steps": [
+       "Complete dipstick urine albumin and sugar test at next ANM clinic.",
+       "Complete mandatory antenatal infection screening at PHC.",
+       "Counsel mother and family on emergency warning signs and 108 transport."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "anc_trimester_2_none",
+   "checklist_type": "anc_trimester_2",
+   "completed": [],
+   "opts": {},
+   "expected": {
+    "checklist_type": "anc_trimester_2",
+    "title": "ANC Trimester 2 Checklist (13-27 Weeks)",
+    "protocol": "NHM_ANC_T2",
+    "patient_id": null,
+    "total_items": 7,
+    "completed_items": [],
+    "missing_items": [
+     "anc_t2_bp_weight",
+     "anc_t2_repeat_hb",
+     "anc_t2_ifa_calcium",
+     "anc_t2_td2_vaccine",
+     "anc_t2_deworming",
+     "anc_t2_gdm_ogtt",
+     "anc_t2_fetal_movement"
+    ],
+    "missing_critical_checks": [
+     "anc_t2_bp_weight",
+     "anc_t2_repeat_hb",
+     "anc_t2_ifa_calcium",
+     "anc_t2_td2_vaccine",
+     "anc_t2_gdm_ogtt"
+    ],
+    "missing_critical_labels": [
+     "Blood pressure and maternal weight gain recorded",
+     "Second-trimester Hemoglobin check completed",
+     "Daily IFA (Iron-Folic Acid) and Calcium tablets active",
+     "Td-2 dose administered (4 weeks after Td-1)",
+     "Gestational Diabetes (75g OGTT) screening done"
+    ],
+    "completion_score": 0.0,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Blood pressure and maternal weight gain recorded",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) — critical check pending: Blood pressure and maternal weight gain recorded.",
+      "action_steps": [
+       "Record BP and weight at PHC/VHND to monitor for hypertension and growth."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Second-trimester Hemoglobin check completed",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) — critical check pending: Second-trimester Hemoglobin check completed.",
+      "action_steps": [
+       "Arrange repeat Hb test at PHC/ANM to screen for mid-pregnancy anemia."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Daily IFA (Iron-Folic Acid) and Calcium tablets active",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) — critical check pending: Daily IFA (Iron-Folic Acid) and Calcium tablets active.",
+      "action_steps": [
+       "Dispense IFA and Calcium tablets (taken separately from tea/coffee/calcium) and verify adherence."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Td-2 dose administered (4 weeks after Td-1)",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) — critical check pending: Td-2 dose administered (4 weeks after Td-1).",
+      "action_steps": [
+       "Schedule Td-2 immunization at next VHND/ANM session."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Gestational Diabetes (75g OGTT) screening done",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) — critical check pending: Gestational Diabetes (75g OGTT) screening done.",
+      "action_steps": [
+       "Refer to PHC/PMSMA clinic for 75g oral glucose tolerance test."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (2)",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) has 2 routine check(s) remaining.",
+      "action_steps": [
+       "Provide single-dose Albendazole 400 mg under ANM guidance.",
+       "Counsel mother to monitor daily fetal movements after 20 weeks and report any reduction immediately."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "anc_trimester_2_all",
+   "checklist_type": "anc_trimester_2",
+   "completed": [
+    "anc_t2_bp_weight",
+    "anc_t2_repeat_hb",
+    "anc_t2_ifa_calcium",
+    "anc_t2_td2_vaccine",
+    "anc_t2_deworming",
+    "anc_t2_gdm_ogtt",
+    "anc_t2_fetal_movement"
+   ],
+   "opts": {},
+   "expected": {
+    "checklist_type": "anc_trimester_2",
+    "title": "ANC Trimester 2 Checklist (13-27 Weeks)",
+    "protocol": "NHM_ANC_T2",
+    "patient_id": null,
+    "total_items": 7,
+    "completed_items": [
+     "anc_t2_bp_weight",
+     "anc_t2_repeat_hb",
+     "anc_t2_ifa_calcium",
+     "anc_t2_td2_vaccine",
+     "anc_t2_deworming",
+     "anc_t2_gdm_ogtt",
+     "anc_t2_fetal_movement"
+    ],
+    "missing_items": [],
+    "missing_critical_checks": [],
+    "missing_critical_labels": [],
+    "completion_score": 1.0,
+    "is_complete": true,
+    "has_critical_gaps": false,
+    "action_cards": []
+   }
+  },
+  {
+   "name": "anc_trimester_2_all_critical_only",
+   "checklist_type": "anc_trimester_2",
+   "completed": [
+    "anc_t2_bp_weight",
+    "anc_t2_repeat_hb",
+    "anc_t2_ifa_calcium",
+    "anc_t2_td2_vaccine",
+    "anc_t2_gdm_ogtt"
+   ],
+   "opts": {},
+   "expected": {
+    "checklist_type": "anc_trimester_2",
+    "title": "ANC Trimester 2 Checklist (13-27 Weeks)",
+    "protocol": "NHM_ANC_T2",
+    "patient_id": null,
+    "total_items": 7,
+    "completed_items": [
+     "anc_t2_bp_weight",
+     "anc_t2_repeat_hb",
+     "anc_t2_ifa_calcium",
+     "anc_t2_td2_vaccine",
+     "anc_t2_gdm_ogtt"
+    ],
+    "missing_items": [
+     "anc_t2_deworming",
+     "anc_t2_fetal_movement"
+    ],
+    "missing_critical_checks": [],
+    "missing_critical_labels": [],
+    "completion_score": 0.7143,
+    "is_complete": false,
+    "has_critical_gaps": false,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (2)",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) has 2 routine check(s) remaining.",
+      "action_steps": [
+       "Provide single-dose Albendazole 400 mg under ANM guidance.",
+       "Counsel mother to monitor daily fetal movements after 20 weeks and report any reduction immediately."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "anc_trimester_2_all_routine_only",
+   "checklist_type": "anc_trimester_2",
+   "completed": [
+    "anc_t2_deworming",
+    "anc_t2_fetal_movement"
+   ],
+   "opts": {
+    "patient_id": "m-9",
+    "due_by": "2026-12-01"
+   },
+   "expected": {
+    "checklist_type": "anc_trimester_2",
+    "title": "ANC Trimester 2 Checklist (13-27 Weeks)",
+    "protocol": "NHM_ANC_T2",
+    "patient_id": "m-9",
+    "total_items": 7,
+    "completed_items": [
+     "anc_t2_deworming",
+     "anc_t2_fetal_movement"
+    ],
+    "missing_items": [
+     "anc_t2_bp_weight",
+     "anc_t2_repeat_hb",
+     "anc_t2_ifa_calcium",
+     "anc_t2_td2_vaccine",
+     "anc_t2_gdm_ogtt"
+    ],
+    "missing_critical_checks": [
+     "anc_t2_bp_weight",
+     "anc_t2_repeat_hb",
+     "anc_t2_ifa_calcium",
+     "anc_t2_td2_vaccine",
+     "anc_t2_gdm_ogtt"
+    ],
+    "missing_critical_labels": [
+     "Blood pressure and maternal weight gain recorded",
+     "Second-trimester Hemoglobin check completed",
+     "Daily IFA (Iron-Folic Acid) and Calcium tablets active",
+     "Td-2 dose administered (4 weeks after Td-1)",
+     "Gestational Diabetes (75g OGTT) screening done"
+    ],
+    "completion_score": 0.2857,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": "m-9",
+      "title": "Missing Critical Check: Blood pressure and maternal weight gain recorded",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) — critical check pending: Blood pressure and maternal weight gain recorded.",
+      "action_steps": [
+       "Record BP and weight at PHC/VHND to monitor for hypertension and growth."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": "2026-12-01",
+      "language": "en"
+     },
+     {
+      "patient_id": "m-9",
+      "title": "Missing Critical Check: Second-trimester Hemoglobin check completed",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) — critical check pending: Second-trimester Hemoglobin check completed.",
+      "action_steps": [
+       "Arrange repeat Hb test at PHC/ANM to screen for mid-pregnancy anemia."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": "2026-12-01",
+      "language": "en"
+     },
+     {
+      "patient_id": "m-9",
+      "title": "Missing Critical Check: Daily IFA (Iron-Folic Acid) and Calcium tablets active",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) — critical check pending: Daily IFA (Iron-Folic Acid) and Calcium tablets active.",
+      "action_steps": [
+       "Dispense IFA and Calcium tablets (taken separately from tea/coffee/calcium) and verify adherence."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": "2026-12-01",
+      "language": "en"
+     },
+     {
+      "patient_id": "m-9",
+      "title": "Missing Critical Check: Td-2 dose administered (4 weeks after Td-1)",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) — critical check pending: Td-2 dose administered (4 weeks after Td-1).",
+      "action_steps": [
+       "Schedule Td-2 immunization at next VHND/ANM session."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": "2026-12-01",
+      "language": "en"
+     },
+     {
+      "patient_id": "m-9",
+      "title": "Missing Critical Check: Gestational Diabetes (75g OGTT) screening done",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) — critical check pending: Gestational Diabetes (75g OGTT) screening done.",
+      "action_steps": [
+       "Refer to PHC/PMSMA clinic for 75g oral glucose tolerance test."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": "2026-12-01",
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "anc_trimester_2_first_half",
+   "checklist_type": "anc_trimester_2",
+   "completed": [
+    "anc_t2_bp_weight",
+    "anc_t2_repeat_hb",
+    "anc_t2_ifa_calcium"
+   ],
+   "opts": {
+    "target_tier": "TIER_1_PHONE"
+   },
+   "expected": {
+    "checklist_type": "anc_trimester_2",
+    "title": "ANC Trimester 2 Checklist (13-27 Weeks)",
+    "protocol": "NHM_ANC_T2",
+    "patient_id": null,
+    "total_items": 7,
+    "completed_items": [
+     "anc_t2_bp_weight",
+     "anc_t2_repeat_hb",
+     "anc_t2_ifa_calcium"
+    ],
+    "missing_items": [
+     "anc_t2_td2_vaccine",
+     "anc_t2_deworming",
+     "anc_t2_gdm_ogtt",
+     "anc_t2_fetal_movement"
+    ],
+    "missing_critical_checks": [
+     "anc_t2_td2_vaccine",
+     "anc_t2_gdm_ogtt"
+    ],
+    "missing_critical_labels": [
+     "Td-2 dose administered (4 weeks after Td-1)",
+     "Gestational Diabetes (75g OGTT) screening done"
+    ],
+    "completion_score": 0.4286,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Td-2 dose administered (4 weeks after Td-1)",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) — critical check pending: Td-2 dose administered (4 weeks after Td-1).",
+      "action_steps": [
+       "Schedule Td-2 immunization at next VHND/ANM session."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_1_PHONE",
+      "watch_mode": null,
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Gestational Diabetes (75g OGTT) screening done",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) — critical check pending: Gestational Diabetes (75g OGTT) screening done.",
+      "action_steps": [
+       "Refer to PHC/PMSMA clinic for 75g oral glucose tolerance test."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_1_PHONE",
+      "watch_mode": null,
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (2)",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) has 2 routine check(s) remaining.",
+      "action_steps": [
+       "Provide single-dose Albendazole 400 mg under ANM guidance.",
+       "Counsel mother to monitor daily fetal movements after 20 weeks and report any reduction immediately."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_1_PHONE",
+      "watch_mode": null,
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "anc_trimester_2_one_whitespace_and_unknown",
+   "checklist_type": "anc_trimester_2",
+   "completed": [
+    "  anc_t2_bp_weight  ",
+    "unknown_item",
+    ""
+   ],
+   "opts": {
+    "watch_mode": "PATIENT_FAMILY"
+   },
+   "expected": {
+    "checklist_type": "anc_trimester_2",
+    "title": "ANC Trimester 2 Checklist (13-27 Weeks)",
+    "protocol": "NHM_ANC_T2",
+    "patient_id": null,
+    "total_items": 7,
+    "completed_items": [
+     "anc_t2_bp_weight"
+    ],
+    "missing_items": [
+     "anc_t2_repeat_hb",
+     "anc_t2_ifa_calcium",
+     "anc_t2_td2_vaccine",
+     "anc_t2_deworming",
+     "anc_t2_gdm_ogtt",
+     "anc_t2_fetal_movement"
+    ],
+    "missing_critical_checks": [
+     "anc_t2_repeat_hb",
+     "anc_t2_ifa_calcium",
+     "anc_t2_td2_vaccine",
+     "anc_t2_gdm_ogtt"
+    ],
+    "missing_critical_labels": [
+     "Second-trimester Hemoglobin check completed",
+     "Daily IFA (Iron-Folic Acid) and Calcium tablets active",
+     "Td-2 dose administered (4 weeks after Td-1)",
+     "Gestational Diabetes (75g OGTT) screening done"
+    ],
+    "completion_score": 0.1429,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Second-trimester Hemoglobin check completed",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) — critical check pending: Second-trimester Hemoglobin check completed.",
+      "action_steps": [
+       "Arrange repeat Hb test at PHC/ANM to screen for mid-pregnancy anemia."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "PATIENT_FAMILY",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Daily IFA (Iron-Folic Acid) and Calcium tablets active",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) — critical check pending: Daily IFA (Iron-Folic Acid) and Calcium tablets active.",
+      "action_steps": [
+       "Dispense IFA and Calcium tablets (taken separately from tea/coffee/calcium) and verify adherence."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "PATIENT_FAMILY",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Td-2 dose administered (4 weeks after Td-1)",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) — critical check pending: Td-2 dose administered (4 weeks after Td-1).",
+      "action_steps": [
+       "Schedule Td-2 immunization at next VHND/ANM session."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "PATIENT_FAMILY",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Gestational Diabetes (75g OGTT) screening done",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) — critical check pending: Gestational Diabetes (75g OGTT) screening done.",
+      "action_steps": [
+       "Refer to PHC/PMSMA clinic for 75g oral glucose tolerance test."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "PATIENT_FAMILY",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (2)",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) has 2 routine check(s) remaining.",
+      "action_steps": [
+       "Provide single-dose Albendazole 400 mg under ANM guidance.",
+       "Counsel mother to monitor daily fetal movements after 20 weeks and report any reduction immediately."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "PATIENT_FAMILY",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "anc_trimester_2_mapping",
+   "checklist_type": "anc_trimester_2",
+   "completed": {
+    "anc_t2_bp_weight": true,
+    "anc_t2_repeat_hb": false,
+    "anc_t2_fetal_movement": true
+   },
+   "opts": {},
+   "expected": {
+    "checklist_type": "anc_trimester_2",
+    "title": "ANC Trimester 2 Checklist (13-27 Weeks)",
+    "protocol": "NHM_ANC_T2",
+    "patient_id": null,
+    "total_items": 7,
+    "completed_items": [
+     "anc_t2_bp_weight",
+     "anc_t2_fetal_movement"
+    ],
+    "missing_items": [
+     "anc_t2_repeat_hb",
+     "anc_t2_ifa_calcium",
+     "anc_t2_td2_vaccine",
+     "anc_t2_deworming",
+     "anc_t2_gdm_ogtt"
+    ],
+    "missing_critical_checks": [
+     "anc_t2_repeat_hb",
+     "anc_t2_ifa_calcium",
+     "anc_t2_td2_vaccine",
+     "anc_t2_gdm_ogtt"
+    ],
+    "missing_critical_labels": [
+     "Second-trimester Hemoglobin check completed",
+     "Daily IFA (Iron-Folic Acid) and Calcium tablets active",
+     "Td-2 dose administered (4 weeks after Td-1)",
+     "Gestational Diabetes (75g OGTT) screening done"
+    ],
+    "completion_score": 0.2857,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Second-trimester Hemoglobin check completed",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) — critical check pending: Second-trimester Hemoglobin check completed.",
+      "action_steps": [
+       "Arrange repeat Hb test at PHC/ANM to screen for mid-pregnancy anemia."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Daily IFA (Iron-Folic Acid) and Calcium tablets active",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) — critical check pending: Daily IFA (Iron-Folic Acid) and Calcium tablets active.",
+      "action_steps": [
+       "Dispense IFA and Calcium tablets (taken separately from tea/coffee/calcium) and verify adherence."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Td-2 dose administered (4 weeks after Td-1)",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) — critical check pending: Td-2 dose administered (4 weeks after Td-1).",
+      "action_steps": [
+       "Schedule Td-2 immunization at next VHND/ANM session."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Gestational Diabetes (75g OGTT) screening done",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) — critical check pending: Gestational Diabetes (75g OGTT) screening done.",
+      "action_steps": [
+       "Refer to PHC/PMSMA clinic for 75g oral glucose tolerance test."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (1)",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) has 1 routine check(s) remaining.",
+      "action_steps": [
+       "Provide single-dose Albendazole 400 mg under ANM guidance."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "anc_trimester_2_one_item",
+   "checklist_type": "anc_trimester_2",
+   "completed": [
+    "anc_t2_ifa_calcium"
+   ],
+   "opts": {},
+   "expected": {
+    "checklist_type": "anc_trimester_2",
+    "title": "ANC Trimester 2 Checklist (13-27 Weeks)",
+    "protocol": "NHM_ANC_T2",
+    "patient_id": null,
+    "total_items": 7,
+    "completed_items": [
+     "anc_t2_ifa_calcium"
+    ],
+    "missing_items": [
+     "anc_t2_bp_weight",
+     "anc_t2_repeat_hb",
+     "anc_t2_td2_vaccine",
+     "anc_t2_deworming",
+     "anc_t2_gdm_ogtt",
+     "anc_t2_fetal_movement"
+    ],
+    "missing_critical_checks": [
+     "anc_t2_bp_weight",
+     "anc_t2_repeat_hb",
+     "anc_t2_td2_vaccine",
+     "anc_t2_gdm_ogtt"
+    ],
+    "missing_critical_labels": [
+     "Blood pressure and maternal weight gain recorded",
+     "Second-trimester Hemoglobin check completed",
+     "Td-2 dose administered (4 weeks after Td-1)",
+     "Gestational Diabetes (75g OGTT) screening done"
+    ],
+    "completion_score": 0.1429,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Blood pressure and maternal weight gain recorded",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) — critical check pending: Blood pressure and maternal weight gain recorded.",
+      "action_steps": [
+       "Record BP and weight at PHC/VHND to monitor for hypertension and growth."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Second-trimester Hemoglobin check completed",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) — critical check pending: Second-trimester Hemoglobin check completed.",
+      "action_steps": [
+       "Arrange repeat Hb test at PHC/ANM to screen for mid-pregnancy anemia."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Td-2 dose administered (4 weeks after Td-1)",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) — critical check pending: Td-2 dose administered (4 weeks after Td-1).",
+      "action_steps": [
+       "Schedule Td-2 immunization at next VHND/ANM session."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Gestational Diabetes (75g OGTT) screening done",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) — critical check pending: Gestational Diabetes (75g OGTT) screening done.",
+      "action_steps": [
+       "Refer to PHC/PMSMA clinic for 75g oral glucose tolerance test."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (2)",
+      "summary": "ANC Trimester 2 Checklist (13-27 Weeks) has 2 routine check(s) remaining.",
+      "action_steps": [
+       "Provide single-dose Albendazole 400 mg under ANM guidance.",
+       "Counsel mother to monitor daily fetal movements after 20 weeks and report any reduction immediately."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "anc_trimester_3_none",
+   "checklist_type": "anc_trimester_3",
+   "completed": [],
+   "opts": {},
+   "expected": {
+    "checklist_type": "anc_trimester_3",
+    "title": "ANC Trimester 3 Checklist (28-40 Weeks)",
+    "protocol": "NHM_ANC_T3",
+    "patient_id": null,
+    "total_items": 7,
+    "completed_items": [],
+    "missing_items": [
+     "anc_t3_bp_urine_albumin",
+     "anc_t3_repeat_hb",
+     "anc_t3_fetal_heart_position",
+     "anc_t3_kick_count",
+     "anc_t3_birth_preparedness",
+     "anc_t3_ifa_calcium_adherence",
+     "anc_t3_early_breastfeeding_plan"
+    ],
+    "missing_critical_checks": [
+     "anc_t3_bp_urine_albumin",
+     "anc_t3_repeat_hb",
+     "anc_t3_fetal_heart_position",
+     "anc_t3_kick_count",
+     "anc_t3_birth_preparedness"
+    ],
+    "missing_critical_labels": [
+     "Blood pressure and urine albumin checked",
+     "Third-trimester Hemoglobin verified",
+     "Fetal presentation and fetal heart sound assessed",
+     "Daily fetal movement monitoring confirmed",
+     "Institutional delivery facility, 108 transport, and blood donor identified"
+    ],
+    "completion_score": 0.0,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Blood pressure and urine albumin checked",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) — critical check pending: Blood pressure and urine albumin checked.",
+      "action_steps": [
+       "Perform urgent BP and urine albumin check at PHC/ANM to rule out late-onset pre-eclampsia."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Third-trimester Hemoglobin verified",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) — critical check pending: Third-trimester Hemoglobin verified.",
+      "action_steps": [
+       "Test Hemoglobin at PHC to ensure mother is safe for delivery."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Fetal presentation and fetal heart sound assessed",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) — critical check pending: Fetal presentation and fetal heart sound assessed.",
+      "action_steps": [
+       "Arrange ANM/MO abdominal examination for fetal lie and heart rate."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Daily fetal movement monitoring confirmed",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) — critical check pending: Daily fetal movement monitoring confirmed.",
+      "action_steps": [
+       "Instruct mother on daily kick-count check and immediate escalation if movements decrease."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Institutional delivery facility, 108 transport, and blood donor identified",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) — critical check pending: Institutional delivery facility, 108 transport, and blood donor identified.",
+      "action_steps": [
+       "Finalize micro-birth plan with family: identified FRU/PHC, emergency 108 contact, and emergency funds."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (2)",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) has 2 routine check(s) remaining.",
+      "action_steps": [
+       "Verify remaining IFA/Calcium tablet stock and counsel daily adherence.",
+       "Counsel family on initiating breastfeeding within 1 hour of birth and delaying first bath."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "anc_trimester_3_all",
+   "checklist_type": "anc_trimester_3",
+   "completed": [
+    "anc_t3_bp_urine_albumin",
+    "anc_t3_repeat_hb",
+    "anc_t3_fetal_heart_position",
+    "anc_t3_kick_count",
+    "anc_t3_birth_preparedness",
+    "anc_t3_ifa_calcium_adherence",
+    "anc_t3_early_breastfeeding_plan"
+   ],
+   "opts": {},
+   "expected": {
+    "checklist_type": "anc_trimester_3",
+    "title": "ANC Trimester 3 Checklist (28-40 Weeks)",
+    "protocol": "NHM_ANC_T3",
+    "patient_id": null,
+    "total_items": 7,
+    "completed_items": [
+     "anc_t3_bp_urine_albumin",
+     "anc_t3_repeat_hb",
+     "anc_t3_fetal_heart_position",
+     "anc_t3_kick_count",
+     "anc_t3_birth_preparedness",
+     "anc_t3_ifa_calcium_adherence",
+     "anc_t3_early_breastfeeding_plan"
+    ],
+    "missing_items": [],
+    "missing_critical_checks": [],
+    "missing_critical_labels": [],
+    "completion_score": 1.0,
+    "is_complete": true,
+    "has_critical_gaps": false,
+    "action_cards": []
+   }
+  },
+  {
+   "name": "anc_trimester_3_all_critical_only",
+   "checklist_type": "anc_trimester_3",
+   "completed": [
+    "anc_t3_bp_urine_albumin",
+    "anc_t3_repeat_hb",
+    "anc_t3_fetal_heart_position",
+    "anc_t3_kick_count",
+    "anc_t3_birth_preparedness"
+   ],
+   "opts": {},
+   "expected": {
+    "checklist_type": "anc_trimester_3",
+    "title": "ANC Trimester 3 Checklist (28-40 Weeks)",
+    "protocol": "NHM_ANC_T3",
+    "patient_id": null,
+    "total_items": 7,
+    "completed_items": [
+     "anc_t3_bp_urine_albumin",
+     "anc_t3_repeat_hb",
+     "anc_t3_fetal_heart_position",
+     "anc_t3_kick_count",
+     "anc_t3_birth_preparedness"
+    ],
+    "missing_items": [
+     "anc_t3_ifa_calcium_adherence",
+     "anc_t3_early_breastfeeding_plan"
+    ],
+    "missing_critical_checks": [],
+    "missing_critical_labels": [],
+    "completion_score": 0.7143,
+    "is_complete": false,
+    "has_critical_gaps": false,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (2)",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) has 2 routine check(s) remaining.",
+      "action_steps": [
+       "Verify remaining IFA/Calcium tablet stock and counsel daily adherence.",
+       "Counsel family on initiating breastfeeding within 1 hour of birth and delaying first bath."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "anc_trimester_3_all_routine_only",
+   "checklist_type": "anc_trimester_3",
+   "completed": [
+    "anc_t3_ifa_calcium_adherence",
+    "anc_t3_early_breastfeeding_plan"
+   ],
+   "opts": {
+    "patient_id": "m-9",
+    "due_by": "2026-12-01"
+   },
+   "expected": {
+    "checklist_type": "anc_trimester_3",
+    "title": "ANC Trimester 3 Checklist (28-40 Weeks)",
+    "protocol": "NHM_ANC_T3",
+    "patient_id": "m-9",
+    "total_items": 7,
+    "completed_items": [
+     "anc_t3_ifa_calcium_adherence",
+     "anc_t3_early_breastfeeding_plan"
+    ],
+    "missing_items": [
+     "anc_t3_bp_urine_albumin",
+     "anc_t3_repeat_hb",
+     "anc_t3_fetal_heart_position",
+     "anc_t3_kick_count",
+     "anc_t3_birth_preparedness"
+    ],
+    "missing_critical_checks": [
+     "anc_t3_bp_urine_albumin",
+     "anc_t3_repeat_hb",
+     "anc_t3_fetal_heart_position",
+     "anc_t3_kick_count",
+     "anc_t3_birth_preparedness"
+    ],
+    "missing_critical_labels": [
+     "Blood pressure and urine albumin checked",
+     "Third-trimester Hemoglobin verified",
+     "Fetal presentation and fetal heart sound assessed",
+     "Daily fetal movement monitoring confirmed",
+     "Institutional delivery facility, 108 transport, and blood donor identified"
+    ],
+    "completion_score": 0.2857,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": "m-9",
+      "title": "Missing Critical Check: Blood pressure and urine albumin checked",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) — critical check pending: Blood pressure and urine albumin checked.",
+      "action_steps": [
+       "Perform urgent BP and urine albumin check at PHC/ANM to rule out late-onset pre-eclampsia."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": "2026-12-01",
+      "language": "en"
+     },
+     {
+      "patient_id": "m-9",
+      "title": "Missing Critical Check: Third-trimester Hemoglobin verified",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) — critical check pending: Third-trimester Hemoglobin verified.",
+      "action_steps": [
+       "Test Hemoglobin at PHC to ensure mother is safe for delivery."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": "2026-12-01",
+      "language": "en"
+     },
+     {
+      "patient_id": "m-9",
+      "title": "Missing Critical Check: Fetal presentation and fetal heart sound assessed",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) — critical check pending: Fetal presentation and fetal heart sound assessed.",
+      "action_steps": [
+       "Arrange ANM/MO abdominal examination for fetal lie and heart rate."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": "2026-12-01",
+      "language": "en"
+     },
+     {
+      "patient_id": "m-9",
+      "title": "Missing Critical Check: Daily fetal movement monitoring confirmed",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) — critical check pending: Daily fetal movement monitoring confirmed.",
+      "action_steps": [
+       "Instruct mother on daily kick-count check and immediate escalation if movements decrease."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": "2026-12-01",
+      "language": "en"
+     },
+     {
+      "patient_id": "m-9",
+      "title": "Missing Critical Check: Institutional delivery facility, 108 transport, and blood donor identified",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) — critical check pending: Institutional delivery facility, 108 transport, and blood donor identified.",
+      "action_steps": [
+       "Finalize micro-birth plan with family: identified FRU/PHC, emergency 108 contact, and emergency funds."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": "2026-12-01",
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "anc_trimester_3_first_half",
+   "checklist_type": "anc_trimester_3",
+   "completed": [
+    "anc_t3_bp_urine_albumin",
+    "anc_t3_repeat_hb",
+    "anc_t3_fetal_heart_position"
+   ],
+   "opts": {
+    "target_tier": "TIER_1_PHONE"
+   },
+   "expected": {
+    "checklist_type": "anc_trimester_3",
+    "title": "ANC Trimester 3 Checklist (28-40 Weeks)",
+    "protocol": "NHM_ANC_T3",
+    "patient_id": null,
+    "total_items": 7,
+    "completed_items": [
+     "anc_t3_bp_urine_albumin",
+     "anc_t3_repeat_hb",
+     "anc_t3_fetal_heart_position"
+    ],
+    "missing_items": [
+     "anc_t3_kick_count",
+     "anc_t3_birth_preparedness",
+     "anc_t3_ifa_calcium_adherence",
+     "anc_t3_early_breastfeeding_plan"
+    ],
+    "missing_critical_checks": [
+     "anc_t3_kick_count",
+     "anc_t3_birth_preparedness"
+    ],
+    "missing_critical_labels": [
+     "Daily fetal movement monitoring confirmed",
+     "Institutional delivery facility, 108 transport, and blood donor identified"
+    ],
+    "completion_score": 0.4286,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Daily fetal movement monitoring confirmed",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) — critical check pending: Daily fetal movement monitoring confirmed.",
+      "action_steps": [
+       "Instruct mother on daily kick-count check and immediate escalation if movements decrease."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_1_PHONE",
+      "watch_mode": null,
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Institutional delivery facility, 108 transport, and blood donor identified",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) — critical check pending: Institutional delivery facility, 108 transport, and blood donor identified.",
+      "action_steps": [
+       "Finalize micro-birth plan with family: identified FRU/PHC, emergency 108 contact, and emergency funds."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_1_PHONE",
+      "watch_mode": null,
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (2)",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) has 2 routine check(s) remaining.",
+      "action_steps": [
+       "Verify remaining IFA/Calcium tablet stock and counsel daily adherence.",
+       "Counsel family on initiating breastfeeding within 1 hour of birth and delaying first bath."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_1_PHONE",
+      "watch_mode": null,
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "anc_trimester_3_one_whitespace_and_unknown",
+   "checklist_type": "anc_trimester_3",
+   "completed": [
+    "  anc_t3_bp_urine_albumin  ",
+    "unknown_item",
+    ""
+   ],
+   "opts": {
+    "watch_mode": "PATIENT_FAMILY"
+   },
+   "expected": {
+    "checklist_type": "anc_trimester_3",
+    "title": "ANC Trimester 3 Checklist (28-40 Weeks)",
+    "protocol": "NHM_ANC_T3",
+    "patient_id": null,
+    "total_items": 7,
+    "completed_items": [
+     "anc_t3_bp_urine_albumin"
+    ],
+    "missing_items": [
+     "anc_t3_repeat_hb",
+     "anc_t3_fetal_heart_position",
+     "anc_t3_kick_count",
+     "anc_t3_birth_preparedness",
+     "anc_t3_ifa_calcium_adherence",
+     "anc_t3_early_breastfeeding_plan"
+    ],
+    "missing_critical_checks": [
+     "anc_t3_repeat_hb",
+     "anc_t3_fetal_heart_position",
+     "anc_t3_kick_count",
+     "anc_t3_birth_preparedness"
+    ],
+    "missing_critical_labels": [
+     "Third-trimester Hemoglobin verified",
+     "Fetal presentation and fetal heart sound assessed",
+     "Daily fetal movement monitoring confirmed",
+     "Institutional delivery facility, 108 transport, and blood donor identified"
+    ],
+    "completion_score": 0.1429,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Third-trimester Hemoglobin verified",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) — critical check pending: Third-trimester Hemoglobin verified.",
+      "action_steps": [
+       "Test Hemoglobin at PHC to ensure mother is safe for delivery."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "PATIENT_FAMILY",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Fetal presentation and fetal heart sound assessed",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) — critical check pending: Fetal presentation and fetal heart sound assessed.",
+      "action_steps": [
+       "Arrange ANM/MO abdominal examination for fetal lie and heart rate."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "PATIENT_FAMILY",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Daily fetal movement monitoring confirmed",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) — critical check pending: Daily fetal movement monitoring confirmed.",
+      "action_steps": [
+       "Instruct mother on daily kick-count check and immediate escalation if movements decrease."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "PATIENT_FAMILY",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Institutional delivery facility, 108 transport, and blood donor identified",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) — critical check pending: Institutional delivery facility, 108 transport, and blood donor identified.",
+      "action_steps": [
+       "Finalize micro-birth plan with family: identified FRU/PHC, emergency 108 contact, and emergency funds."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "PATIENT_FAMILY",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (2)",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) has 2 routine check(s) remaining.",
+      "action_steps": [
+       "Verify remaining IFA/Calcium tablet stock and counsel daily adherence.",
+       "Counsel family on initiating breastfeeding within 1 hour of birth and delaying first bath."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "PATIENT_FAMILY",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "anc_trimester_3_mapping",
+   "checklist_type": "anc_trimester_3",
+   "completed": {
+    "anc_t3_bp_urine_albumin": true,
+    "anc_t3_repeat_hb": false,
+    "anc_t3_early_breastfeeding_plan": true
+   },
+   "opts": {},
+   "expected": {
+    "checklist_type": "anc_trimester_3",
+    "title": "ANC Trimester 3 Checklist (28-40 Weeks)",
+    "protocol": "NHM_ANC_T3",
+    "patient_id": null,
+    "total_items": 7,
+    "completed_items": [
+     "anc_t3_bp_urine_albumin",
+     "anc_t3_early_breastfeeding_plan"
+    ],
+    "missing_items": [
+     "anc_t3_repeat_hb",
+     "anc_t3_fetal_heart_position",
+     "anc_t3_kick_count",
+     "anc_t3_birth_preparedness",
+     "anc_t3_ifa_calcium_adherence"
+    ],
+    "missing_critical_checks": [
+     "anc_t3_repeat_hb",
+     "anc_t3_fetal_heart_position",
+     "anc_t3_kick_count",
+     "anc_t3_birth_preparedness"
+    ],
+    "missing_critical_labels": [
+     "Third-trimester Hemoglobin verified",
+     "Fetal presentation and fetal heart sound assessed",
+     "Daily fetal movement monitoring confirmed",
+     "Institutional delivery facility, 108 transport, and blood donor identified"
+    ],
+    "completion_score": 0.2857,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Third-trimester Hemoglobin verified",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) — critical check pending: Third-trimester Hemoglobin verified.",
+      "action_steps": [
+       "Test Hemoglobin at PHC to ensure mother is safe for delivery."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Fetal presentation and fetal heart sound assessed",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) — critical check pending: Fetal presentation and fetal heart sound assessed.",
+      "action_steps": [
+       "Arrange ANM/MO abdominal examination for fetal lie and heart rate."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Daily fetal movement monitoring confirmed",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) — critical check pending: Daily fetal movement monitoring confirmed.",
+      "action_steps": [
+       "Instruct mother on daily kick-count check and immediate escalation if movements decrease."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Institutional delivery facility, 108 transport, and blood donor identified",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) — critical check pending: Institutional delivery facility, 108 transport, and blood donor identified.",
+      "action_steps": [
+       "Finalize micro-birth plan with family: identified FRU/PHC, emergency 108 contact, and emergency funds."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (1)",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) has 1 routine check(s) remaining.",
+      "action_steps": [
+       "Verify remaining IFA/Calcium tablet stock and counsel daily adherence."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "anc_trimester_3_one_item",
+   "checklist_type": "anc_trimester_3",
+   "completed": [
+    "anc_t3_fetal_heart_position"
+   ],
+   "opts": {},
+   "expected": {
+    "checklist_type": "anc_trimester_3",
+    "title": "ANC Trimester 3 Checklist (28-40 Weeks)",
+    "protocol": "NHM_ANC_T3",
+    "patient_id": null,
+    "total_items": 7,
+    "completed_items": [
+     "anc_t3_fetal_heart_position"
+    ],
+    "missing_items": [
+     "anc_t3_bp_urine_albumin",
+     "anc_t3_repeat_hb",
+     "anc_t3_kick_count",
+     "anc_t3_birth_preparedness",
+     "anc_t3_ifa_calcium_adherence",
+     "anc_t3_early_breastfeeding_plan"
+    ],
+    "missing_critical_checks": [
+     "anc_t3_bp_urine_albumin",
+     "anc_t3_repeat_hb",
+     "anc_t3_kick_count",
+     "anc_t3_birth_preparedness"
+    ],
+    "missing_critical_labels": [
+     "Blood pressure and urine albumin checked",
+     "Third-trimester Hemoglobin verified",
+     "Daily fetal movement monitoring confirmed",
+     "Institutional delivery facility, 108 transport, and blood donor identified"
+    ],
+    "completion_score": 0.1429,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Blood pressure and urine albumin checked",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) — critical check pending: Blood pressure and urine albumin checked.",
+      "action_steps": [
+       "Perform urgent BP and urine albumin check at PHC/ANM to rule out late-onset pre-eclampsia."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Third-trimester Hemoglobin verified",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) — critical check pending: Third-trimester Hemoglobin verified.",
+      "action_steps": [
+       "Test Hemoglobin at PHC to ensure mother is safe for delivery."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Daily fetal movement monitoring confirmed",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) — critical check pending: Daily fetal movement monitoring confirmed.",
+      "action_steps": [
+       "Instruct mother on daily kick-count check and immediate escalation if movements decrease."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Institutional delivery facility, 108 transport, and blood donor identified",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) — critical check pending: Institutional delivery facility, 108 transport, and blood donor identified.",
+      "action_steps": [
+       "Finalize micro-birth plan with family: identified FRU/PHC, emergency 108 contact, and emergency funds."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (2)",
+      "summary": "ANC Trimester 3 Checklist (28-40 Weeks) has 2 routine check(s) remaining.",
+      "action_steps": [
+       "Verify remaining IFA/Calcium tablet stock and counsel daily adherence.",
+       "Counsel family on initiating breastfeeding within 1 hour of birth and delaying first bath."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "pnc_mother_none",
+   "checklist_type": "pnc_mother",
+   "completed": [],
+   "opts": {},
+   "expected": {
+    "checklist_type": "pnc_mother",
+    "title": "Postnatal Maternal Home Visit Checklist (HBNC)",
+    "protocol": "NHM_HBNC_MOTHER",
+    "patient_id": null,
+    "total_items": 6,
+    "completed_items": [],
+    "missing_items": [
+     "pnc_m_bleeding_check",
+     "pnc_m_temp_bp",
+     "pnc_m_breast_check",
+     "pnc_m_wound_check",
+     "pnc_m_ifa_calcium",
+     "pnc_m_family_planning"
+    ],
+    "missing_critical_checks": [
+     "pnc_m_bleeding_check",
+     "pnc_m_temp_bp",
+     "pnc_m_wound_check"
+    ],
+    "missing_critical_labels": [
+     "Checked for excessive vaginal bleeding / foul-smelling lochia",
+     "Maternal temperature and blood pressure recorded",
+     "Perineal or C-section incision inspected for infection"
+    ],
+    "completion_score": 0.0,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Checked for excessive vaginal bleeding / foul-smelling lochia",
+      "summary": "Postnatal Maternal Home Visit Checklist (HBNC) — critical check pending: Checked for excessive vaginal bleeding / foul-smelling lochia.",
+      "action_steps": [
+       "Assess pad soakage immediately; escalate as RED_EMERGENCY if heavy bleeding or foul odor."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Maternal temperature and blood pressure recorded",
+      "summary": "Postnatal Maternal Home Visit Checklist (HBNC) — critical check pending: Maternal temperature and blood pressure recorded.",
+      "action_steps": [
+       "Record temperature and BP to screen for postpartum sepsis or postpartum pre-eclampsia."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Perineal or C-section incision inspected for infection",
+      "summary": "Postnatal Maternal Home Visit Checklist (HBNC) — critical check pending: Perineal or C-section incision inspected for infection.",
+      "action_steps": [
+       "Inspect incision site; refer to PHC if redness, pus, or wound opening."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (3)",
+      "summary": "Postnatal Maternal Home Visit Checklist (HBNC) has 3 routine check(s) remaining.",
+      "action_steps": [
+       "Support correct latching position and refer if fever or red tender breast lump.",
+       "Ensure mother continues IFA and Calcium for 6 months postpartum.",
+       "Counsel on extra nutritious meals, rest, and postpartum spacing options."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "pnc_mother_all",
+   "checklist_type": "pnc_mother",
+   "completed": [
+    "pnc_m_bleeding_check",
+    "pnc_m_temp_bp",
+    "pnc_m_breast_check",
+    "pnc_m_wound_check",
+    "pnc_m_ifa_calcium",
+    "pnc_m_family_planning"
+   ],
+   "opts": {},
+   "expected": {
+    "checklist_type": "pnc_mother",
+    "title": "Postnatal Maternal Home Visit Checklist (HBNC)",
+    "protocol": "NHM_HBNC_MOTHER",
+    "patient_id": null,
+    "total_items": 6,
+    "completed_items": [
+     "pnc_m_bleeding_check",
+     "pnc_m_temp_bp",
+     "pnc_m_breast_check",
+     "pnc_m_wound_check",
+     "pnc_m_ifa_calcium",
+     "pnc_m_family_planning"
+    ],
+    "missing_items": [],
+    "missing_critical_checks": [],
+    "missing_critical_labels": [],
+    "completion_score": 1.0,
+    "is_complete": true,
+    "has_critical_gaps": false,
+    "action_cards": []
+   }
+  },
+  {
+   "name": "pnc_mother_all_critical_only",
+   "checklist_type": "pnc_mother",
+   "completed": [
+    "pnc_m_bleeding_check",
+    "pnc_m_temp_bp",
+    "pnc_m_wound_check"
+   ],
+   "opts": {},
+   "expected": {
+    "checklist_type": "pnc_mother",
+    "title": "Postnatal Maternal Home Visit Checklist (HBNC)",
+    "protocol": "NHM_HBNC_MOTHER",
+    "patient_id": null,
+    "total_items": 6,
+    "completed_items": [
+     "pnc_m_bleeding_check",
+     "pnc_m_temp_bp",
+     "pnc_m_wound_check"
+    ],
+    "missing_items": [
+     "pnc_m_breast_check",
+     "pnc_m_ifa_calcium",
+     "pnc_m_family_planning"
+    ],
+    "missing_critical_checks": [],
+    "missing_critical_labels": [],
+    "completion_score": 0.5,
+    "is_complete": false,
+    "has_critical_gaps": false,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (3)",
+      "summary": "Postnatal Maternal Home Visit Checklist (HBNC) has 3 routine check(s) remaining.",
+      "action_steps": [
+       "Support correct latching position and refer if fever or red tender breast lump.",
+       "Ensure mother continues IFA and Calcium for 6 months postpartum.",
+       "Counsel on extra nutritious meals, rest, and postpartum spacing options."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "pnc_mother_all_routine_only",
+   "checklist_type": "pnc_mother",
+   "completed": [
+    "pnc_m_breast_check",
+    "pnc_m_ifa_calcium",
+    "pnc_m_family_planning"
+   ],
+   "opts": {
+    "patient_id": "m-9",
+    "due_by": "2026-12-01"
+   },
+   "expected": {
+    "checklist_type": "pnc_mother",
+    "title": "Postnatal Maternal Home Visit Checklist (HBNC)",
+    "protocol": "NHM_HBNC_MOTHER",
+    "patient_id": "m-9",
+    "total_items": 6,
+    "completed_items": [
+     "pnc_m_breast_check",
+     "pnc_m_ifa_calcium",
+     "pnc_m_family_planning"
+    ],
+    "missing_items": [
+     "pnc_m_bleeding_check",
+     "pnc_m_temp_bp",
+     "pnc_m_wound_check"
+    ],
+    "missing_critical_checks": [
+     "pnc_m_bleeding_check",
+     "pnc_m_temp_bp",
+     "pnc_m_wound_check"
+    ],
+    "missing_critical_labels": [
+     "Checked for excessive vaginal bleeding / foul-smelling lochia",
+     "Maternal temperature and blood pressure recorded",
+     "Perineal or C-section incision inspected for infection"
+    ],
+    "completion_score": 0.5,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": "m-9",
+      "title": "Missing Critical Check: Checked for excessive vaginal bleeding / foul-smelling lochia",
+      "summary": "Postnatal Maternal Home Visit Checklist (HBNC) — critical check pending: Checked for excessive vaginal bleeding / foul-smelling lochia.",
+      "action_steps": [
+       "Assess pad soakage immediately; escalate as RED_EMERGENCY if heavy bleeding or foul odor."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": "2026-12-01",
+      "language": "en"
+     },
+     {
+      "patient_id": "m-9",
+      "title": "Missing Critical Check: Maternal temperature and blood pressure recorded",
+      "summary": "Postnatal Maternal Home Visit Checklist (HBNC) — critical check pending: Maternal temperature and blood pressure recorded.",
+      "action_steps": [
+       "Record temperature and BP to screen for postpartum sepsis or postpartum pre-eclampsia."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": "2026-12-01",
+      "language": "en"
+     },
+     {
+      "patient_id": "m-9",
+      "title": "Missing Critical Check: Perineal or C-section incision inspected for infection",
+      "summary": "Postnatal Maternal Home Visit Checklist (HBNC) — critical check pending: Perineal or C-section incision inspected for infection.",
+      "action_steps": [
+       "Inspect incision site; refer to PHC if redness, pus, or wound opening."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": "2026-12-01",
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "pnc_mother_first_half",
+   "checklist_type": "pnc_mother",
+   "completed": [
+    "pnc_m_bleeding_check",
+    "pnc_m_temp_bp",
+    "pnc_m_breast_check"
+   ],
+   "opts": {
+    "target_tier": "TIER_1_PHONE"
+   },
+   "expected": {
+    "checklist_type": "pnc_mother",
+    "title": "Postnatal Maternal Home Visit Checklist (HBNC)",
+    "protocol": "NHM_HBNC_MOTHER",
+    "patient_id": null,
+    "total_items": 6,
+    "completed_items": [
+     "pnc_m_bleeding_check",
+     "pnc_m_temp_bp",
+     "pnc_m_breast_check"
+    ],
+    "missing_items": [
+     "pnc_m_wound_check",
+     "pnc_m_ifa_calcium",
+     "pnc_m_family_planning"
+    ],
+    "missing_critical_checks": [
+     "pnc_m_wound_check"
+    ],
+    "missing_critical_labels": [
+     "Perineal or C-section incision inspected for infection"
+    ],
+    "completion_score": 0.5,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Perineal or C-section incision inspected for infection",
+      "summary": "Postnatal Maternal Home Visit Checklist (HBNC) — critical check pending: Perineal or C-section incision inspected for infection.",
+      "action_steps": [
+       "Inspect incision site; refer to PHC if redness, pus, or wound opening."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_1_PHONE",
+      "watch_mode": null,
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (2)",
+      "summary": "Postnatal Maternal Home Visit Checklist (HBNC) has 2 routine check(s) remaining.",
+      "action_steps": [
+       "Ensure mother continues IFA and Calcium for 6 months postpartum.",
+       "Counsel on extra nutritious meals, rest, and postpartum spacing options."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_1_PHONE",
+      "watch_mode": null,
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "pnc_mother_one_whitespace_and_unknown",
+   "checklist_type": "pnc_mother",
+   "completed": [
+    "  pnc_m_bleeding_check  ",
+    "unknown_item",
+    ""
+   ],
+   "opts": {
+    "watch_mode": "PATIENT_FAMILY"
+   },
+   "expected": {
+    "checklist_type": "pnc_mother",
+    "title": "Postnatal Maternal Home Visit Checklist (HBNC)",
+    "protocol": "NHM_HBNC_MOTHER",
+    "patient_id": null,
+    "total_items": 6,
+    "completed_items": [
+     "pnc_m_bleeding_check"
+    ],
+    "missing_items": [
+     "pnc_m_temp_bp",
+     "pnc_m_breast_check",
+     "pnc_m_wound_check",
+     "pnc_m_ifa_calcium",
+     "pnc_m_family_planning"
+    ],
+    "missing_critical_checks": [
+     "pnc_m_temp_bp",
+     "pnc_m_wound_check"
+    ],
+    "missing_critical_labels": [
+     "Maternal temperature and blood pressure recorded",
+     "Perineal or C-section incision inspected for infection"
+    ],
+    "completion_score": 0.1667,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Maternal temperature and blood pressure recorded",
+      "summary": "Postnatal Maternal Home Visit Checklist (HBNC) — critical check pending: Maternal temperature and blood pressure recorded.",
+      "action_steps": [
+       "Record temperature and BP to screen for postpartum sepsis or postpartum pre-eclampsia."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "PATIENT_FAMILY",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Perineal or C-section incision inspected for infection",
+      "summary": "Postnatal Maternal Home Visit Checklist (HBNC) — critical check pending: Perineal or C-section incision inspected for infection.",
+      "action_steps": [
+       "Inspect incision site; refer to PHC if redness, pus, or wound opening."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "PATIENT_FAMILY",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (3)",
+      "summary": "Postnatal Maternal Home Visit Checklist (HBNC) has 3 routine check(s) remaining.",
+      "action_steps": [
+       "Support correct latching position and refer if fever or red tender breast lump.",
+       "Ensure mother continues IFA and Calcium for 6 months postpartum.",
+       "Counsel on extra nutritious meals, rest, and postpartum spacing options."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "PATIENT_FAMILY",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "pnc_mother_mapping",
+   "checklist_type": "pnc_mother",
+   "completed": {
+    "pnc_m_bleeding_check": true,
+    "pnc_m_temp_bp": false,
+    "pnc_m_family_planning": true
+   },
+   "opts": {},
+   "expected": {
+    "checklist_type": "pnc_mother",
+    "title": "Postnatal Maternal Home Visit Checklist (HBNC)",
+    "protocol": "NHM_HBNC_MOTHER",
+    "patient_id": null,
+    "total_items": 6,
+    "completed_items": [
+     "pnc_m_bleeding_check",
+     "pnc_m_family_planning"
+    ],
+    "missing_items": [
+     "pnc_m_temp_bp",
+     "pnc_m_breast_check",
+     "pnc_m_wound_check",
+     "pnc_m_ifa_calcium"
+    ],
+    "missing_critical_checks": [
+     "pnc_m_temp_bp",
+     "pnc_m_wound_check"
+    ],
+    "missing_critical_labels": [
+     "Maternal temperature and blood pressure recorded",
+     "Perineal or C-section incision inspected for infection"
+    ],
+    "completion_score": 0.3333,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Maternal temperature and blood pressure recorded",
+      "summary": "Postnatal Maternal Home Visit Checklist (HBNC) — critical check pending: Maternal temperature and blood pressure recorded.",
+      "action_steps": [
+       "Record temperature and BP to screen for postpartum sepsis or postpartum pre-eclampsia."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Perineal or C-section incision inspected for infection",
+      "summary": "Postnatal Maternal Home Visit Checklist (HBNC) — critical check pending: Perineal or C-section incision inspected for infection.",
+      "action_steps": [
+       "Inspect incision site; refer to PHC if redness, pus, or wound opening."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (2)",
+      "summary": "Postnatal Maternal Home Visit Checklist (HBNC) has 2 routine check(s) remaining.",
+      "action_steps": [
+       "Support correct latching position and refer if fever or red tender breast lump.",
+       "Ensure mother continues IFA and Calcium for 6 months postpartum."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "pnc_mother_one_item",
+   "checklist_type": "pnc_mother",
+   "completed": [
+    "pnc_m_breast_check"
+   ],
+   "opts": {},
+   "expected": {
+    "checklist_type": "pnc_mother",
+    "title": "Postnatal Maternal Home Visit Checklist (HBNC)",
+    "protocol": "NHM_HBNC_MOTHER",
+    "patient_id": null,
+    "total_items": 6,
+    "completed_items": [
+     "pnc_m_breast_check"
+    ],
+    "missing_items": [
+     "pnc_m_bleeding_check",
+     "pnc_m_temp_bp",
+     "pnc_m_wound_check",
+     "pnc_m_ifa_calcium",
+     "pnc_m_family_planning"
+    ],
+    "missing_critical_checks": [
+     "pnc_m_bleeding_check",
+     "pnc_m_temp_bp",
+     "pnc_m_wound_check"
+    ],
+    "missing_critical_labels": [
+     "Checked for excessive vaginal bleeding / foul-smelling lochia",
+     "Maternal temperature and blood pressure recorded",
+     "Perineal or C-section incision inspected for infection"
+    ],
+    "completion_score": 0.1667,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Checked for excessive vaginal bleeding / foul-smelling lochia",
+      "summary": "Postnatal Maternal Home Visit Checklist (HBNC) — critical check pending: Checked for excessive vaginal bleeding / foul-smelling lochia.",
+      "action_steps": [
+       "Assess pad soakage immediately; escalate as RED_EMERGENCY if heavy bleeding or foul odor."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Maternal temperature and blood pressure recorded",
+      "summary": "Postnatal Maternal Home Visit Checklist (HBNC) — critical check pending: Maternal temperature and blood pressure recorded.",
+      "action_steps": [
+       "Record temperature and BP to screen for postpartum sepsis or postpartum pre-eclampsia."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Perineal or C-section incision inspected for infection",
+      "summary": "Postnatal Maternal Home Visit Checklist (HBNC) — critical check pending: Perineal or C-section incision inspected for infection.",
+      "action_steps": [
+       "Inspect incision site; refer to PHC if redness, pus, or wound opening."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (2)",
+      "summary": "Postnatal Maternal Home Visit Checklist (HBNC) has 2 routine check(s) remaining.",
+      "action_steps": [
+       "Ensure mother continues IFA and Calcium for 6 months postpartum.",
+       "Counsel on extra nutritious meals, rest, and postpartum spacing options."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "pnc_newborn_none",
+   "checklist_type": "pnc_newborn",
+   "completed": [],
+   "opts": {},
+   "expected": {
+    "checklist_type": "pnc_newborn",
+    "title": "Postnatal Newborn Home Visit Checklist (HBNC)",
+    "protocol": "NHM_HBNC_NEWBORN",
+    "patient_id": null,
+    "total_items": 7,
+    "completed_items": [],
+    "missing_items": [
+     "pnc_nb_temperature_warmth",
+     "pnc_nb_breastfeeding",
+     "pnc_nb_respiratory_rate",
+     "pnc_nb_cord_stump",
+     "pnc_nb_weight_lbw",
+     "pnc_nb_jaundice_activity",
+     "pnc_nb_birth_vaccines"
+    ],
+    "missing_critical_checks": [
+     "pnc_nb_temperature_warmth",
+     "pnc_nb_breastfeeding",
+     "pnc_nb_respiratory_rate",
+     "pnc_nb_cord_stump",
+     "pnc_nb_weight_lbw",
+     "pnc_nb_jaundice_activity"
+    ],
+    "missing_critical_labels": [
+     "Newborn temperature checked (36.5-37.4C) and warmth/KMC verified",
+     "Exclusive breastfeeding and effective latch observed",
+     "Respiratory rate (<60/min) and no severe chest indrawing verified",
+     "Umbilical cord stump dry with no redness or pus",
+     "Birth/visit weight recorded and LBW (<2.5 kg) flagged",
+     "Checked for yellow palms/soles (jaundice) and normal limb activity"
+    ],
+    "completion_score": 0.0,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Newborn temperature checked (36.5-37.4C) and warmth/KMC verified",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Newborn temperature checked (36.5-37.4C) and warmth/KMC verified.",
+      "action_steps": [
+       "Measure axillary temperature; initiate Kangaroo Mother Care if cold and escalate if <35.5C or >=37.5C."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Exclusive breastfeeding and effective latch observed",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Exclusive breastfeeding and effective latch observed.",
+      "action_steps": [
+       "Observe a full feed; assist positioning and refer if infant feeds poorly or cannot suck."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Respiratory rate (<60/min) and no severe chest indrawing verified",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Respiratory rate (<60/min) and no severe chest indrawing verified.",
+      "action_steps": [
+       "Count breaths for 1 full minute; refer urgently if >=60/min or severe chest indrawing."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Umbilical cord stump dry with no redness or pus",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Umbilical cord stump dry with no redness or pus.",
+      "action_steps": [
+       "Advise keeping cord dry (no oils/ash); refer to PHC if umbilical redness or discharge."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Birth/visit weight recorded and LBW (<2.5 kg) flagged",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Birth/visit weight recorded and LBW (<2.5 kg) flagged.",
+      "action_steps": [
+       "Weigh newborn; if <2.5 kg initiate KMC + frequent feeds + extra HBNC visits; if <1.8 kg refer to SNCU."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Checked for yellow palms/soles (jaundice) and normal limb activity",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Checked for yellow palms/soles (jaundice) and normal limb activity.",
+      "action_steps": [
+       "Examine newborn in daylight; refer urgently if jaundice extends to palms/soles or baby is lethargic."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (1)",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) has 1 routine check(s) remaining.",
+      "action_steps": [
+       "Verify birth vaccines on MCP card and schedule missed BCG/OPV-0 promptly."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "pnc_newborn_all",
+   "checklist_type": "pnc_newborn",
+   "completed": [
+    "pnc_nb_temperature_warmth",
+    "pnc_nb_breastfeeding",
+    "pnc_nb_respiratory_rate",
+    "pnc_nb_cord_stump",
+    "pnc_nb_weight_lbw",
+    "pnc_nb_jaundice_activity",
+    "pnc_nb_birth_vaccines"
+   ],
+   "opts": {},
+   "expected": {
+    "checklist_type": "pnc_newborn",
+    "title": "Postnatal Newborn Home Visit Checklist (HBNC)",
+    "protocol": "NHM_HBNC_NEWBORN",
+    "patient_id": null,
+    "total_items": 7,
+    "completed_items": [
+     "pnc_nb_temperature_warmth",
+     "pnc_nb_breastfeeding",
+     "pnc_nb_respiratory_rate",
+     "pnc_nb_cord_stump",
+     "pnc_nb_weight_lbw",
+     "pnc_nb_jaundice_activity",
+     "pnc_nb_birth_vaccines"
+    ],
+    "missing_items": [],
+    "missing_critical_checks": [],
+    "missing_critical_labels": [],
+    "completion_score": 1.0,
+    "is_complete": true,
+    "has_critical_gaps": false,
+    "action_cards": []
+   }
+  },
+  {
+   "name": "pnc_newborn_all_critical_only",
+   "checklist_type": "pnc_newborn",
+   "completed": [
+    "pnc_nb_temperature_warmth",
+    "pnc_nb_breastfeeding",
+    "pnc_nb_respiratory_rate",
+    "pnc_nb_cord_stump",
+    "pnc_nb_weight_lbw",
+    "pnc_nb_jaundice_activity"
+   ],
+   "opts": {},
+   "expected": {
+    "checklist_type": "pnc_newborn",
+    "title": "Postnatal Newborn Home Visit Checklist (HBNC)",
+    "protocol": "NHM_HBNC_NEWBORN",
+    "patient_id": null,
+    "total_items": 7,
+    "completed_items": [
+     "pnc_nb_temperature_warmth",
+     "pnc_nb_breastfeeding",
+     "pnc_nb_respiratory_rate",
+     "pnc_nb_cord_stump",
+     "pnc_nb_weight_lbw",
+     "pnc_nb_jaundice_activity"
+    ],
+    "missing_items": [
+     "pnc_nb_birth_vaccines"
+    ],
+    "missing_critical_checks": [],
+    "missing_critical_labels": [],
+    "completion_score": 0.8571,
+    "is_complete": false,
+    "has_critical_gaps": false,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (1)",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) has 1 routine check(s) remaining.",
+      "action_steps": [
+       "Verify birth vaccines on MCP card and schedule missed BCG/OPV-0 promptly."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "pnc_newborn_all_routine_only",
+   "checklist_type": "pnc_newborn",
+   "completed": [
+    "pnc_nb_birth_vaccines"
+   ],
+   "opts": {
+    "patient_id": "m-9",
+    "due_by": "2026-12-01"
+   },
+   "expected": {
+    "checklist_type": "pnc_newborn",
+    "title": "Postnatal Newborn Home Visit Checklist (HBNC)",
+    "protocol": "NHM_HBNC_NEWBORN",
+    "patient_id": "m-9",
+    "total_items": 7,
+    "completed_items": [
+     "pnc_nb_birth_vaccines"
+    ],
+    "missing_items": [
+     "pnc_nb_temperature_warmth",
+     "pnc_nb_breastfeeding",
+     "pnc_nb_respiratory_rate",
+     "pnc_nb_cord_stump",
+     "pnc_nb_weight_lbw",
+     "pnc_nb_jaundice_activity"
+    ],
+    "missing_critical_checks": [
+     "pnc_nb_temperature_warmth",
+     "pnc_nb_breastfeeding",
+     "pnc_nb_respiratory_rate",
+     "pnc_nb_cord_stump",
+     "pnc_nb_weight_lbw",
+     "pnc_nb_jaundice_activity"
+    ],
+    "missing_critical_labels": [
+     "Newborn temperature checked (36.5-37.4C) and warmth/KMC verified",
+     "Exclusive breastfeeding and effective latch observed",
+     "Respiratory rate (<60/min) and no severe chest indrawing verified",
+     "Umbilical cord stump dry with no redness or pus",
+     "Birth/visit weight recorded and LBW (<2.5 kg) flagged",
+     "Checked for yellow palms/soles (jaundice) and normal limb activity"
+    ],
+    "completion_score": 0.1429,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": "m-9",
+      "title": "Missing Critical Check: Newborn temperature checked (36.5-37.4C) and warmth/KMC verified",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Newborn temperature checked (36.5-37.4C) and warmth/KMC verified.",
+      "action_steps": [
+       "Measure axillary temperature; initiate Kangaroo Mother Care if cold and escalate if <35.5C or >=37.5C."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": "2026-12-01",
+      "language": "en"
+     },
+     {
+      "patient_id": "m-9",
+      "title": "Missing Critical Check: Exclusive breastfeeding and effective latch observed",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Exclusive breastfeeding and effective latch observed.",
+      "action_steps": [
+       "Observe a full feed; assist positioning and refer if infant feeds poorly or cannot suck."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": "2026-12-01",
+      "language": "en"
+     },
+     {
+      "patient_id": "m-9",
+      "title": "Missing Critical Check: Respiratory rate (<60/min) and no severe chest indrawing verified",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Respiratory rate (<60/min) and no severe chest indrawing verified.",
+      "action_steps": [
+       "Count breaths for 1 full minute; refer urgently if >=60/min or severe chest indrawing."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": "2026-12-01",
+      "language": "en"
+     },
+     {
+      "patient_id": "m-9",
+      "title": "Missing Critical Check: Umbilical cord stump dry with no redness or pus",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Umbilical cord stump dry with no redness or pus.",
+      "action_steps": [
+       "Advise keeping cord dry (no oils/ash); refer to PHC if umbilical redness or discharge."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": "2026-12-01",
+      "language": "en"
+     },
+     {
+      "patient_id": "m-9",
+      "title": "Missing Critical Check: Birth/visit weight recorded and LBW (<2.5 kg) flagged",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Birth/visit weight recorded and LBW (<2.5 kg) flagged.",
+      "action_steps": [
+       "Weigh newborn; if <2.5 kg initiate KMC + frequent feeds + extra HBNC visits; if <1.8 kg refer to SNCU."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": "2026-12-01",
+      "language": "en"
+     },
+     {
+      "patient_id": "m-9",
+      "title": "Missing Critical Check: Checked for yellow palms/soles (jaundice) and normal limb activity",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Checked for yellow palms/soles (jaundice) and normal limb activity.",
+      "action_steps": [
+       "Examine newborn in daylight; refer urgently if jaundice extends to palms/soles or baby is lethargic."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": "2026-12-01",
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "pnc_newborn_first_half",
+   "checklist_type": "pnc_newborn",
+   "completed": [
+    "pnc_nb_temperature_warmth",
+    "pnc_nb_breastfeeding",
+    "pnc_nb_respiratory_rate"
+   ],
+   "opts": {
+    "target_tier": "TIER_1_PHONE"
+   },
+   "expected": {
+    "checklist_type": "pnc_newborn",
+    "title": "Postnatal Newborn Home Visit Checklist (HBNC)",
+    "protocol": "NHM_HBNC_NEWBORN",
+    "patient_id": null,
+    "total_items": 7,
+    "completed_items": [
+     "pnc_nb_temperature_warmth",
+     "pnc_nb_breastfeeding",
+     "pnc_nb_respiratory_rate"
+    ],
+    "missing_items": [
+     "pnc_nb_cord_stump",
+     "pnc_nb_weight_lbw",
+     "pnc_nb_jaundice_activity",
+     "pnc_nb_birth_vaccines"
+    ],
+    "missing_critical_checks": [
+     "pnc_nb_cord_stump",
+     "pnc_nb_weight_lbw",
+     "pnc_nb_jaundice_activity"
+    ],
+    "missing_critical_labels": [
+     "Umbilical cord stump dry with no redness or pus",
+     "Birth/visit weight recorded and LBW (<2.5 kg) flagged",
+     "Checked for yellow palms/soles (jaundice) and normal limb activity"
+    ],
+    "completion_score": 0.4286,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Umbilical cord stump dry with no redness or pus",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Umbilical cord stump dry with no redness or pus.",
+      "action_steps": [
+       "Advise keeping cord dry (no oils/ash); refer to PHC if umbilical redness or discharge."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_1_PHONE",
+      "watch_mode": null,
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Birth/visit weight recorded and LBW (<2.5 kg) flagged",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Birth/visit weight recorded and LBW (<2.5 kg) flagged.",
+      "action_steps": [
+       "Weigh newborn; if <2.5 kg initiate KMC + frequent feeds + extra HBNC visits; if <1.8 kg refer to SNCU."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_1_PHONE",
+      "watch_mode": null,
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Checked for yellow palms/soles (jaundice) and normal limb activity",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Checked for yellow palms/soles (jaundice) and normal limb activity.",
+      "action_steps": [
+       "Examine newborn in daylight; refer urgently if jaundice extends to palms/soles or baby is lethargic."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_1_PHONE",
+      "watch_mode": null,
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (1)",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) has 1 routine check(s) remaining.",
+      "action_steps": [
+       "Verify birth vaccines on MCP card and schedule missed BCG/OPV-0 promptly."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_1_PHONE",
+      "watch_mode": null,
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "pnc_newborn_one_whitespace_and_unknown",
+   "checklist_type": "pnc_newborn",
+   "completed": [
+    "  pnc_nb_temperature_warmth  ",
+    "unknown_item",
+    ""
+   ],
+   "opts": {
+    "watch_mode": "PATIENT_FAMILY"
+   },
+   "expected": {
+    "checklist_type": "pnc_newborn",
+    "title": "Postnatal Newborn Home Visit Checklist (HBNC)",
+    "protocol": "NHM_HBNC_NEWBORN",
+    "patient_id": null,
+    "total_items": 7,
+    "completed_items": [
+     "pnc_nb_temperature_warmth"
+    ],
+    "missing_items": [
+     "pnc_nb_breastfeeding",
+     "pnc_nb_respiratory_rate",
+     "pnc_nb_cord_stump",
+     "pnc_nb_weight_lbw",
+     "pnc_nb_jaundice_activity",
+     "pnc_nb_birth_vaccines"
+    ],
+    "missing_critical_checks": [
+     "pnc_nb_breastfeeding",
+     "pnc_nb_respiratory_rate",
+     "pnc_nb_cord_stump",
+     "pnc_nb_weight_lbw",
+     "pnc_nb_jaundice_activity"
+    ],
+    "missing_critical_labels": [
+     "Exclusive breastfeeding and effective latch observed",
+     "Respiratory rate (<60/min) and no severe chest indrawing verified",
+     "Umbilical cord stump dry with no redness or pus",
+     "Birth/visit weight recorded and LBW (<2.5 kg) flagged",
+     "Checked for yellow palms/soles (jaundice) and normal limb activity"
+    ],
+    "completion_score": 0.1429,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Exclusive breastfeeding and effective latch observed",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Exclusive breastfeeding and effective latch observed.",
+      "action_steps": [
+       "Observe a full feed; assist positioning and refer if infant feeds poorly or cannot suck."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "PATIENT_FAMILY",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Respiratory rate (<60/min) and no severe chest indrawing verified",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Respiratory rate (<60/min) and no severe chest indrawing verified.",
+      "action_steps": [
+       "Count breaths for 1 full minute; refer urgently if >=60/min or severe chest indrawing."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "PATIENT_FAMILY",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Umbilical cord stump dry with no redness or pus",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Umbilical cord stump dry with no redness or pus.",
+      "action_steps": [
+       "Advise keeping cord dry (no oils/ash); refer to PHC if umbilical redness or discharge."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "PATIENT_FAMILY",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Birth/visit weight recorded and LBW (<2.5 kg) flagged",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Birth/visit weight recorded and LBW (<2.5 kg) flagged.",
+      "action_steps": [
+       "Weigh newborn; if <2.5 kg initiate KMC + frequent feeds + extra HBNC visits; if <1.8 kg refer to SNCU."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "PATIENT_FAMILY",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Checked for yellow palms/soles (jaundice) and normal limb activity",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Checked for yellow palms/soles (jaundice) and normal limb activity.",
+      "action_steps": [
+       "Examine newborn in daylight; refer urgently if jaundice extends to palms/soles or baby is lethargic."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "PATIENT_FAMILY",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (1)",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) has 1 routine check(s) remaining.",
+      "action_steps": [
+       "Verify birth vaccines on MCP card and schedule missed BCG/OPV-0 promptly."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "PATIENT_FAMILY",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "pnc_newborn_mapping",
+   "checklist_type": "pnc_newborn",
+   "completed": {
+    "pnc_nb_temperature_warmth": true,
+    "pnc_nb_breastfeeding": false,
+    "pnc_nb_birth_vaccines": true
+   },
+   "opts": {},
+   "expected": {
+    "checklist_type": "pnc_newborn",
+    "title": "Postnatal Newborn Home Visit Checklist (HBNC)",
+    "protocol": "NHM_HBNC_NEWBORN",
+    "patient_id": null,
+    "total_items": 7,
+    "completed_items": [
+     "pnc_nb_temperature_warmth",
+     "pnc_nb_birth_vaccines"
+    ],
+    "missing_items": [
+     "pnc_nb_breastfeeding",
+     "pnc_nb_respiratory_rate",
+     "pnc_nb_cord_stump",
+     "pnc_nb_weight_lbw",
+     "pnc_nb_jaundice_activity"
+    ],
+    "missing_critical_checks": [
+     "pnc_nb_breastfeeding",
+     "pnc_nb_respiratory_rate",
+     "pnc_nb_cord_stump",
+     "pnc_nb_weight_lbw",
+     "pnc_nb_jaundice_activity"
+    ],
+    "missing_critical_labels": [
+     "Exclusive breastfeeding and effective latch observed",
+     "Respiratory rate (<60/min) and no severe chest indrawing verified",
+     "Umbilical cord stump dry with no redness or pus",
+     "Birth/visit weight recorded and LBW (<2.5 kg) flagged",
+     "Checked for yellow palms/soles (jaundice) and normal limb activity"
+    ],
+    "completion_score": 0.2857,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Exclusive breastfeeding and effective latch observed",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Exclusive breastfeeding and effective latch observed.",
+      "action_steps": [
+       "Observe a full feed; assist positioning and refer if infant feeds poorly or cannot suck."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Respiratory rate (<60/min) and no severe chest indrawing verified",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Respiratory rate (<60/min) and no severe chest indrawing verified.",
+      "action_steps": [
+       "Count breaths for 1 full minute; refer urgently if >=60/min or severe chest indrawing."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Umbilical cord stump dry with no redness or pus",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Umbilical cord stump dry with no redness or pus.",
+      "action_steps": [
+       "Advise keeping cord dry (no oils/ash); refer to PHC if umbilical redness or discharge."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Birth/visit weight recorded and LBW (<2.5 kg) flagged",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Birth/visit weight recorded and LBW (<2.5 kg) flagged.",
+      "action_steps": [
+       "Weigh newborn; if <2.5 kg initiate KMC + frequent feeds + extra HBNC visits; if <1.8 kg refer to SNCU."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Checked for yellow palms/soles (jaundice) and normal limb activity",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Checked for yellow palms/soles (jaundice) and normal limb activity.",
+      "action_steps": [
+       "Examine newborn in daylight; refer urgently if jaundice extends to palms/soles or baby is lethargic."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  },
+  {
+   "name": "pnc_newborn_one_item",
+   "checklist_type": "pnc_newborn",
+   "completed": [
+    "pnc_nb_respiratory_rate"
+   ],
+   "opts": {},
+   "expected": {
+    "checklist_type": "pnc_newborn",
+    "title": "Postnatal Newborn Home Visit Checklist (HBNC)",
+    "protocol": "NHM_HBNC_NEWBORN",
+    "patient_id": null,
+    "total_items": 7,
+    "completed_items": [
+     "pnc_nb_respiratory_rate"
+    ],
+    "missing_items": [
+     "pnc_nb_temperature_warmth",
+     "pnc_nb_breastfeeding",
+     "pnc_nb_cord_stump",
+     "pnc_nb_weight_lbw",
+     "pnc_nb_jaundice_activity",
+     "pnc_nb_birth_vaccines"
+    ],
+    "missing_critical_checks": [
+     "pnc_nb_temperature_warmth",
+     "pnc_nb_breastfeeding",
+     "pnc_nb_cord_stump",
+     "pnc_nb_weight_lbw",
+     "pnc_nb_jaundice_activity"
+    ],
+    "missing_critical_labels": [
+     "Newborn temperature checked (36.5-37.4C) and warmth/KMC verified",
+     "Exclusive breastfeeding and effective latch observed",
+     "Umbilical cord stump dry with no redness or pus",
+     "Birth/visit weight recorded and LBW (<2.5 kg) flagged",
+     "Checked for yellow palms/soles (jaundice) and normal limb activity"
+    ],
+    "completion_score": 0.1429,
+    "is_complete": false,
+    "has_critical_gaps": true,
+    "action_cards": [
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Newborn temperature checked (36.5-37.4C) and warmth/KMC verified",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Newborn temperature checked (36.5-37.4C) and warmth/KMC verified.",
+      "action_steps": [
+       "Measure axillary temperature; initiate Kangaroo Mother Care if cold and escalate if <35.5C or >=37.5C."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Exclusive breastfeeding and effective latch observed",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Exclusive breastfeeding and effective latch observed.",
+      "action_steps": [
+       "Observe a full feed; assist positioning and refer if infant feeds poorly or cannot suck."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Umbilical cord stump dry with no redness or pus",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Umbilical cord stump dry with no redness or pus.",
+      "action_steps": [
+       "Advise keeping cord dry (no oils/ash); refer to PHC if umbilical redness or discharge."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Birth/visit weight recorded and LBW (<2.5 kg) flagged",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Birth/visit weight recorded and LBW (<2.5 kg) flagged.",
+      "action_steps": [
+       "Weigh newborn; if <2.5 kg initiate KMC + frequent feeds + extra HBNC visits; if <1.8 kg refer to SNCU."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Missing Critical Check: Checked for yellow palms/soles (jaundice) and normal limb activity",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) — critical check pending: Checked for yellow palms/soles (jaundice) and normal limb activity.",
+      "action_steps": [
+       "Examine newborn in daylight; refer urgently if jaundice extends to palms/soles or baby is lethargic."
+      ],
+      "priority": "HIGH",
+      "severity": "YELLOW_PHC",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     },
+     {
+      "patient_id": null,
+      "title": "Pending Routine Checks (1)",
+      "summary": "Postnatal Newborn Home Visit Checklist (HBNC) has 1 routine check(s) remaining.",
+      "action_steps": [
+       "Verify birth vaccines on MCP card and schedule missed BCG/OPV-0 promptly."
+      ],
+      "priority": "LOW",
+      "severity": "GREEN_HOME",
+      "status": "OPEN",
+      "target_tier": "TIER_0_WATCH",
+      "watch_mode": "CHW_COMPANION",
+      "source_event_id": null,
+      "due_by": null,
+      "language": "en"
+     }
+    ]
+   }
+  }
+ ],
+ "select_anc": [
+  {
+   "weeks": 0,
+   "expected": "anc_trimester_1"
+  },
+  {
+   "weeks": 12,
+   "expected": "anc_trimester_1"
+  },
+  {
+   "weeks": 13,
+   "expected": "anc_trimester_2"
+  },
+  {
+   "weeks": 27,
+   "expected": "anc_trimester_2"
+  },
+  {
+   "weeks": 28,
+   "expected": "anc_trimester_3"
+  },
+  {
+   "weeks": 45,
+   "expected": "anc_trimester_3"
+  },
+  {
+   "weeks": -1,
+   "error": true
+  },
+  {
+   "weeks": 46,
+   "error": true
+  }
+ ]
+}
