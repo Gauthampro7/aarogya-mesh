@@ -19,13 +19,28 @@
   - `GET /api/v1/patients` — CRDT-projected patient roster
   - `GET /api/v1/action-cards` — CRDT-projected action cards for Phone/Watch
   - `GET /api/v1/enrichment/pending` — Pending `VOICE_NOTE_RECORDED` events queued for `services/ml-pipeline`
+- **Background Enrichment Worker (`enrichment_worker.py`)**:
+  - `POST /api/v1/enrichment/run` (and `POST /api/v1/enrichment/run-once` alias) — Drains pending voice notes through `Stub*` / local ML backends + deterministic `evaluate_triage` Clinical Safety Floor, emitting `ENRICHMENT_COMPLETED`, `ACTION_CARD_ISSUED`, and deduplicated EWMA `OUTBREAK_ALERT_RAISED` events
+  - `GET /api/v1/enrichment/status` — Worker running state, last run summary, and cumulative processed count
+- **mDNS Peer Discovery & Offline Connect Info (`discovery.py`)**:
+  - `GET /api/v1/peers` — Live Tier-0 Watch & Tier-1 Phone peers seen via `sync_http`, `sync_ws`, or `mdns`
+  - `GET /api/v1/discovery/connect-info` — Offline LAN IPv4 URL, WebSocket URL, and `_aarogya-mesh._tcp.local.` mDNS status
+- **PHC Command Center Dashboard (`dashboard.py` & `static/`)**:
+  - `GET /` & `GET /static/{filename}` — 100% offline, zero-CDN clinical dashboard with English / pure *Shuddh Tatsama* Hindi toggle
+  - `GET /api/v1/dashboard/summary` — Hub manifest, connected peers, patient/triage KPIs, enrichment risk/SHAP summaries, action cards, and outbreak alerts
+  - `GET /api/v1/events` — Newest-first HLC CRDT event log inspector
 - **Voice Blob Transport (`blob_store.py`)**:
   - `PUT /api/v1/blobs/{blob_key}` — Idempotent raw audio upload (`audio/webm`, `audio/ogg`, `audio/wav`, max 25 MiB) referenced by `VOICE_NOTE_RECORDED.payload["audio_blob_key"]`
   - `HEAD /api/v1/blobs/{blob_key}` — Fast existence check so Watch/Phone skip re-uploading synced audio
   - `GET /api/v1/blobs/{blob_key}` — Raw audio retrieval for Hub playback and `services/ml-pipeline` (`VoiceTranscriber`)
-- **Persistent Local State**:
+- **Persistent Local State & Environment Variables**:
   - `AAROGYA_HUB_DB` defaults to `.data/phc_hub.db` (survives restarts; gitignored).
   - `AAROGYA_HUB_BLOB_DIR` defaults to `.data/blobs` (gitignored).
+  - `AAROGYA_HUB_NODE_ID` defaults to `phc-hub-local`.
+  - `AAROGYA_HUB_PORT` defaults to `8000`.
+  - `AAROGYA_HUB_ENABLE_MDNS` defaults to `0` (`1` enables `_aarogya-mesh._tcp.local.` mDNS advertising).
+  - `AAROGYA_HUB_ENABLE_WORKER` defaults to `1` (`0` disables background enrichment loop).
+  - `AAROGYA_HUB_ENRICHMENT_INTERVAL_SEC` defaults to `5.0`.
 
 ---
 

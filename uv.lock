@@ -119,6 +119,7 @@ dependencies = [
     { name = "aarogya-clinical-engine" },
     { name = "aarogya-contracts" },
     { name = "aarogya-crdt-sync" },
+    { name = "aarogya-ml-pipeline" },
     { name = "fastapi" },
     { name = "uvicorn", extra = ["standard"] },
 ]
@@ -128,6 +129,7 @@ requires-dist = [
     { name = "aarogya-clinical-engine", editable = "packages/clinical-engine" },
     { name = "aarogya-contracts", editable = "packages/contracts" },
     { name = "aarogya-crdt-sync", editable = "packages/crdt-sync" },
+    { name = "aarogya-ml-pipeline", editable = "services/ml-pipeline" },
     { name = "fastapi", specifier = ">=0.115" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.32" },
 ]

@@ -11,7 +11,7 @@ Each teammate owns one isolated directory so all 4 tracks can develop, test, and
 
 | Track | Module Directory | Owner | Status | Primary Stack |
 | --- | --- | --- | --- | --- |
-| **Track 1** | `packages/contracts`, `packages/clinical-engine`, `packages/crdt-sync`, `services/phc-hub` | **Core Bedrock (`@Gauthampro7`)** | Built & Verified | Python 3.12, Pydantic v2, SQLite, FastAPI |
+| **Track 1** | `packages/contracts`, `packages/clinical-engine`, `packages/crdt-sync`, `services/phc-hub` | **Core Bedrock (`@Gauthampro7`)** | Built & Verified (Core + T1-01..03 Complete) | Python 3.12, Pydantic v2, SQLite, FastAPI |
 | **Track 2** | `apps/field-pwa` | **`@Akarshx-x`** | Complete & Merged (#2–#7, #15–#17) | TypeScript, Offline PWA, Service Worker, IndexedDB |
 | **Track 3** | `apps/watch-companion` | **`@aril-travass`** | Complete & Merged (#18–#21) | TypeScript, Dual-Mode 360x360 Watch UI |
 | **Track 4** | `services/ml-pipeline` | **`@Krishnanand-10`** | Claimed (#12) · In Review (Draft PR #22) | Python 3.12, `whisper.cpp`, `Qwen2.5-3B` GBNF, `LightGBM+SHAP`, `EWMA` |
@@ -47,6 +47,9 @@ Use [`prompts/README.md`](./prompts/README.md) to grab a decoupled, contract-loc
   - `GET /api/v1/patients`
   - `GET /api/v1/action-cards`
   - `GET /api/v1/enrichment/pending`
+  - `POST /api/v1/enrichment/run` (alias `POST /api/v1/enrichment/run-once`) & `GET /api/v1/enrichment/status`
+  - `GET /api/v1/peers` & `GET /api/v1/discovery/connect-info`
+  - `GET /`, `GET /static/{filename}`, `GET /api/v1/dashboard/summary`, & `GET /api/v1/events`
   - `WS /ws/mesh`
 
 ---

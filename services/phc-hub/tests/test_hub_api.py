@@ -250,3 +250,113 @@ def test_persistent_db_survives_hub_restart(tmp_path: Path) -> None:
     hub_v2 = create_app(db_path=db_file, node_id="hub-persist-01")
     client_v2 = TestClient(hub_v2)
     assert client_v2.get("/health").json()["event_count"] == 1
+
+
+def test_unified_hub_enrichment_discovery_and_dashboard_e2e(tmp_path: Path) -> None:
+    hub_app = create_app(
+        db_path=tmp_path / "hub_e2e.db",
+        blob_dir=tmp_path / "blobs_e2e",
+        node_id="hub-e2e-01",
+    )
+    client = TestClient(hub_app)
+
+    # 1. Phone uploads voice blob and syncs PATIENT_REGISTERED + PENDING VOICE_NOTE_RECORDED
+    blob_key = "vn-e2e-001"
+    put_resp = client.put(
+        f"/api/v1/blobs/{blob_key}",
+        content=b"\x1a\x45\xdf\xa3mock-audio-e2e",
+        headers={"Content-Type": "audio/webm"},
+    )
+    assert put_resp.status_code == 200
+
+    phone_manifest = HardwareCapabilityManifest(
+        node_id="phone-e2e-01",
+        tier=NodeTier.TIER_1_PHONE,
+        ram_mb=4096,
+        cpu_cores=8,
+    )
+    patient_evt = CrdtEvent(
+        event_id="evt-e2e-pat-01",
+        hlc=HlcTimestamp(wall_ms=1_700_000_010_000, logical=0, node_id="phone-e2e-01"),
+        origin_node_id="phone-e2e-01",
+        patient_id="pat-e2e-01",
+        event_type=EventType.PATIENT_REGISTERED,
+        payload={
+            "patient_id": "pat-e2e-01",
+            "full_name": "Sunita Devi",
+            "village_id": "rampur-02",
+            "sex": "F",
+            "is_pregnant": True,
+            "gestational_weeks": 30,
+        },
+    )
+    voice_evt = CrdtEvent(
+        event_id="evt-e2e-voice-01",
+        hlc=HlcTimestamp(wall_ms=1_700_000_011_000, logical=0, node_id="phone-e2e-01"),
+        origin_node_id="phone-e2e-01",
+        patient_id="pat-e2e-01",
+        event_type=EventType.VOICE_NOTE_RECORDED,
+        enrichment_state=EnrichmentState.PENDING,
+        payload={
+            "audio_blob_key": blob_key,
+            "language": "hi",
+            "transcript_hint": "High fever and convulsions since morning",
+        },
+    )
+    sync_resp = client.post(
+        "/api/v1/sync",
+        json=SyncEnvelope(
+            sender_manifest=phone_manifest,
+            sender_hlc=HlcTimestamp(wall_ms=1_700_000_012_000, logical=0, node_id="phone-e2e-01"),
+            events=[patient_evt, voice_evt],
+        ).model_dump(mode="json"),
+    )
+    assert sync_resp.status_code == 200
+
+    peers_http = client.get("/api/v1/peers").json()
+    assert any(p["node_id"] == "phone-e2e-01" and p["source"] == "sync_http" for p in peers_http)
+
+    # 2. Run enrichment -> drains pending queue and updates dashboard summary
+    run_resp = client.post("/api/v1/enrichment/run")
+    assert run_resp.status_code == 200
+    assert run_resp.json()["processed"] == 1
+    assert client.get("/api/v1/enrichment/pending").json() == []
+
+    summary_resp = client.get("/api/v1/dashboard/summary")
+    assert summary_resp.status_code == 200
+    summary = summary_resp.json()
+    assert summary["completed_enrichments"] == 1
+    assert summary["pending_enrichments"] == 0
+    assert isinstance(summary["enrichments"][0]["risk_score"], float)
+    assert len(summary["enrichments"][0]["shap_attributions"]) > 0
+    assert sum(summary["triage_counts"].values()) >= 1
+    assert len(summary["action_cards"]) >= 1
+
+    # 3. Watch WS sync -> recorded as sync_ws peer and receives Hub-issued ACTION_CARD_ISSUED
+    watch_manifest = HardwareCapabilityManifest(
+        node_id="watch-e2e-01",
+        tier=NodeTier.TIER_0_WATCH,
+        ram_mb=256,
+        cpu_cores=2,
+        watch_mode=WatchMode.CHW_COMPANION,
+    )
+    ws_env = SyncEnvelope(
+        sender_manifest=watch_manifest,
+        sender_hlc=HlcTimestamp(wall_ms=1_700_000_013_000, logical=0, node_id="watch-e2e-01"),
+    )
+    with client.websocket_connect("/ws/mesh") as ws:
+        ws.send_json(ws_env.model_dump(mode="json"))
+        ws_reply = SyncEnvelope.model_validate(ws.receive_json())
+        assert any(evt.event_type == EventType.ACTION_CARD_ISSUED for evt in ws_reply.events)
+
+    peers_all = client.get("/api/v1/peers").json()
+    assert any(p["node_id"] == "watch-e2e-01" and p["source"] == "sync_ws" for p in peers_all)
+
+    # 4. Dashboard HTML & discovery connect-info
+    index_resp = client.get("/")
+    assert index_resp.status_code == 200
+    assert "text/html" in index_resp.headers["content-type"]
+
+    connect_resp = client.get("/api/v1/discovery/connect-info")
+    assert connect_resp.status_code == 200
+    assert connect_resp.json()["hub_node_id"] == "hub-e2e-01"
