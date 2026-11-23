@@ -2,13 +2,15 @@ import type { ActionCard } from "../../../../../packages/contracts/ts/index";
 import { t } from "../../i18n";
 import { field, h } from "../dom";
 import type { Ctx } from "../ctx";
-import { runSync } from "../app_state";
+import { heldClipsFromDetail, runSync } from "../app_state";
 import { getHubUrl, getLastSync, isValidHubUrl, setHubUrl } from "../settings";
 import { ackPayload, sortCards } from "../sync_logic";
 
 export async function syncPanel(ctx: Ctx): Promise<HTMLElement> {
   const [pending, cards] = await Promise.all([ctx.engine.pendingCount(), ctx.store.listActionCards()]);
   const last = getLastSync();
+  const held = last ? heldClipsFromDetail(last.detail) : 0;
+  const lastText = !last ? "" : last.ok ? t("sync.ok") : held ? t("sync.clipsWaiting", { n: held }) : t("sync.fail", { s: last.detail });
   const url = h("input", { type: "url", name: "hub", value: getHubUrl(), inputmode: "url", autocapitalize: "off" });
   const msg = h("p", { role: "status", "aria-live": "polite" });
 
@@ -55,7 +57,7 @@ export async function syncPanel(ctx: Ctx): Promise<HTMLElement> {
     btn,
     msg,
     h("p", {}, `${t("home.pendingSync")}: ${pending}`),
-    h("p", { class: "muted" }, last ? `${t("sync.last")}: ${new Date(last.at).toLocaleString()} — ${last.ok ? t("sync.ok") : t("sync.fail", { s: last.detail })}` : t("sync.never")),
+    h("p", { class: "muted" }, last ? `${t("sync.last")}: ${new Date(last.at).toLocaleString()} — ${lastText}` : t("sync.never")),
     h("h2", {}, t("cards.title")),
     cards.length ? h("ul", { class: "list" }, sortCards(cards).map(card)) : h("p", { class: "muted" }, t("cards.none")),
   );

@@ -165,6 +165,7 @@ export const en = {
   "sync.ok": "succeeded",
   "sync.fail": "failed ({s})",
   "sync.never": "Not synced yet.",
+  "sync.clipsWaiting": "{n} voice clips waiting to upload; their notes will be sent once the audio reaches the health centre.",
   "cards.title": "Received action cards",
   "cards.none": "No action cards yet.",
   "cards.ack": "Acknowledge",
