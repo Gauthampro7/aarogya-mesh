@@ -23,6 +23,7 @@ import type { ImnciPediatricRules, MaternalAncRules } from "./rules/types";
 import { normalizeFlag, validateTriageInput } from "./triage_input";
 import type { PatientCategory, TriageInput } from "./triage_input";
 import { dedupePreserveOrder, pyFixed1, pyStr } from "./pyfmt";
+import { uuid } from "../core/uuid";
 
 export { FLAG_ALIASES, normalizeFlag, validateTriageInput } from "./triage_input";
 export type { PatientCategory, TriageInput, TriageMode } from "./triage_input";
@@ -507,7 +508,7 @@ export function evaluateTriage(input: TriageInput): TriageAssessment {
   }
 
   return {
-    assessment_id: crypto.randomUUID(),
+    assessment_id: uuid(),
     patient_id: d.patient_id,
     severity: acc.severity,
     matched_rules: dedupePreserveOrder(acc.matchedRules),
@@ -552,7 +553,7 @@ export function triageToActionCard(
   const targetTier = opts.target_tier ?? "TIER_0_WATCH";
   const watchMode = opts.watch_mode === undefined ? "CHW_COMPANION" : opts.watch_mode;
   return {
-    card_id: crypto.randomUUID(),
+    card_id: uuid(),
     patient_id: assessment.patient_id,
     title: TITLE_MAP[assessment.severity],
     summary: assessment.rationale.slice(0, 1000),
