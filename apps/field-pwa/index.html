@@ -5,92 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0d9488" />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <title>Aarogya Mesh — Tier-1 CHW Field PWA</title>
-    <style>
-      :root {
-        font-family: system-ui, -apple-system, sans-serif;
-        color: #f8fafc;
-        background: #0f172a;
-      }
-      body {
-        margin: 0 auto;
-        max-width: 480px;
-        padding: 1rem;
-      }
-      header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #334155;
-        padding-bottom: 0.75rem;
-      }
-      .badge {
-        padding: 0.25rem 0.6rem;
-        border-radius: 999px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        background: #0d9488;
-      }
-      .card {
-        margin-top: 1rem;
-        padding: 1rem;
-        border-radius: 0.75rem;
-        background: #1e293b;
-        border: 1px solid #334155;
-      }
-      button {
-        background: #0d9488;
-        color: #ffffff;
-        border: none;
-        border-radius: 0.5rem;
-        padding: 0.6rem 1rem;
-        font-weight: 600;
-        cursor: pointer;
-      }
-    </style>
+    <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+    <link rel="stylesheet" href="./dist/app.css" />
+    <title>Aarogya Mesh</title>
   </head>
   <body>
-    <header>
-      <div>
-        <h1 style="margin: 0; font-size: 1.15rem">Aarogya Mesh · Tier-1 CHW</h1>
-        <small id="node-subtitle">Autonomous Offline Node</small>
-      </div>
-      <span id="connectivity-badge" class="badge">OFFLINE READY</span>
-    </header>
-
-    <main>
-      <section class="card">
-        <h2 style="margin-top: 0; font-size: 1rem">1. Local Triage &amp; Patient Queue</h2>
-        <p style="font-size: 0.875rem; color: #cbd5e1">
-          Teammate A: Mount IndexedDB patient registry, WHO IMNCI checklist, UIP vaccination
-          tracker, and offline voice-note capture here using
-          <code>src/sync_client.ts</code>.
-        </p>
-      </section>
-
-      <section class="card">
-        <h2 style="margin-top: 0; font-size: 1rem">2. Opportunistic PHC Hub Sync</h2>
-        <p style="font-size: 0.875rem; color: #cbd5e1">
-          Exchanges <code>SyncEnvelope</code> deltas with <code>POST /api/v1/sync</code> and
-          <code>WS /ws/mesh</code>.
-        </p>
-        <button id="sync-btn" type="button">Sync with PHC Hub</button>
-        <pre id="sync-status" style="font-size: 0.75rem; color: #94a3b8">Idle (0 pending events)</pre>
-      </section>
-    </main>
-
-    <script>
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("./sw.js").catch(console.error);
-      }
-      const badge = document.getElementById("connectivity-badge");
-      const updateBadge = () => {
-        badge.textContent = navigator.onLine ? "LAN / ONLINE" : "AIRPLANE MODE";
-        badge.style.background = navigator.onLine ? "#0d9488" : "#d97706";
-      };
-      window.addEventListener("online", updateBadge);
-      window.addEventListener("offline", updateBadge);
-      updateBadge();
-    </script>
+    <div id="app">Loading...</div>
+    <noscript>This application needs JavaScript.</noscript>
+    <script type="module" src="./dist/app.js"></script>
   </body>
 </html>
