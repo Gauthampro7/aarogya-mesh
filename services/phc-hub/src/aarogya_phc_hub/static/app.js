@@ -13,6 +13,27 @@
       autoOn: "Auto-Refresh: ON",
       autoOff: "Auto-Refresh: OFF",
       refresh: "Refresh",
+      demoBarLabel: "Live Scenarios",
+      scenarioMaternal: "Maternal Watch SOS",
+      scenarioVoice: "Offline Voice → AI",
+      scenarioOutbreak: "Village Outbreak",
+      scenarioCrdt: "CRDT Merge Proof",
+      demoReset: "Reset",
+      openShowcase: "Open 3-Tier Live Stage →",
+      demoLoading: "Running live clinical scenario...",
+      demoLoaded: "Scenario executed through live CRDT sync:",
+      demoResetting: "Resetting Hub state...",
+      demoResetDone: "Hub SQLite event store and peer registry cleared.",
+      demoUnavailable: "Demo scenario endpoint unavailable.",
+      archTitle: "Compute-Proportional 3-Tier Autonomous Mesh",
+      tier0Label: "Tier-0 Watch",
+      tier0Desc: "Standalone SOS & Reminders for Normal Public & CHW",
+      tier1Label: "Tier-1 Phone",
+      tier1Desc: "WHO IMNCI Deterministic Triage + Offline IndexedDB",
+      tier2Label: "Tier-2 Hub",
+      tier2Desc: "Whisper + SLM + LightGBM SHAP + EWMA Outbreak",
+      activePeersShort: "active",
+      hubOnlineShort: "online",
       nodeId: "Node ID",
       ram: "RAM",
       cpu: "CPU Cores",
@@ -29,19 +50,21 @@
       pendingEnrichments: "Pending Enrichments",
       completedEnrichments: "Completed Enrichments",
       totalEvents: "CRDT Events",
-      peerTopology: "Live Peer Topology",
-      tier0Label: "Tier-0 Watch",
-      tier1Label: "Tier-1 Phone",
-      tier2Label: "Tier-2 Hub",
-      clinicalPanel: "Clinical Triage & Risk Alerts",
-      runEnrichment: "Run Enrichment Now",
+      clinicalPanel: "Clinical Triage, Action Cards & SHAP Risk",
+      triageFeedTitle: "Active Triage Decisions",
+      patientsRosterTitle: "Synced Patient Registry & Peers",
+      peerTopology: "Live Mesh Peers",
+      hubTelemetryTitle: "Hub Hardware & LAN Discovery",
+      runEnrichment: "Run Hub Enrichment",
       runningEnrichment: "Running Enrichment...",
       enrichmentDone: "Enrichment cycle completed.",
       enrichmentUnavailable: "Enrichment endpoint unavailable.",
-      outbreakAlerts: "Outbreak Alerts",
+      outbreakAlerts: "EWMA Outbreak Alerts",
       shapTitle: "SHAP Risk Attributions",
       actionCards: "Action Cards",
-      eventLog: "Live HLC CRDT Event Log Inspector",
+      eventLog: "HLC CRDT Event Log Inspector",
+      showEventLog: "Show Log",
+      hideEventLog: "Hide Log",
       filterEvents: "Filter by event type",
       allEvents: "All Events",
       colHlc: "HLC Timestamp",
@@ -50,6 +73,8 @@
       colPatient: "Patient ID",
       colEnrichment: "Enrichment",
       colSummary: "Payload",
+      noPatients: "No patients synced yet. Launch a scenario above or sync a peer.",
+      noTriage: "No triage assessments recorded yet.",
       noPeers: "No mesh peers connected yet.",
       noOutbreaks: "No active outbreak alerts.",
       noShap: "No completed SHAP risk enrichments yet.",
@@ -57,7 +82,11 @@
       noEvents: "No CRDT events recorded yet.",
       battery: "Battery",
       riskScore: "Risk Score",
-      outbreakBannerPrefix: "ACTIVE OUTBREAK ALERT",
+      outbreakBannerPrefix: "ACTIVE EWMA OUTBREAK ALERT",
+      pregnantWeeks: "Pregnant",
+      referralYes: "PHC Referral",
+      eventsUnit: "events",
+      peersUnit: "peers",
     },
     hi: {
       appTitle: "आरोग्य संजाल — प्राथमिक स्वास्थ्य केन्द्र नियन्त्रण कक्ष",
@@ -70,6 +99,27 @@
       autoOn: "स्वतः अद्यतन: सक्रिय",
       autoOff: "स्वतः अद्यतन: निष्क्रिय",
       refresh: "अद्यतन करें",
+      demoBarLabel: "प्रदर्शन परिदृश्य",
+      scenarioMaternal: "मातृ घटिका आपात संकेत",
+      scenarioVoice: "अन्तर्जाल-रहित स्वर → प्रज्ञा",
+      scenarioOutbreak: "ग्राम संक्रमण प्रकोप",
+      scenarioCrdt: "द्वन्द्व-रहित विलय प्रमाण",
+      demoReset: "पुनःस्थापन",
+      openShowcase: "त्रि-स्तरीय जीवन्त मंच →",
+      demoLoading: "जीवन्त चिकित्सकीय परिदृश्य प्रारम्भ हो रहा है...",
+      demoLoaded: "परिदृश्य वास्तविक समन्वय द्वारा पूर्ण हुआ:",
+      demoResetting: "मुख्य केन्द्र पुनःस्थापित हो रहा है...",
+      demoResetDone: "घटना अभिलेख एवं सहकर्मी सूची स्वच्छ हुई।",
+      demoUnavailable: "परिदृश्य सेवा अभी संयोजित नहीं है।",
+      archTitle: "क्षमता-आधारित त्रि-स्तरीय स्वावलम्बी संजाल संरचना",
+      tier0Label: "स्तर-० घटिका",
+      tier0Desc: "सामान्य जन एवं स्वास्थ्य कार्यकर्ता हेतु स्वावलम्बी आपात संकेत एवं स्मरण",
+      tier1Label: "स्तर-१ दूरभाष",
+      tier1Desc: "विश्व स्वास्थ्य संगठन नियम वर्गीकरण एवं स्थानीय संग्रहण",
+      tier2Label: "स्तर-२ मुख्य केन्द्र",
+      tier2Desc: "ध्वनि अनुलेखन · संकट कारक विश्लेषण · प्रकोप संसूचन",
+      activePeersShort: "सक्रिय",
+      hubOnlineShort: "सक्रिय",
       nodeId: "केन्द्र पहचान",
       ram: "मुख्य स्मृति",
       cpu: "प्रक्रमक क्रोड",
@@ -86,11 +136,11 @@
       pendingEnrichments: "प्रतीक्षारत संवर्धन",
       completedEnrichments: "पूर्ण संवर्धन",
       totalEvents: "कुल घटनाएँ",
-      peerTopology: "जीवन्त संजाल सहकर्मी संरचना",
-      tier0Label: "स्तर-० घटिका",
-      tier1Label: "स्तर-१ दूरभाष",
-      tier2Label: "स्तर-२ मुख्य केन्द्र",
-      clinicalPanel: "चिकित्सकीय वर्गीकरण एवं संकट चेतावनी",
+      clinicalPanel: "चिकित्सकीय वर्गीकरण, कार्य पत्रक एवं संकट विश्लेषण",
+      triageFeedTitle: "सक्रिय चिकित्सकीय वर्गीकरण",
+      patientsRosterTitle: "समन्वित रोगी पंजिका एवं सहकर्मी",
+      peerTopology: "जीवन्त संजाल सहकर्मी",
+      hubTelemetryTitle: "मुख्य केन्द्र उपकरण एवं स्थानीय सम्पर्क",
       runEnrichment: "तत्काल संवर्धन चलाएँ",
       runningEnrichment: "संवर्धन प्रगति पर...",
       enrichmentDone: "संवर्धन चक्र पूर्ण हुआ।",
@@ -99,6 +149,8 @@
       shapTitle: "संकट कारक विश्लेषण (SHAP)",
       actionCards: "तत्काल कार्य पत्रक",
       eventLog: "जीवन्त कालक्रम घटना अभिलेख निरीक्षक",
+      showEventLog: "अभिलेख दिखाएँ",
+      hideEventLog: "अभिलेख छिपाएँ",
       filterEvents: "घटना प्रकार चयन",
       allEvents: "समस्त घटनाएँ",
       colHlc: "कालक्रम मुहर",
@@ -107,6 +159,8 @@
       colPatient: "रोगी पहचान",
       colEnrichment: "संवर्धन स्थिति",
       colSummary: "विवरण",
+      noPatients: "अभी कोई रोगी पंजीकृत नहीं है। ऊपर से परिदृश्य चुनें।",
+      noTriage: "अभी कोई चिकित्सकीय वर्गीकरण अभिलेखित नहीं है।",
       noPeers: "कोई संजाल सहकर्मी अभी संयोजित नहीं है।",
       noOutbreaks: "कोई सक्रिय संक्रमण प्रकोप चेतावनी नहीं है।",
       noShap: "अभी कोई संकट कारक संवर्धन उपलब्ध नहीं है।",
@@ -115,6 +169,10 @@
       battery: "विद्युत स्तर",
       riskScore: "संकट सूचकांक",
       outbreakBannerPrefix: "सक्रिय संक्रमण प्रकोप चेतावनी",
+      pregnantWeeks: "गर्भावस्था",
+      referralYes: "शीघ्र स्वास्थ्य केन्द्र प्रेषण",
+      eventsUnit: "घटनाएँ",
+      peersUnit: "सहकर्मी",
     },
   };
 
@@ -124,6 +182,8 @@
     autoRefresh: true,
     timerId: null,
     selectedEventType: "",
+    eventsExpanded: false,
+    activeScenario: null,
     lastSummary: null,
     lastPeers: [],
     lastConnectInfo: null,
@@ -161,6 +221,21 @@
     if (node) node.textContent = String(value);
   }
 
+  function severityStyle(severity) {
+    if (severity === "RED_EMERGENCY") {
+      return { badge: "badge badge-red", card: "item-card item-card-red" };
+    }
+    if (severity === "YELLOW_PHC") {
+      return { badge: "badge badge-yellow", card: "item-card item-card-yellow" };
+    }
+    return { badge: "badge badge-green", card: "item-card item-card-green" };
+  }
+
+  function formatHlc(hlc) {
+    if (!hlc) return "--";
+    return `${hlc.wall_ms}:${hlc.logical}:${hlc.node_id}`;
+  }
+
   function applyTranslations() {
     document.documentElement.lang = state.lang;
     setText("app-title", t("appTitle"));
@@ -171,26 +246,32 @@
     setText("btn-theme", state.theme === "dark" ? t("themeLight") : t("themeDark"));
     setText("btn-autorefresh", state.autoRefresh ? t("autoOn") : t("autoOff"));
     setText("btn-refresh", t("refresh"));
+    setText("btn-toggle-events", state.eventsExpanded ? t("hideEventLog") : t("showEventLog"));
 
     const nodes = document.querySelectorAll("[data-i18n]");
     for (const node of nodes) {
       const key = node.getAttribute("data-i18n");
       if (key) node.textContent = t(key);
     }
-  }
-
-  function formatHlc(hlc) {
-    if (!hlc) return "--";
-    return `${hlc.wall_ms}:${hlc.logical}:${hlc.node_id}`;
+    setText("btn-toggle-events", state.eventsExpanded ? t("hideEventLog") : t("showEventLog"));
   }
 
   function renderManifest(summary, connectInfo) {
     const manifest = summary && summary.manifest ? summary.manifest : null;
     if (manifest) {
       setText("manifest-node-id", manifest.node_id || "--");
+      setText("arch-hub-node", manifest.node_id || "phc-hub-local");
+      const ramGb = manifest.ram_mb ? `${Math.max(1, Math.round(manifest.ram_mb / 1024))} GB` : "32 GB";
+      setText("arch-hub-ram", ramGb);
       setText("manifest-ram", manifest.ram_mb ? `${manifest.ram_mb} MB` : "--");
       setText("manifest-cpu", manifest.cpu_cores || "--");
       setText("manifest-npu", manifest.has_npu ? t("npuAvailable") : t("npuAbsent"));
+    }
+
+    if (summary && summary.latest_hlc) {
+      setText("arch-hlc-badge", `HLC: ${formatHlc(summary.latest_hlc)}`);
+    } else {
+      setText("arch-hlc-badge", "HLC: --");
     }
 
     const httpUrl =
@@ -213,6 +294,91 @@
     setText("kpi-pending", summary.pending_enrichments ?? 0);
     setText("kpi-completed", summary.completed_enrichments ?? 0);
     setText("kpi-events", summary.event_count ?? 0);
+    setText("event-log-count", summary.event_count ?? 0);
+  }
+
+  function renderPatients(patients) {
+    const container = document.getElementById("patients-list");
+    if (!container) return;
+
+    const list = Array.isArray(patients) ? patients : [];
+    if (list.length === 0) {
+      container.replaceChildren(el("p", { className: "empty-state" }, t("noPatients")));
+      return;
+    }
+
+    const cards = list.slice(0, 8).map((pat) => {
+      const chips = [];
+      if (pat.village_id) chips.push(el("span", { className: "meta-chip mono" }, pat.village_id));
+      if (pat.is_pregnant) {
+        const wk = pat.gestational_weeks ? ` · ${pat.gestational_weeks}w` : "";
+        chips.push(el("span", { className: "meta-chip" }, `${t("pregnantWeeks")}${wk}`));
+      }
+      if (pat.metadata && typeof pat.metadata === "object") {
+        for (const [k, v] of Object.entries(pat.metadata).slice(0, 3)) {
+          chips.push(el("span", { className: "meta-chip mono" }, `${k}: ${String(v)}`));
+        }
+      }
+
+      return el(
+        "div",
+        { className: "item-card" },
+        el(
+          "div",
+          { className: "item-card-head" },
+          el("span", { className: "item-card-title" }, pat.full_name || pat.patient_id),
+          el("span", { className: "badge badge-brand mono" }, pat.patient_id)
+        ),
+        chips.length > 0 ? el("div", { className: "meta-chips" }, ...chips) : null
+      );
+    });
+    container.replaceChildren(...cards);
+  }
+
+  function renderTriageHistory(summary) {
+    const container = document.getElementById("triage-list");
+    if (!container) return;
+
+    const history = summary && Array.isArray(summary.triage_history) ? summary.triage_history : [];
+    const enrichmentTriages = [];
+    if (summary && Array.isArray(summary.enrichments)) {
+      for (const enr of summary.enrichments) {
+        const ta = enr && enr.payload && enr.payload.triage_assessment;
+        if (ta && typeof ta === "object" && ta.severity) {
+          enrichmentTriages.push(ta);
+        }
+      }
+    }
+    const combined = [...history, ...enrichmentTriages].reverse();
+    setText("triage-count-badge", combined.length);
+
+    if (combined.length === 0) {
+      container.replaceChildren(el("p", { className: "empty-state" }, t("noTriage")));
+      return;
+    }
+
+    const cards = combined.slice(0, 6).map((item) => {
+      const style = severityStyle(item.severity);
+      const rules = Array.isArray(item.matched_rules) ? item.matched_rules.join(", ") : "";
+      return el(
+        "div",
+        { className: style.card },
+        el(
+          "div",
+          { className: "item-card-head" },
+          el("span", { className: "item-card-title mono" }, item.patient_id || item.assessment_id),
+          el("span", { className: style.badge }, item.severity)
+        ),
+        item.rationale ? el("div", { className: "item-card-meta" }, item.rationale) : null,
+        rules
+          ? el("div", { className: "item-card-meta mono" }, rules)
+          : null,
+        item.referral_required
+          ? el("div", { className: "meta-chips" }, el("span", { className: "badge badge-red" }, t("referralYes")))
+          : null
+      );
+    });
+    container.replaceChildren(...cards);
   }
 
   function renderPeers(peers) {
@@ -232,6 +398,11 @@
     setText("tier0-count", tier0);
     setText("tier1-count", tier1);
 
+    const card0 = document.getElementById("arch-tier-0");
+    const card1 = document.getElementById("arch-tier-1");
+    if (card0) card0.classList.toggle("arch-tier-active", tier0 > 0);
+    if (card1) card1.classList.toggle("arch-tier-active", tier1 > 0);
+
     if (list.length === 0) {
       container.replaceChildren(el("p", { className: "empty-state" }, t("noPeers")));
       return;
@@ -243,8 +414,8 @@
       const tier = m.tier || peer.tier || "PEER";
       const battery = m.battery_pct !== undefined ? `${t("battery")}: ${m.battery_pct}%` : "";
       const mode = m.watch_mode ? ` · ${m.watch_mode}` : "";
-      const lastSeen = peer.last_seen_ms || peer.last_seen || "";
-      const metaParts = [battery, mode, lastSeen ? `· ${lastSeen}` : ""].filter(Boolean).join(" ");
+      const source = peer.source ? ` · ${peer.source}` : "";
+      const metaParts = [battery, mode, source].filter(Boolean).join(" ");
 
       return el(
         "div",
@@ -265,6 +436,7 @@
     const banner = document.getElementById("outbreak-banner");
     const container = document.getElementById("outbreak-list");
     const list = Array.isArray(alerts) ? alerts : [];
+    setText("outbreak-count-badge", list.length);
 
     if (banner) {
       if (list.length > 0) {
@@ -291,16 +463,16 @@
     const cards = list.map((alert) => {
       const p = alert.payload || {};
       const title = p.syndrome || p.disease || p.title || alert.event_type;
-      const village = p.village_id ? `Village: ${p.village_id}` : "";
+      const village = p.village_id ? `Village: ${p.village_id}` : "EWMA";
       const detail = p.message || p.rationale || JSON.stringify(p);
       return el(
         "div",
-        { className: "item-card" },
+        { className: "item-card item-card-red" },
         el(
           "div",
           { className: "item-card-head" },
           el("span", { className: "item-card-title" }, title),
-          el("span", { className: "badge badge-red" }, village || "EWMA")
+          el("span", { className: "badge badge-red" }, village)
         ),
         el("div", { className: "item-card-meta" }, detail)
       );
@@ -335,6 +507,7 @@
     if (!container) return;
 
     const list = Array.isArray(enrichments) ? enrichments : [];
+    setText("shap-count-badge", list.length);
     if (list.length === 0) {
       container.replaceChildren(el("p", { className: "empty-state" }, t("noShap")));
       return;
@@ -342,10 +515,7 @@
 
     const cards = list.slice(0, 6).map((item) => {
       const entries = normalizeShapEntries(item.shap_attributions);
-      const maxAbs = Math.max(
-        0.01,
-        ...entries.map((entry) => Math.abs(entry.value))
-      );
+      const maxAbs = Math.max(0.01, ...entries.map((entry) => Math.abs(entry.value)));
       const scoreText =
         item.risk_score !== null && item.risk_score !== undefined
           ? `${t("riskScore")}: ${Number(item.risk_score).toFixed(2)}`
@@ -359,11 +529,16 @@
         return el(
           "div",
           { className: "shap-bar-row" },
-          el("span", { className: "mono" }, entry.name),
+          el("span", { className: "mono shap-feature", title: entry.name }, entry.name),
           el("div", { className: "shap-track" }, fill),
-          el("span", { className: "mono" }, (entry.value >= 0 ? "+" : "") + entry.value.toFixed(2))
+          el("span", { className: "mono shap-val" }, (entry.value >= 0 ? "+" : "") + entry.value.toFixed(2))
         );
       });
+
+      const badgeClass =
+        item.risk_band === "RED_EMERGENCY" || item.risk_band === "HIGH"
+          ? "badge badge-red"
+          : "badge badge-yellow";
 
       return el(
         "div",
@@ -372,7 +547,7 @@
           "div",
           { className: "item-card-head" },
           el("span", { className: "item-card-title mono" }, item.patient_id || item.ref_event_id || item.event_id),
-          el("span", { className: "badge badge-yellow" }, scoreText)
+          el("span", { className: badgeClass }, scoreText)
         ),
         item.summary ? el("div", { className: "item-card-meta" }, item.summary) : null,
         ...barNodes
@@ -386,6 +561,7 @@
     if (!container) return;
 
     const list = Array.isArray(cardsData) ? cardsData : [];
+    setText("action-count-badge", list.length);
     if (list.length === 0) {
       container.replaceChildren(el("p", { className: "empty-state" }, t("noActionCards")));
       return;
@@ -399,10 +575,16 @@
           : priority === "HIGH"
             ? "badge badge-yellow"
             : "badge badge-green";
+      const cardClass =
+        priority === "CRITICAL"
+          ? "item-card item-card-red"
+          : priority === "HIGH"
+            ? "item-card item-card-yellow"
+            : "item-card item-card-green";
 
       return el(
         "div",
-        { className: "item-card" },
+        { className: cardClass },
         el(
           "div",
           { className: "item-card-head" },
@@ -411,7 +593,7 @@
         ),
         el("div", { className: "item-card-meta" }, card.summary || ""),
         card.patient_id
-          ? el("div", { className: "item-card-meta mono" }, `${card.patient_id} · ${card.target_tier || ""}`)
+          ? el("div", { className: "item-card-meta mono" }, `${card.patient_id} → ${card.target_tier || ""}`)
           : null
       );
     });
@@ -447,6 +629,70 @@
       );
     });
     tbody.replaceChildren(...rows);
+  }
+
+  function showDemoStatus(message, meta) {
+    const banner = document.getElementById("demo-status-banner");
+    if (!banner) return;
+    banner.classList.remove("hidden");
+    banner.replaceChildren(
+      el("span", null, message),
+      meta ? el("span", { className: "badge badge-brand mono" }, meta) : null
+    );
+  }
+
+  function updateScenarioButtons() {
+    const buttons = document.querySelectorAll("[data-scenario]");
+    for (const btn of buttons) {
+      const sid = btn.getAttribute("data-scenario");
+      btn.classList.toggle("active", sid === state.activeScenario);
+    }
+  }
+
+  async function runScenario(scenarioId) {
+    const buttons = document.querySelectorAll("[data-scenario], #btn-demo-reset");
+    for (const b of buttons) b.disabled = true;
+    showDemoStatus(t("demoLoading"), scenarioId);
+    try {
+      const res = await fetch(`/api/v1/demo/load/${encodeURIComponent(scenarioId)}`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        showDemoStatus(t("demoUnavailable"), String(res.status));
+        return;
+      }
+      const data = await res.json();
+      state.activeScenario = scenarioId;
+      updateScenarioButtons();
+      const meta = `${data.events_added ?? 0} ${t("eventsUnit")} · ${data.peers_registered ?? 0} ${t("peersUnit")}`;
+      showDemoStatus(`${t("demoLoaded")} ${scenarioId}`, meta);
+      await refreshAll();
+    } catch (_err) {
+      showDemoStatus(t("demoUnavailable"), null);
+    } finally {
+      for (const b of buttons) b.disabled = false;
+    }
+  }
+
+  async function resetDemo() {
+    const buttons = document.querySelectorAll("[data-scenario], #btn-demo-reset");
+    for (const b of buttons) b.disabled = true;
+    showDemoStatus(t("demoResetting"), null);
+    try {
+      const res = await fetch("/api/v1/demo/reset", { method: "POST" });
+      if (!res.ok) {
+        showDemoStatus(t("demoUnavailable"), String(res.status));
+        return;
+      }
+      state.activeScenario = null;
+      updateScenarioButtons();
+      showDemoStatus(t("demoResetDone"), "0 events");
+      await refreshAll();
+    } catch (_err) {
+      showDemoStatus(t("demoUnavailable"), null);
+    } finally {
+      for (const b of buttons) b.disabled = false;
+    }
   }
 
   async function fetchJsonSafe(url) {
@@ -488,6 +734,8 @@
     applyTranslations();
     renderManifest(state.lastSummary, state.lastConnectInfo);
     renderKpis(state.lastSummary);
+    renderPatients(state.lastSummary ? state.lastSummary.patients : []);
+    renderTriageHistory(state.lastSummary);
     renderPeers(state.lastPeers);
     renderOutbreaks(state.lastSummary ? state.lastSummary.outbreak_alerts : []);
     renderShap(state.lastSummary ? state.lastSummary.enrichments : []);
@@ -583,6 +831,32 @@
       filterSelect.addEventListener("change", (ev) => {
         state.selectedEventType = ev.target.value || "";
         refreshAll();
+      });
+    }
+
+    const toggleEventsBtn = document.getElementById("btn-toggle-events");
+    const eventsCollapsible = document.getElementById("events-collapsible");
+    if (toggleEventsBtn && eventsCollapsible) {
+      toggleEventsBtn.addEventListener("click", () => {
+        state.eventsExpanded = !state.eventsExpanded;
+        eventsCollapsible.classList.toggle("hidden", !state.eventsExpanded);
+        toggleEventsBtn.setAttribute("aria-expanded", String(state.eventsExpanded));
+        toggleEventsBtn.textContent = state.eventsExpanded ? t("hideEventLog") : t("showEventLog");
+      });
+    }
+
+    const scenarioBtns = document.querySelectorAll("[data-scenario]");
+    for (const btn of scenarioBtns) {
+      btn.addEventListener("click", () => {
+        const sid = btn.getAttribute("data-scenario");
+        if (sid) runScenario(sid);
+      });
+    }
+
+    const resetBtn = document.getElementById("btn-demo-reset");
+    if (resetBtn) {
+      resetBtn.addEventListener("click", () => {
+        resetDemo();
       });
     }
   }

@@ -360,3 +360,35 @@ def test_unified_hub_enrichment_discovery_and_dashboard_e2e(tmp_path: Path) -> N
     connect_resp = client.get("/api/v1/discovery/connect-info")
     assert connect_resp.status_code == 200
     assert connect_resp.json()["hub_node_id"] == "hub-e2e-01"
+
+
+def test_hub_showcase_mounts_and_demo_router_integration(tmp_path: Path) -> None:
+    hub_app = create_app(
+        db_path=tmp_path / "hub_showcase.db",
+        blob_dir=tmp_path / "blobs_showcase",
+        node_id="hub-showcase-01",
+    )
+    client = TestClient(hub_app)
+
+    for route in ("/showcase", "/phone/", "/watch/"):
+        resp = client.get(route)
+        assert resp.status_code == 200
+        assert "text/html" in resp.headers["content-type"]
+
+    scenarios_resp = client.get("/api/v1/demo/scenarios")
+    assert scenarios_resp.status_code == 200
+    assert len(scenarios_resp.json()) == 4
+
+    load_resp = client.post("/api/v1/demo/load/village_outbreak")
+    assert load_resp.status_code == 200
+
+    summary = client.get("/api/v1/dashboard/summary").json()
+    assert summary["patient_count"] >= 1
+    assert len(summary["peers"]) >= 1
+    assert len(summary["outbreak_alerts"]) >= 1
+
+    reset_resp = client.post("/api/v1/demo/reset")
+    assert reset_resp.status_code == 200
+    after_reset = client.get("/api/v1/dashboard/summary").json()
+    assert after_reset["event_count"] == 0
+    assert after_reset["peers"] == []

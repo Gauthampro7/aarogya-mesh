@@ -27,8 +27,14 @@
   - `GET /api/v1/discovery/connect-info` — Offline LAN IPv4 URL, WebSocket URL, and `_aarogya-mesh._tcp.local.` mDNS status
 - **PHC Command Center Dashboard (`dashboard.py` & `static/`)**:
   - `GET /` & `GET /static/{filename}` — 100% offline, zero-CDN clinical dashboard with English / pure *Shuddh Tatsama* Hindi toggle
+  - `GET /showcase` — 3-Tier Live Interactive Showcase Stage embedding `/watch/` (Tier-0 Watch), `/phone/` (Tier-1 Phone), and live Tier-2 PHC Hub Brain side-by-side
   - `GET /api/v1/dashboard/summary` — Hub manifest, connected peers, patient/triage KPIs, enrichment risk/SHAP summaries, action cards, and outbreak alerts
   - `GET /api/v1/events` — Newest-first HLC CRDT event log inspector
+- **Interactive Demo Scenario Engine (`demo_scenarios.py`) & Unified Static Mounts**:
+  - `GET /api/v1/demo/scenarios` — Lists 4 real-data CRDT/enrichment scenarios (`maternal_sos`, `pediatric_voice_offload`, `village_outbreak`, `crdt_conflict_merge`)
+  - `POST /api/v1/demo/load/{scenario_id}` — Loads a real scenario through `reconcile_envelopes`, `PeerRegistry`, `LocalBlobStore`, and `EnrichmentWorker`
+  - `POST /api/v1/demo/reset` — Resets Hub SQLite events, blobs, and peer registry
+  - `GET /phone/` & `GET /watch/` — Read-only static mounts for `apps/field-pwa` and `apps/watch-companion` when present on disk
 - **Voice Blob Transport (`blob_store.py`)**:
   - `PUT /api/v1/blobs/{blob_key}` — Idempotent raw audio upload (`audio/webm`, `audio/ogg`, `audio/wav`, max 25 MiB) referenced by `VOICE_NOTE_RECORDED.payload["audio_blob_key"]`
   - `HEAD /api/v1/blobs/{blob_key}` — Fast existence check so Watch/Phone skip re-uploading synced audio

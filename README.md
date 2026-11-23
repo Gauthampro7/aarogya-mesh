@@ -45,10 +45,10 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for the full mechanism-first specificat
 
 | Track | Module Path | Owner | Status |
 | --- | --- | --- | --- |
-| **Track 1: Core Bedrock** | `packages/contracts`, `packages/clinical-engine`, `packages/crdt-sync`, `services/phc-hub` | Core / Gautham | Built & Verified |
-| **Track 2: Field PWA** | `apps/field-pwa` | Teammate A | Ready to Claim |
-| **Track 3: Watch Companion** | `apps/watch-companion` | Teammate B | Ready to Claim |
-| **Track 4: Local ML Pipeline** | `services/ml-pipeline` | Teammate C | Ready to Claim |
+| **Track 1: Core Bedrock** | `packages/contracts`, `packages/clinical-engine`, `packages/crdt-sync`, `services/phc-hub` | Core / `@Gauthampro7` | Complete & Verified |
+| **Track 2: Field PWA** | `apps/field-pwa` | `@Akarshx-x` | Complete & Merged (`#2`–`#7`, `#15`–`#17`) |
+| **Track 3: Watch Companion** | `apps/watch-companion` | `@aril-travass` | Complete & Merged (`#18`–`#21`) |
+| **Track 4: Local ML Pipeline** | `services/ml-pipeline` | `@Krishnanand-10` | In Review — Draft PR `#22` |
 
 See [TEAM_BOARD.md](./TEAM_BOARD.md) for exact interface contracts, entrypoints, and Definition of Done for each track.
 
@@ -87,6 +87,29 @@ Once the Hub is running, inspect:
 - `GET http://127.0.0.1:8000/health` — Hub liveness check
 - `GET http://127.0.0.1:8000/manifest` — Live host `HardwareCapabilityManifest`
 - `GET http://127.0.0.1:8000/docs` — Interactive OpenAPI docs
+
+---
+
+## 3-Minute Winning Hackathon Demo Script (`/showcase` on `:8000`)
+
+Present the entire **3-Tier Offline Mesh** (Watch + Phone + Hub Brain) live on a single port (`:8000`):
+
+1. **Boot the Unified Stage** (auto-builds `apps/field-pwa` and `apps/watch-companion` bundles if needed):
+   ```bash
+   make run-hub
+   ```
+   Open **`http://127.0.0.1:8000/showcase`** (3-Tier Live Interactive Stage) and **`http://127.0.0.1:8000/`** (PHC Command Center).
+2. **Prove Airplane-Mode & Pure *Shuddh Tatsama* Hindi (`हिन्दी`)**:
+   - Disconnect Wi-Fi / toggle Airplane Mode on the laptop; confirm zero CDN calls and instant local rendering.
+   - Click the **`हिन्दी`** toggle on `/showcase` or `/` (and inside the embedded Watch `/watch/` and Phone `/phone/` frames) to show pure *Shuddh Tatsama* Hindi clinical UX.
+3. **Interactive Live Watch + Phone -> Hub Sync**:
+   - In the left **Tier-0 Watch** bezel (`/watch/`), switch between `CHW_COMPANION` and `PATIENT_FAMILY` modes and tap a danger sign (`RED_EMERGENCY` fires in 0ms locally).
+   - In the middle **Tier-1 Phone** frame (`/phone/`), register a patient or run a WHO IMNCI checklist and tap **Sync** — watch the right-hand **Tier-2 PHC Hub Brain** light up live every 2s.
+4. **1-Click Real-Data Scenarios (Real CRDT + Enrichment Pipeline)**:
+   - **`maternal_sos`**: Watch SOS + Phone ANC visit -> deterministic `RED_EMERGENCY` safety floor + Action Card pushed back to Watch.
+   - **`pediatric_voice_offload`**: Phone uploads `.webm` audio blob + `PENDING` voice note -> click **Run Hub Enrichment** -> drains queue, renders SHAP risk bars & `ACTION_CARD_ISSUED`.
+   - **`village_outbreak`**: Multi-node spike across Rampur -> triggers EWMA `OUTBREAK_ALERT_RAISED` banner.
+   - **`crdt_conflict_merge`**: Concurrent offline edits converge deterministically via HLC `(wall_ms, logical, node_id)` — click **Reset** between takes.
 
 ---
 
