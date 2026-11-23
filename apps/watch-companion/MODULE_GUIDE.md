@@ -3,6 +3,8 @@
 **Track**: Tier-0 Dual-Mode Watch Companion (`CHW_COMPANION` / `PATIENT_FAMILY`)  
 **Owned Path**: `apps/watch-companion/` (do NOT edit `packages/` or `services/`)
 
+> **Atomic Starter Prompts**: Pick one stacked slice from [`prompts/track-3-watch-companion/`](../../prompts/track-3-watch-companion/) (see the dependency DAG in [`prompts/README.md`](../../prompts/README.md)) and read only that file before coding.
+
 ---
 
 ## 1. Contract Lock & Dual-Mode Spec

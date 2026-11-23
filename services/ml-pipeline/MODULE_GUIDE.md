@@ -4,6 +4,8 @@
 **Package**: `aarogya-ml-pipeline` (importable as `aarogya_ml_pipeline`)  
 **Target Hardware**: Fedora Linux, Python 3.12 (`uv`), 32 GiB RAM, Intel Core Ultra 9 185H (x86_64 CPU + iGPU/NPU)
 
+> **Atomic Starter Prompts**: Pick one independent slice from [`prompts/track-4-ml-pipeline/`](../../prompts/track-4-ml-pipeline/) (see the dependency DAG in [`prompts/README.md`](../../prompts/README.md)) and read only that file before coding.
+
 ---
 
 ## 1. Zero-Bloat Hardware & Safety Rules

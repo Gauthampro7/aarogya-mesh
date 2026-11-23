@@ -52,6 +52,15 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for the full mechanism-first specificat
 
 See [TEAM_BOARD.md](./TEAM_BOARD.md) for exact interface contracts, entrypoints, and Definition of Done for each track.
 
+### Atomic Starter Prompts (`prompts/`)
+
+Every remaining feature slice has a self-contained, copy-pasteable prompt for teammates and their AI coding agents — see [`prompts/README.md`](./prompts/README.md) for the dependency DAG and index:
+
+- **Track 1 (`services/phc-hub`)**: [`prompts/track-1-phc-hub/`](./prompts/track-1-phc-hub/)
+- **Track 2 (`apps/field-pwa`)**: [`prompts/track-2-field-pwa/`](./prompts/track-2-field-pwa/)
+- **Track 3 (`apps/watch-companion`)**: [`prompts/track-3-watch-companion/`](./prompts/track-3-watch-companion/)
+- **Track 4 (`services/ml-pipeline`)**: [`prompts/track-4-ml-pipeline/`](./prompts/track-4-ml-pipeline/)
+
 ---
 
 ## 2-Minute Local Quickstart

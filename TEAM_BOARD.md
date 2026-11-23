@@ -16,6 +16,15 @@ Each teammate owns one isolated directory so all 4 tracks can develop, test, and
 | **Track 3** | `apps/watch-companion` | **`@aril-travass`** | Claimed (#8) · In Progress | TypeScript, Dual-Mode 360x360 Watch UI |
 | **Track 4** | `services/ml-pipeline` | **`@Krishnanand-10`** | Assigned · Ready to Claim | Python 3.12, `whisper.cpp`, `Qwen2.5-3B` GBNF, `LightGBM+SHAP`, `EWMA` |
 
+### Atomic Starter Prompts (`prompts/`)
+
+Use [`prompts/README.md`](./prompts/README.md) to grab a decoupled, contract-locked starter prompt for your next slice (paste directly into your AI agent after claiming the matching Issue):
+
+- **Track 1 (`services/phc-hub`)**: [`prompts/track-1-phc-hub/`](./prompts/track-1-phc-hub/)
+- **Track 2 (`apps/field-pwa`)**: [`prompts/track-2-field-pwa/`](./prompts/track-2-field-pwa/)
+- **Track 3 (`apps/watch-companion`)**: [`prompts/track-3-watch-companion/`](./prompts/track-3-watch-companion/)
+- **Track 4 (`services/ml-pipeline`)**: [`prompts/track-4-ml-pipeline/`](./prompts/track-4-ml-pipeline/)
+
 ---
 
 ## Track 1: Core Bedrock (Built & Maintained)
