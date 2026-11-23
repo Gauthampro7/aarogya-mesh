@@ -1,52 +1,82 @@
-const CACHE_NAME = "aarogya-field-pwa-v1";
-const APP_SHELL_ASSETS = [
+/* Aarogya Mesh field PWA service worker. Same-origin shell only; never touches the hub. */
+// dist/sw-version.js is stamped with a content hash by `npm run build`, so every
+// rebuild gets a fresh cache name automatically (no manual bump needed).
+try {
+  importScripts("./dist/sw-version.js");
+} catch (e) {
+  /* not built yet: fall back to a fixed name */
+}
+const CACHE_NAME = "aarogya-field-pwa-v3-" + (self.SW_BUILD || "dev");
+const SHELL_ASSETS = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
+  "./dist/app.js",
+  "./dist/app.css",
+  "./icons/icon.svg",
+  "./icons/icon-maskable.svg",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png",
 ];
 
+/** True when this worker may answer the request: same-origin GET, and not an /api/ or /ws/ path. */
+function shouldHandle(request, selfOrigin) {
+  if (request.method !== "GET") return false;
+  const url = new URL(request.url);
+  if (url.origin !== selfOrigin) return false; // hub is cross-origin: never intercept
+  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/ws/")) return false;
+  return true;
+}
+
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL_ASSETS)),
-  );
-  self.skipWaiting();
+  // No automatic skipWaiting: the page offers "update now" and posts SKIP_WAITING.
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_ASSETS)));
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((oldKey) => caches.delete(oldKey)),
-      ),
-    ),
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim()),
   );
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
-  const url = new URL(event.request.url);
+  const request = event.request;
+  if (!shouldHandle(request, self.location.origin)) return;
 
-  // Never intercept Hub API or WebSocket sync traffic; let SyncClient handle offline queueing.
-  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/ws/")) {
+  if (request.mode === "navigate") {
+    // Network first, fall back to the cached shell (works in Airplane Mode).
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((c) => c.put("./index.html", copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match("./index.html").then((r) => r || caches.match("./"))),
+    );
     return;
   }
 
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) {
-        return cached;
-      }
-      return fetch(event.request)
-        .then((response) => {
-          if (event.request.method === "GET" && response.ok) {
+    caches.match(request).then(
+      (cached) =>
+        cached ||
+        fetch(request).then((response) => {
+          if (response.ok) {
             const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+            caches.open(CACHE_NAME).then((c) => c.put(request, copy));
           }
           return response;
-        })
-        .catch(() => caches.match("./index.html"));
-    }),
+        }),
+    ),
   );
 });
