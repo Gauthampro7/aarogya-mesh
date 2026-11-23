@@ -17,23 +17,40 @@
 
 ```bash
 cd apps/field-pwa
-npm run dev       # serves static PWA shell on http://127.0.0.1:5173
+npm install
+npm run build      # esbuild bundle -> dist/, then stamps the service-worker cache version
+npm run dev        # build + serve on http://127.0.0.1:5173
+npm run typecheck  # tsc --noEmit (src + tests, contracts imported from packages/contracts/ts)
+npm test           # vitest: core, sync, clinical parity, ui
 ```
 
-If you install dev tooling (`npm install` inside `apps/field-pwa`):
-
-```bash
-npm run typecheck # runs tsc --noEmit against packages/contracts/ts/index.ts
-```
+Run against a hub: `make run-hub` from the repo root. Set `AAROGYA_HUB_DB=<path>` so
+events survive a hub restart (the default is in-memory). Hub URL is set in the app's Sync screen.
 
 ---
 
-## 3. What to Build Next
+## 3. Layout
 
-1. **IndexedDB Event Log**: Persist `FieldSyncClient.pendingEvents` and materialized `patients` / `actionCards` in IndexedDB (`idb`) so reloads in Airplane Mode keep all state.
-2. **Offline Clinical Forms**:
-   - Patient registration (`PATIENT_REGISTERED`)
-   - WHO IMNCI & maternal danger-sign screening (`TRIAGE_COMPLETED`) — port the JSON rule tables from `packages/clinical-engine/rules/` directly into the PWA so triage runs 100% locally on the phone.
-   - India UIP immunization schedule tracker (`VACCINATION_LOGGED`)
-   - Offline voice memo recorder (`VOICE_NOTE_RECORDED` with `enrichment_state: "PENDING"`)
-3. **Hub Delta Sync**: Connect `FieldSyncClient.syncWithHub()` to the running Tier-2 Hub (`make run-hub`) at `POST /api/v1/sync` and `WS /ws/mesh` to receive `ENRICHMENT_COMPLETED` and `ACTION_CARD_ISSUED` cards back on the phone.
+| Path | Responsibility |
+|---|---|
+| `src/core/` | IndexedDB event log, outbox, cursor, patients, cards; persisted HLC |
+| `src/sync/` | Hub delta sync (`POST /api/v1/sync`, `WS /ws/mesh`), apply/projection, emitter |
+| `src/clinical/` | TypeScript port of IMNCI / maternal triage, UIP schedule, ANC/PNC checklists; rule tables copied from `packages/clinical-engine/rules/` |
+| `src/ui/`, `src/i18n/` | Offline screens, Hindi/English strings, voice notes |
+| `sw.js`, `scripts/stamp-sw.mjs` | App-shell service worker (never caches `/api/` or `/ws/`) |
+| `tests/` | Unit tests plus parity fixtures generated from the Python engine |
+
+Dependencies: no runtime dependencies; dev only (typescript, vitest, fake-indexeddb, esbuild).
+
+---
+
+## 4. Status and Known Gaps
+
+Done: patient registration, triage (RED on any single danger sign), UIP vaccination log,
+ANC/PNC checklists, offline voice notes, hub delta sync, action cards and enrichment count.
+
+- **Hindi strings** have had only an AI review; a native-speaker pass is needed.
+- **Rule tables** are generated copies; `tests/clinical/rules_parity.test.ts` fails if they drift from `packages/clinical-engine/rules/`. Regenerate them when the engine rules change.
+- **Python engine aliases:** some natural phrasings (e.g. `not_able_to_drink`) have no alias in the Python engine; the UI offers canonical flags only.
+- **Multi-tab:** two tabs on one database could mint duplicate HLCs (HLC read-compute-write is not one transaction).
+- `src/sync_client.ts` is the legacy client, unused by the bundle; remove once nothing references it.
