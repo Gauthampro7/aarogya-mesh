@@ -1,5 +1,5 @@
 import type { ChecklistType } from "../../clinical";
-import { t } from "../../i18n";
+import { t, tx } from "../../i18n";
 import { checkbox, clear, field, h } from "../dom";
 import type { Ctx } from "../ctx";
 import { autoChecklistType, buildChecklistPayload, checklistItems, checklistTypes, evaluate } from "../checklist_logic";
@@ -19,7 +19,7 @@ export async function checklist(ctx: Ctx): Promise<HTMLElement> {
     done.clear();
     list.append(
       h("fieldset", {}, h("legend", {}, t(`ck.${type}` as const)), checklistItems(type).map((i) =>
-        checkbox(i.critical ? `${i.label} *` : i.label, i.id, false, (c) => (c ? done.add(i.id) : done.delete(i.id))),
+        checkbox(i.critical ? `${tx(`cki.${i.id}`, i.label)} *` : tx(`cki.${i.id}`, i.label), i.id, false, (c) => (c ? done.add(i.id) : done.delete(i.id))),
       )),
       h("p", { class: "muted" }, t("ck.criticalNote")),
       h("button", { type: "button", class: "primary", onclick: save }, t("ck.save")),
