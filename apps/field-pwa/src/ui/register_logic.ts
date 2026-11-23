@@ -1,5 +1,6 @@
 import type { PatientRecord, PatientSex } from "../../../../packages/contracts/ts/index";
 import { isoToDayNumber } from "../clinical";
+import { uuid } from "../core/uuid";
 
 export interface RegisterForm {
   full_name: string;
@@ -23,7 +24,7 @@ const todayIso = (now: Date) =>
 export function buildPatient(
   f: RegisterForm,
   nodeId: string,
-  newId: () => string = () => crypto.randomUUID(),
+  newId: () => string = () => uuid(),
   now: Date = new Date(),
 ): RegResult {
   const errors: RegErr[] = [];
