@@ -1,4 +1,13 @@
 export {
+  DEFAULT_BLOB_DB_PREFIX,
+  IndexedDbWatchBlobQueue,
+  MemoryWatchBlobQueue,
+  resolveDefaultBlobQueue,
+  type IndexedDbBlobQueueOptions,
+  type QueuedWatchBlob,
+  type WatchBlobQueue,
+} from "./blob_queue";
+export {
   isValidBlobKey,
   uploadWatchBlobIfMissing,
   type BlobMetadata,
@@ -8,11 +17,8 @@ export {
 } from "./blobs";
 export {
   DEFAULT_HUB_URL,
-  MemoryWatchBlobQueue,
   WatchSyncClient,
-  type QueuedWatchBlob,
   type VoiceSosInput,
-  type WatchBlobQueue,
   type WatchSyncClientOptions,
   type WatchSyncResult,
 } from "./client";
