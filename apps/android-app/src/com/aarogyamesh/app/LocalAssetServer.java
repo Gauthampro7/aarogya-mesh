@@ -38,66 +38,8 @@ public final class LocalAssetServer {
     private static final int PREFERRED_PORT = 49842;
     private static final int SOCKET_TIMEOUT_MS = 10_000;
 
+    /** Suggested LAN PHC Hub address shown as a placeholder in the native Hub URL dialog. */
     public static final String DEFAULT_HUB_URL = "http://192.168.1.14:8000";
-
-    private static final String HUB_PRESEED_SCRIPT =
-            "<script>(function(){try{var d=\"" + DEFAULT_HUB_URL + "\";"
-            + "if(!localStorage.getItem(\"aarogya.hubUrl\")){localStorage.setItem(\"aarogya.hubUrl\",d);}"
-            + "if(!localStorage.getItem(\"aarogya.watch.hubUrl\")){localStorage.setItem(\"aarogya.watch.hubUrl\",d);}"
-            + "}catch(e){}})();</script>";
-
-    private static final String LANDING_SHELL_HTML =
-            "<!doctype html>\n"
-            + "<html lang=\"en\">\n"
-            + "<head>\n"
-            + "<meta charset=\"UTF-8\">\n"
-            + "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">\n"
-            + "<meta name=\"theme-color\" content=\"#0f172a\">\n"
-            + "<title>Aarogya Mesh</title>\n"
-            + HUB_PRESEED_SCRIPT + "\n"
-            + "<style>\n"
-            + "*{box-sizing:border-box;margin:0;padding:0}\n"
-            + "html,body{width:100%;height:100%;overflow:hidden;background:#0f172a;color:#f8fafc;"
-            + "font-family:system-ui,-apple-system,sans-serif}\n"
-            + ".shell{display:flex;flex-direction:column;width:100%;height:100%}\n"
-            + ".bar{display:flex;align-items:center;justify-content:space-between;gap:8px;"
-            + "padding:6px 10px;background:#0f172a;border-bottom:1px solid #1e293b;flex-shrink:0}\n"
-            + ".brand{font-size:13px;font-weight:800;color:#5eead4;letter-spacing:.2px;white-space:nowrap}\n"
-            + ".tabs{display:flex;gap:6px;flex:1;justify-content:flex-end}\n"
-            + ".tab{border:1px solid #334155;background:#1e293b;color:#cbd5e1;border-radius:999px;"
-            + "padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}\n"
-            + ".tab.active{background:#0d9488;border-color:#14b8a6;color:#020617}\n"
-            + "iframe{flex:1;width:100%;height:100%;border:0;background:#0f172a}\n"
-            + "</style>\n"
-            + "</head>\n"
-            + "<body>\n"
-            + "<div class=\"shell\">\n"
-            + "  <header class=\"bar\">\n"
-            + "    <span class=\"brand\">Aarogya Mesh</span>\n"
-            + "    <nav class=\"tabs\">\n"
-            + "      <button id=\"tab-phone\" class=\"tab active\" type=\"button\">ASHA Field</button>\n"
-            + "      <button id=\"tab-watch\" class=\"tab\" type=\"button\">Watch / SOS</button>\n"
-            + "    </nav>\n"
-            + "  </header>\n"
-            + "  <iframe id=\"app-frame\" src=\"/phone/\" allow=\"microphone; autoplay; clipboard-read; clipboard-write\"></iframe>\n"
-            + "</div>\n"
-            + "<script>\n"
-            + "(function(){\n"
-            + "  var frame=document.getElementById('app-frame');\n"
-            + "  var bPhone=document.getElementById('tab-phone');\n"
-            + "  var bWatch=document.getElementById('tab-watch');\n"
-            + "  function activate(mode){\n"
-            + "    var isWatch=(mode==='watch');\n"
-            + "    frame.src=isWatch?'/watch/':'/phone/';\n"
-            + "    bPhone.classList.toggle('active',!isWatch);\n"
-            + "    bWatch.classList.toggle('active',isWatch);\n"
-            + "  }\n"
-            + "  bPhone.addEventListener('click',function(){activate('phone');});\n"
-            + "  bWatch.addEventListener('click',function(){activate('watch');});\n"
-            + "})();\n"
-            + "</script>\n"
-            + "</body>\n"
-            + "</html>\n";
 
     private final AssetManager assets;
     private ServerSocket serverSocket;
@@ -234,15 +176,8 @@ public final class LocalAssetServer {
                 return;
             }
 
-            // Route 1: Landing shell at /
-            if ("/".equals(cleanPath) || "/index.html".equals(cleanPath)) {
-                byte[] body = LANDING_SHELL_HTML.getBytes(StandardCharsets.UTF_8);
-                writeBytesResponse(out, 200, "OK", "text/html; charset=utf-8", body, headOnly);
-                return;
-            }
-
-            // Route 2: Canonical trailing-slash redirects so relative ./dist/* resolves cleanly
-            if ("/phone".equals(cleanPath)) {
+            // Canonical redirects: native top bar handles ASHA Field <-> Watch switching directly
+            if ("/".equals(cleanPath) || "/index.html".equals(cleanPath) || "/phone".equals(cleanPath)) {
                 writeRedirect(out, "/phone/");
                 return;
             }
@@ -251,20 +186,19 @@ public final class LocalAssetServer {
                 return;
             }
 
-            // Route 3: Favicon fallback to avoid 404 noise in console
+            // Favicon fallback to avoid 404 noise in console
             if ("/favicon.ico".equals(cleanPath)) {
-                serveAsset(out, "phone/icons/icon-192.png", "image/png", false, headOnly);
+                serveAsset(out, "phone/icons/icon-192.png", "image/png", headOnly);
                 return;
             }
 
-            // Route 4: /phone/* and /watch/* static bundles from APK assets
+            // Static bundles from APK assets
             if (cleanPath.startsWith("/phone/")) {
                 String rel = cleanPath.substring("/phone/".length());
                 if (rel.isEmpty()) {
                     rel = "index.html";
                 }
-                boolean injectPreseed = "index.html".equals(rel);
-                serveAsset(out, "phone/" + rel, mimeTypeFor(rel), injectPreseed, headOnly);
+                serveAsset(out, "phone/" + rel, mimeTypeFor(rel), headOnly);
                 return;
             }
 
@@ -273,8 +207,7 @@ public final class LocalAssetServer {
                 if (rel.isEmpty()) {
                     rel = "index.html";
                 }
-                boolean injectPreseed = "index.html".equals(rel);
-                serveAsset(out, "watch/" + rel, mimeTypeFor(rel), injectPreseed, headOnly);
+                serveAsset(out, "watch/" + rel, mimeTypeFor(rel), headOnly);
                 return;
             }
 
@@ -289,28 +222,14 @@ public final class LocalAssetServer {
         }
     }
 
-    private void serveAsset(OutputStream out, String assetPath, String mimeType, boolean injectPreseed, boolean headOnly)
+    private void serveAsset(OutputStream out, String assetPath, String mimeType, boolean headOnly)
             throws IOException {
         byte[] data = readAssetBytes(assetPath);
         if (data == null) {
             writeTextResponse(out, 404, "Not Found", "text/plain; charset=utf-8", "Asset not found: " + assetPath, headOnly);
             return;
         }
-        if (injectPreseed) {
-            String html = new String(data, StandardCharsets.UTF_8);
-            String injected = injectHubPreseed(html);
-            data = injected.getBytes(StandardCharsets.UTF_8);
-        }
         writeBytesResponse(out, 200, "OK", mimeType, data, headOnly);
-    }
-
-    private static String injectHubPreseed(String html) {
-        int headIdx = html.indexOf("<head>");
-        if (headIdx >= 0) {
-            int insertPos = headIdx + "<head>".length();
-            return html.substring(0, insertPos) + "\n    " + HUB_PRESEED_SCRIPT + html.substring(insertPos);
-        }
-        return HUB_PRESEED_SCRIPT + html;
     }
 
     private byte[] readAssetBytes(String assetPath) {

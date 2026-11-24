@@ -6,13 +6,14 @@ Gradle-free, reproducible Android APK packaging the offline-first **ASHA Field P
 
 - **`LocalAssetServer.java`**: Pure-Java `ServerSocket` bound strictly to `127.0.0.1` (preferred ephemeral-range port `49842` for stable origin persistence across restarts, automatic fallback to OS ephemeral port `0`). Serving over `http://127.0.0.1:<port>` provides a genuine W3C Secure Context so IndexedDB, `crypto.randomUUID()`, Service Workers, and real hardware `getUserMedia()` microphone recording work offline.
 - **`MainActivity.java`**:
-  - Full-screen Android `WebView` with an unobtrusive native top bar to switch instantly between **ASHA Field** (`/phone/`) and **Watch / SOS** (`/watch/`), plus live battery/network telemetry.
+  - **Dual persistent `WebView` instances** (`phoneWebView` for `/phone/` and `watchWebView` for `/watch/`, toggled via `VISIBLE`/`GONE`) so switching between **ASHA Field** and **Watch / SOS** never reloads or wipes unsaved forms or audio recordings.
+  - **Slim localized native top bar** supporting English (`ASHA Field`, `Watch / SOS`) and pure *Shuddh Tatsama* Hindi (`आशा क्षेत्र`, `घटिका / आपात`) synced with `aarogya.lang`.
+  - **Native "Set Hub URL" dialog**: tapping the top-bar battery/network pill opens an Android `AlertDialog` to inspect, update, or clear `aarogya.hubUrl` / `aarogya.watch.hubUrl` without overwriting custom LAN subnets or cleared settings on page reloads.
   - Runtime `RECORD_AUDIO` permission handling + `WebChromeClient.onPermissionRequest` auto-grant for `127.0.0.1` origins.
   - Native `tel:` link interception (`tel:108` opens Android `Intent.ACTION_DIAL`).
-  - `AarogyaNativeBridge` (`window.AarogyaNativeBridge`): battery %, RAM MB, CPU cores, online/offline network status, and `vibrateEmergency()` haptic SOS pulses.
-  - Pre-seeds `localStorage` Hub URL (`aarogya.hubUrl` and `aarogya.watch.hubUrl`) to `http://192.168.1.14:8000` only if unset.
+  - `AarogyaNativeBridge` (`window.AarogyaNativeBridge`): battery %, RAM MB, CPU cores, online/offline network status, `vibrateEmergency()` haptic SOS pulses, `switchMode()`, `setLanguage()`, and `openHubSettings()`.
   - WebView CDP debugging enabled (`WebView.setWebContentsDebuggingEnabled(true)`).
-  - Native Android Back button navigates WebView history cleanly before minimizing.
+  - Predictive back navigation via `OnBackInvokedCallback` (API 33+) with per-WebView history before minimizing cleanly.
 
 ## Prerequisites (Fedora Linux)
 
@@ -61,5 +62,5 @@ adb -s "$ADB_SERIAL" shell am start -W -S -n com.aarogyamesh.app/.MainActivity
    # or directly:
    uv run uvicorn aarogya_phc_hub.app:app --host 0.0.0.0 --port 8000
    ```
-2. Open **Aarogya Mesh** on the S23 (on the same Wi-Fi LAN). The default Hub URL is pre-seeded to `http://192.168.1.14:8000` (editable anytime in the **Sync** tab if your laptop IP changes).
+2. Open **Aarogya Mesh** on the S23 (on the same Wi-Fi LAN). Tap the top-right network/hub pill (`% · WIFI ⚙`) to open **Set Hub URL** (or edit in the **Sync** tab) and enter your Fedora laptop's LAN address (e.g., `http://192.168.1.14:8000`).
 3. Tap **Sync now** to exchange CRDT events and register the S23 as a live `TIER_1_PHONE` peer on the PHC Hub.
