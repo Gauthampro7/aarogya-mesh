@@ -6,7 +6,8 @@ export interface RegisterForm {
   full_name: string;
   sex: PatientSex;
   dob: string; // ISO or ""
-  age_months: string; // "" or integer text
+  age_months: string; // "" or integer text (in `age_unit`)
+  age_unit?: "months" | "years"; // default "months"
   village_id: string;
   household_id: string;
   is_pregnant: boolean;
@@ -45,8 +46,9 @@ export function buildPatient(
     }
   } else if (f.age_months.trim() !== "") {
     const n = Number(f.age_months);
-    if (!Number.isInteger(n) || n < 0 || n > 1500) errors.push("age");
-    else age = n;
+    const years = f.age_unit === "years";
+    if (!Number.isInteger(n) || n < 0 || n > (years ? 125 : 1500)) errors.push("age");
+    else age = years ? n * 12 : n;
   } else errors.push("age_or_dob");
 
   let weeks: number | null = null;

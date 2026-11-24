@@ -2,10 +2,10 @@ import type { ChecklistType } from "../../clinical";
 import { t, tx } from "../../i18n";
 import { checkbox, clear, field, h } from "../dom";
 import type { Ctx } from "../ctx";
-import { autoChecklistType, buildChecklistPayload, checklistItems, checklistTypes, evaluate } from "../checklist_logic";
+import { autoChecklistType, buildChecklistPayload, checklistItems, checklistTypes, evaluate, latestCompletedChecks } from "../checklist_logic";
 
 export async function checklist(ctx: Ctx): Promise<HTMLElement> {
-  const patients = await ctx.store.listPatients();
+  const [patients, events] = await Promise.all([ctx.store.listPatients(), ctx.store.getAllEvents()]);
   const pSel = h("select", { name: "patient" }, h("option", { value: "" }, t("triage.anon")), patients.map((p) => h("option", { value: p.patient_id }, p.full_name)));
   const tSel = h("select", { name: "type" }, checklistTypes().map((c) => h("option", { value: c }, t(`ck.${c}` as const))));
   const done = new Set<string>();
@@ -16,11 +16,22 @@ export async function checklist(ctx: Ctx): Promise<HTMLElement> {
     clear(list);
     clear(out);
     const type = tSel.value as ChecklistType;
+    const items = checklistItems(type);
     done.clear();
+    for (const id of latestCompletedChecks(events, pSel.value || null, type)) if (items.some((i) => i.id === id)) done.add(id);
+    const count = h("p", { class: "ckcount", "aria-live": "polite" });
+    const recount = () => (count.textContent = t("ck.score", { done: done.size, total: items.length }));
+    recount();
     list.append(
-      h("fieldset", {}, h("legend", {}, t(`ck.${type}` as const)), checklistItems(type).map((i) =>
-        checkbox(i.critical ? `${tx(`cki.${i.id}`, i.label)} *` : tx(`cki.${i.id}`, i.label), i.id, false, (c) => (c ? done.add(i.id) : done.delete(i.id))),
+      h("fieldset", {}, h("legend", {}, t(`ck.${type}` as const)), items.map((i) =>
+        checkbox(i.critical ? `${tx(`cki.${i.id}`, i.label)} *` : tx(`cki.${i.id}`, i.label), i.id, done.has(i.id), (c) => {
+          if (c) done.add(i.id);
+          else done.delete(i.id);
+          recount();
+        }),
       )),
+      count,
+      ...(done.size ? [h("p", { class: "muted" }, t("ck.prefilled"))] : []),
       h("p", { class: "muted" }, t("ck.criticalNote")),
       h("button", { type: "button", class: "primary", onclick: save }, t("ck.save")),
     );
@@ -40,7 +51,8 @@ export async function checklist(ctx: Ctx): Promise<HTMLElement> {
     out.append(saved);
     ctx.engine
       .enqueue({ event_type: "CHECKLIST_RECORDED", patient_id: pid, payload: buildChecklistPayload(ev) })
-      .then(() => {
+      .then((rec) => {
+        events.push(rec);
         saved.textContent = t("ck.saved");
         ctx.syncSoon();
       })

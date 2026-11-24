@@ -29,6 +29,24 @@ export function register(ctx: Ctx): HTMLElement {
   const weeksField = field(t("reg.weeks"), weeks);
   weeksField.hidden = true;
   const preg = checkbox(t("reg.pregnant"), "is_pregnant", false, (c) => (weeksField.hidden = !c));
+  const pregInput = preg.querySelector("input") as HTMLInputElement;
+  const syncSex = () => {
+    preg.hidden = sex.value !== "F";
+    if (preg.hidden) pregInput.checked = false;
+    if (!pregInput.checked) {
+      weeksField.hidden = true;
+      weeks.value = "";
+    }
+  };
+  sex.addEventListener("change", syncSex);
+  const unitSel = h("select", { name: "age_unit" }, h("option", { value: "months" }, t("reg.unitMonths")), h("option", { value: "years" }, t("reg.unitYears")));
+  const ageField = field(t("reg.age"), age, t("reg.ageHint"));
+  const syncUnit = () => {
+    const years = unitSel.value === "years";
+    age.max = years ? "125" : "1500";
+    ageField.querySelector("small")!.textContent = t(years ? "reg.ageHintYears" : "reg.ageHint");
+  };
+  unitSel.addEventListener("change", syncUnit);
   const errors = h("div", { class: "error", role: "alert", "aria-live": "assertive" });
   const ok = h("div", { class: "ok", role: "status" });
 
@@ -38,7 +56,7 @@ export function register(ctx: Ctx): HTMLElement {
     field(t("reg.name"), name),
     field(t("reg.sex"), sex),
     field(t("reg.dob"), dob),
-    field(t("reg.ageMonths"), age, t("reg.ageHint")),
+    h("div", { class: "agerow" }, ageField, field(t("reg.ageUnit"), unitSel)),
     field(t("reg.village"), village),
     field(t("reg.household"), hh),
     preg,
@@ -47,6 +65,7 @@ export function register(ctx: Ctx): HTMLElement {
     h("button", { type: "submit", class: "primary" }, t("reg.save")),
     ok,
   );
+  syncSex();
   form.addEventListener("submit", (ev) => {
     ev.preventDefault();
     const f: RegisterForm = {
@@ -54,9 +73,10 @@ export function register(ctx: Ctx): HTMLElement {
       sex: sex.value as PatientSex,
       dob: dob.value,
       age_months: age.value,
+      age_unit: unitSel.value as "months" | "years",
       village_id: village.value,
       household_id: hh.value,
-      is_pregnant: (preg.querySelector("input") as HTMLInputElement).checked,
+      is_pregnant: pregInput.checked,
       gestational_weeks: weeks.value,
       preferred_language: getLang(),
     };
@@ -64,7 +84,7 @@ export function register(ctx: Ctx): HTMLElement {
     errors.replaceChildren();
     ok.replaceChildren();
     if (!r.ok) {
-      errors.append(h("ul", {}, r.errors.map((e) => h("li", {}, t(ERR_KEY[e])))));
+      errors.append(h("ul", {}, r.errors.map((e) => h("li", {}, t(e === "age" && unitSel.value === "years" ? "reg.err.ageYears" : ERR_KEY[e])))));
       return;
     }
     const p = r.patient;
@@ -79,7 +99,8 @@ export function register(ctx: Ctx): HTMLElement {
           h("a", { class: "bigbtn", href: "#/register", onclick: () => ctx.rerender() }, t("reg.another")),
         );
         form.reset();
-        weeksField.hidden = true;
+        syncSex();
+        syncUnit();
       })
       .catch((e) => errors.append(h("p", {}, String(e))));
   });
