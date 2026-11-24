@@ -113,6 +113,24 @@ Present the entire **3-Tier Offline Mesh** (Watch + Phone + Hub Brain) live on a
 
 ---
 
+## Native Android APK (Phone + Watch Companion on Galaxy S23)
+
+Build and install the standalone offline Android WebView shell (`com.aarogyamesh.app`, bundling `/phone/` + `/watch/` over `127.0.0.1` with native `RECORD_AUDIO`, `VIBRATE`, battery/network bridge, and LAN Hub sync):
+
+```bash
+# 1. Build & sign apps/android-app/dist/aarogya-mesh.apk
+./apps/android-app/build_apk.sh
+
+# 2. Install & launch on Samsung Galaxy S23 (pass your ADB serial)
+adb -s "$ADB_SERIAL" install -r apps/android-app/dist/aarogya-mesh.apk
+adb -s "$ADB_SERIAL" shell pm grant com.aarogyamesh.app android.permission.RECORD_AUDIO
+adb -s "$ADB_SERIAL" shell am start -W -S -n com.aarogyamesh.app/.MainActivity
+```
+
+See [apps/android-app/README.md](./apps/android-app/README.md) for LAN PHC Hub sync details.
+
+---
+
 ## Airplane-Mode Demo Script (3-Minute Verification)
 
 Demonstrate full offline autonomy and opportunistic CRDT convergence without internet:
