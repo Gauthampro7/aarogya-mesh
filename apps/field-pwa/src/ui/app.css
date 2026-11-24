@@ -57,3 +57,8 @@ legend { font-weight: 700; padding: 0 6px; }
 .prio-CRITICAL { border: 3px solid #f87171; } .prio-HIGH { border: 3px solid var(--yellow); }
 details summary { min-height: 48px; display: flex; align-items: center; cursor: pointer; font-weight: 700; }
 @media (max-width: 380px) { .grid2 { grid-template-columns: 1fr; } .tools { width: 100%; } }
+/* === T2-05 === */
+.rec-timer { display: inline-block; margin-left: 12px; font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.voice-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 8px 0; }
+.patient-chip { display: inline-block; margin: 4px 0; padding: 2px 10px; border: 1px solid var(--line); border-radius: 999px; font-weight: 700; }
+.orig-en { margin-top: 6px; font-size: .85em; opacity: .8; }
