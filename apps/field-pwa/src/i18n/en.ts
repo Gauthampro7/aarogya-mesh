@@ -237,6 +237,15 @@ export const en = {
   "cki.pnc_nb_weight_lbw": "Birth/visit weight recorded and LBW (<2.5 kg) flagged",
   "cki.pnc_nb_jaundice_activity": "Checked for yellow palms/soles (jaundice) and normal limb activity",
   "cki.pnc_nb_birth_vaccines": "Birth doses (BCG, OPV-0, HepB-Birth) verified on MCP card",
+
+  // === T2-05 ===
+  "voice.insecureContext": "Microphone recording needs a secure page (https or localhost) or the Aarogya Android app. Type the note below; it is saved on this device.",
+  "voice.discard": "Discard recording",
+  "voice.discarded": "Recording discarded.",
+  "voice.elapsed": "Recording time",
+  "sync.cardPatient": "{name}, village {v}",
+  "sync.cardPatientId": "Patient ID: {id}",
+  "result.originalEn": "Original (English)",
 } as const;
 
 export type Key = keyof typeof en;
