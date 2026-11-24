@@ -89,22 +89,42 @@ def test_canonical_danger_flag_mapping() -> None:
     assert map_to_canonical_danger_flag("cannot_breastfeed") == "not_able_to_drink_or_breastfeed"
     assert map_to_canonical_danger_flag("lethargy") == "lethargic_or_unconscious"
     assert map_to_canonical_danger_flag("abnormally_sleepy") == "lethargic_or_unconscious"
-    assert map_to_canonical_danger_flag("bleeding") == "vaginal_bleeding"
-    assert map_to_canonical_danger_flag("रक्तस्राव") == "vaginal_bleeding"
+    assert map_to_canonical_danger_flag("bleeding") == "severe_bleeding"
+    assert map_to_canonical_danger_flag("severe_bleeding") == "severe_bleeding"
+    assert map_to_canonical_danger_flag("रक्तस्राव") == "severe_bleeding"
+    assert map_to_canonical_danger_flag("vaginal_bleeding") == "vaginal_bleeding"
+    assert map_to_canonical_danger_flag("योनि रक्तस्राव") == "vaginal_bleeding"
+    assert map_to_canonical_danger_flag("very_high_fever") == "very_high_fever"
+    assert map_to_canonical_danger_flag("high_fever") == "high_fever"
     assert map_to_canonical_danger_flag("severe headache") == "severe_headache_or_blurred_vision"
     assert map_to_canonical_danger_flag("धुंधली दृष्टि") == "severe_headache_or_blurred_vision"
     assert map_to_canonical_danger_flag("reduced_fetal_movement") == "reduced_fetal_movement"
 
-    # All primary canonical flags must be present in canonical set
+    # All primary IMNCI and Maternal canonical flags must be present in canonical set
     expected_flags = {
         "convulsions",
         "not_able_to_drink_or_breastfeed",
         "lethargic_or_unconscious",
+        "severe_bleeding",
+        "very_high_fever",
         "vaginal_bleeding",
+        "high_fever",
         "severe_headache_or_blurred_vision",
         "reduced_fetal_movement",
+        "swelling_face_and_hands",
+        "breathing_difficulty_or_chest_pain",
+        "convulsions_or_fits",
     }
     assert expected_flags.issubset(CANONICAL_DANGER_FLAGS)
+
+
+def test_danger_flag_word_boundary_and_negation_safety() -> None:
+    """Word-boundary matching must prevent substring/negation false positives."""
+    assert map_to_canonical_danger_flag("benefits") == "benefits"
+    assert map_to_canonical_danger_flag("no_bleeding") == "no_bleeding"
+    assert map_to_canonical_danger_flag("no bleeding") == "no_bleeding"
+    assert map_to_canonical_danger_flag("nose_bleeding") == "nose_bleeding"
+    assert map_to_canonical_danger_flag("without_fits") == "without_fits"
 
 
 def test_sanitize_hindi_text_pure_indic() -> None:

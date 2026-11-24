@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -22,17 +23,39 @@ from aarogya_ml_pipeline.interfaces import (
 logger = logging.getLogger(__name__)
 
 CANONICAL_DANGER_FLAGS: frozenset[str] = frozenset({
-    "convulsions", "not_able_to_drink_or_breastfeed", "lethargic_or_unconscious",
-    "vaginal_bleeding", "severe_headache_or_blurred_vision", "reduced_fetal_movement",
-    "vomits_everything", "severe_breathing_difficulty", "cyanosis",
-    "stridor_in_calm_child", "stiff_neck", "high_fever", "severe_anemia_signs",
-    "severe_abdominal_pain", "leaking_fluid_before_labor",
+    # WHO IMNCI pediatric general danger signs (imnci_pediatric.json)
+    "not_able_to_drink_or_breastfeed",
+    "vomits_everything",
+    "convulsions",
+    "lethargic_or_unconscious",
+    "severe_breathing_difficulty",
+    "cyanosis",
+    "stridor_in_calm_child",
+    "stiff_neck",
+    "severe_bleeding",
+    "very_high_fever",
+    # NHM ASHA maternal emergency red flags (maternal_anc.json)
+    "severe_headache_or_blurred_vision",
+    "convulsions_or_fits",
+    "vaginal_bleeding",
+    "reduced_fetal_movement",
+    "high_fever",
+    "severe_anemia_signs",
+    "severe_abdominal_pain",
+    "leaking_fluid_before_labor",
+    "swelling_face_and_hands",
+    "breathing_difficulty_or_chest_pain",
 })
 
 DANGER_FLAG_SYNONYMS: dict[str, str] = {
-    "convulsion": "convulsions", "convulsions": "convulsions", "fits": "convulsions",
-    "convulsions_or_fits": "convulsions", "seizure": "convulsions", "seizures": "convulsions",
-    "दौरा": "convulsions", "आक्षेप": "convulsions",
+    "convulsion": "convulsions",
+    "convulsions": "convulsions",
+    "fits": "convulsions",
+    "convulsions_or_fits": "convulsions",
+    "seizure": "convulsions",
+    "seizures": "convulsions",
+    "दौरा": "convulsions",
+    "आक्षेप": "convulsions",
     "not_able_to_drink_or_breastfeed": "not_able_to_drink_or_breastfeed",
     "not_able_to_drink": "not_able_to_drink_or_breastfeed",
     "unable_to_drink": "not_able_to_drink_or_breastfeed",
@@ -42,14 +65,24 @@ DANGER_FLAG_SYNONYMS: dict[str, str] = {
     "not_drinking": "not_able_to_drink_or_breastfeed",
     "स्तनपान_असमर्थ": "not_able_to_drink_or_breastfeed",
     "स्तनपान में असमर्थ": "not_able_to_drink_or_breastfeed",
-    "lethargic_or_unconscious": "lethargic_or_unconscious", "lethargic": "lethargic_or_unconscious",
-    "lethargy": "lethargic_or_unconscious", "unconscious": "lethargic_or_unconscious",
-    "abnormally_sleepy": "lethargic_or_unconscious", "सुस्त": "lethargic_or_unconscious",
-    "अचेत": "lethargic_or_unconscious", "vaginal_bleeding": "vaginal_bleeding",
-    "bleeding": "vaginal_bleeding", "severe_bleeding": "vaginal_bleeding",
-    "antepartum_hemorrhage": "vaginal_bleeding", "postpartum_hemorrhage": "vaginal_bleeding",
-    "hemorrhage": "vaginal_bleeding", "रक्तस्राव": "vaginal_bleeding",
-    "योनि_रक्तस्राव": "vaginal_bleeding", "योनि रक्तस्राव": "vaginal_bleeding",
+    "lethargic_or_unconscious": "lethargic_or_unconscious",
+    "lethargic": "lethargic_or_unconscious",
+    "lethargy": "lethargic_or_unconscious",
+    "unconscious": "lethargic_or_unconscious",
+    "abnormally_sleepy": "lethargic_or_unconscious",
+    "सुस्त": "lethargic_or_unconscious",
+    "अचेत": "lethargic_or_unconscious",
+    # Keep IMNCI severe_bleeding distinct from maternal vaginal_bleeding
+    "severe_bleeding": "severe_bleeding",
+    "bleeding": "severe_bleeding",
+    "hemorrhage": "severe_bleeding",
+    "रक्तस्राव": "severe_bleeding",
+    "vaginal_bleeding": "vaginal_bleeding",
+    "antepartum_hemorrhage": "vaginal_bleeding",
+    "postpartum_hemorrhage": "vaginal_bleeding",
+    "pph": "vaginal_bleeding",
+    "योनि_रक्तस्राव": "vaginal_bleeding",
+    "योनि रक्तस्राव": "vaginal_bleeding",
     "severe_headache_or_blurred_vision": "severe_headache_or_blurred_vision",
     "severe_headache": "severe_headache_or_blurred_vision",
     "blurred_vision": "severe_headache_or_blurred_vision",
@@ -63,12 +96,36 @@ DANGER_FLAG_SYNONYMS: dict[str, str] = {
     "absent_fetal_movement": "reduced_fetal_movement",
     "no_fetal_movement": "reduced_fetal_movement",
     "गर्भस्थ_शिशु_हलचल_कमी": "reduced_fetal_movement",
-    "vomits_everything": "vomits_everything", "severe_breathing_difficulty": "severe_breathing_difficulty",
-    "cyanosis": "cyanosis", "stridor_in_calm_child": "stridor_in_calm_child", "stiff_neck": "stiff_neck",
-    "high_fever": "high_fever", "very_high_fever": "high_fever",
-    "severe_anemia_signs": "severe_anemia_signs", "severe_abdominal_pain": "severe_abdominal_pain",
+    "vomits_everything": "vomits_everything",
+    "severe_breathing_difficulty": "severe_breathing_difficulty",
+    "cyanosis": "cyanosis",
+    "stridor_in_calm_child": "stridor_in_calm_child",
+    "stiff_neck": "stiff_neck",
+    # Keep IMNCI very_high_fever distinct from maternal high_fever
+    "very_high_fever": "very_high_fever",
+    "hyperpyrexia": "very_high_fever",
+    "high_fever": "high_fever",
+    "severe_anemia_signs": "severe_anemia_signs",
+    "severe_abdominal_pain": "severe_abdominal_pain",
     "leaking_fluid_before_labor": "leaking_fluid_before_labor",
+    "swelling_face_and_hands": "swelling_face_and_hands",
+    "facial_swelling": "swelling_face_and_hands",
+    "breathing_difficulty_or_chest_pain": "breathing_difficulty_or_chest_pain",
+    "chest_pain": "breathing_difficulty_or_chest_pain",
 }
+
+_NEGATION_PREFIXES: tuple[str, ...] = (
+    "no_",
+    "non_",
+    "without_",
+    "denied_",
+    "denies_",
+    "negative_for_",
+)
+
+_SORTED_SYNONYM_ITEMS: tuple[tuple[str, str], ...] = tuple(
+    sorted(DANGER_FLAG_SYNONYMS.items(), key=lambda item: len(item[0]), reverse=True)
+)
 
 FORBIDDEN_CLINICAL_KEYS: frozenset[str] = frozenset({
     "severity", "triage_severity", "referral_required", "triage", "triage_status", "priority",
@@ -97,14 +154,21 @@ def sanitize_hindi_text(text: str) -> str:
 
 def map_to_canonical_danger_flag(flag: str) -> str:
     """Map extracted danger sign phrase to canonical clinical-engine code."""
-    normalized = flag.strip().lower().replace("-", "_").replace(" ", "_")
+    cleaned = flag.strip().lower()
+    normalized = cleaned.replace("-", "_").replace(" ", "_")
     if normalized in DANGER_FLAG_SYNONYMS:
         return DANGER_FLAG_SYNONYMS[normalized]
-    cleaned = flag.strip().lower()
     if cleaned in DANGER_FLAG_SYNONYMS:
         return DANGER_FLAG_SYNONYMS[cleaned]
-    for syn_key, canonical in DANGER_FLAG_SYNONYMS.items():
-        if syn_key in cleaned or syn_key in normalized:
+    # Do not fuzzy-match negated phrases (e.g., "no_bleeding", "no bleeding", "without_fits")
+    if normalized.startswith(_NEGATION_PREFIXES):
+        return normalized
+    for syn_key, canonical in _SORTED_SYNONYM_ITEMS:
+        if syn_key.isascii():
+            pattern = rf"(?<![a-z0-9_]){re.escape(syn_key)}(?![a-z0-9_])"
+        else:
+            pattern = rf"(?<![\u0900-\u097f_]){re.escape(syn_key)}(?![\u0900-\u097f_])"
+        if re.search(pattern, cleaned) or re.search(pattern, normalized):
             return canonical
     return normalized
 
