@@ -19,6 +19,11 @@ apps/*/dist/
 apps/*/.vite/
 *.tsbuildinfo
 
+# Android APK build artifacts
+apps/android-app/build/
+apps/android-app/dist/
+apps/android-app/assets/
+
 # Local runtime state & edge ML weights (never commit large weights or patient data)
 *.db
 *.db-shm
