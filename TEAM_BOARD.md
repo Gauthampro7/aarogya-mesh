@@ -11,10 +11,11 @@ Each teammate owns one isolated directory so all 4 tracks can develop, test, and
 
 | Track | Module Directory | Owner | Status | Primary Stack |
 | --- | --- | --- | --- | --- |
-| **Track 1** | `packages/contracts`, `packages/clinical-engine`, `packages/crdt-sync`, `services/phc-hub` | **Core Bedrock (`@Gauthampro7`)** | Built & Verified (Core + T1-01..03 Complete) | Python 3.12, Pydantic v2, SQLite, FastAPI |
-| **Track 2** | `apps/field-pwa` | **`@Akarshx-x`** | Complete & Merged (#2–#7, #15–#17) | TypeScript, Offline PWA, Service Worker, IndexedDB |
-| **Track 3** | `apps/watch-companion` | **`@aril-travass`** | Complete & Merged (#18–#21) | TypeScript, Dual-Mode 360x360 Watch UI |
-| **Track 4** | `services/ml-pipeline` | **`@Krishnanand-10`** | Claimed (#12) · In Review (Draft PR #22) | Python 3.12, `whisper.cpp`, `Qwen2.5-3B` GBNF, `LightGBM+SHAP`, `EWMA` |
+| **Track 1** | `packages/contracts`, `packages/clinical-engine`, `packages/crdt-sync`, `services/phc-hub` | **Core Bedrock — Gautham (`@Gauthampro7`)** | Built & Verified (Core + T1-01..04) | Python 3.12, Pydantic v2, SQLite, FastAPI |
+| **Track 2** | `apps/field-pwa` | **Srivastava (`@Akarshx-x`)** | Merged (#2–#7, #15–#17, #26, #30–#33) · Next: `T2-04`, `T2-05` | TypeScript, Offline PWA, Service Worker, IndexedDB |
+| **Track 3** | `apps/watch-companion` | **Travis (`@aril-travass`)** | Merged (#18–#21) · Next: `T3-05`, `T3-06` | TypeScript, Dual-Mode 360x360 Watch UI |
+| **Track 4** | `services/ml-pipeline` & Hub `/` Quick-Wins | **Krishna / Tiwari (`@Krishnanand-10`)** | Merged (#22) · Next: `T1-05`, `T4-07` | Python 3.12, `whisper.cpp`, `Qwen2.5-3B` GBNF, `LightGBM+SHAP`, `EWMA` |
+| **Track 5** | `apps/android-app` | **Core Bedrock — Gautham (`@Gauthampro7`)** | Built & Verified (`T5-01`, signed APK `v0.1.0`) | Java (JDK 21), Android SDK 34, Dual `WebView` + `LocalAssetServer` |
 
 ### Atomic Starter Prompts (`prompts/`)
 
@@ -24,6 +25,7 @@ Use [`prompts/README.md`](./prompts/README.md) to grab a decoupled, contract-loc
 - **Track 2 (`apps/field-pwa`)**: [`prompts/track-2-field-pwa/`](./prompts/track-2-field-pwa/)
 - **Track 3 (`apps/watch-companion`)**: [`prompts/track-3-watch-companion/`](./prompts/track-3-watch-companion/)
 - **Track 4 (`services/ml-pipeline`)**: [`prompts/track-4-ml-pipeline/`](./prompts/track-4-ml-pipeline/)
+- **Track 5 (`apps/android-app`)**: [`prompts/track-5-android-app/`](./prompts/track-5-android-app/)
 
 ---
 
@@ -108,6 +110,18 @@ Use [`prompts/README.md`](./prompts/README.md) to grab a decoupled, contract-loc
 2. Gracefully falls back to deterministic local stubs if GGUF/Whisper model weights are absent on a fresh checkout so `make test` always passes.
 3. Emitted `ActionCard` and `OUTBREAK_ALERT_RAISED` payloads validate strictly against `aarogya_contracts` models and JSON Schemas.
 4. Unit & integration tests in `services/ml-pipeline/tests/` pass under `pytest -v`.
+
+---
+
+## Track 5: Core Bedrock — `apps/android-app` (Native Offline Android APK)
+
+**Owned Path**: `apps/android-app/` (`@Gauthampro7`)  
+**Guide**: [apps/android-app/README.md](./apps/android-app/README.md)
+
+**Architecture & Interface Entrypoints**:
+- `apps/android-app/src/com/aarogyamesh/app/LocalAssetServer.java` — loopback `127.0.0.1` HTTP asset server providing a W3C Secure Context offline (`IndexedDB`, Service Worker, `getUserMedia()`).
+- `apps/android-app/src/com/aarogyamesh/app/MainActivity.java` — dual persistent `WebView` instances (`phoneWebView` for `/phone/`, `watchWebView` for `/watch/`), native `"Set Hub URL"` dialog, predictive back navigation (`OnBackInvokedCallback`), and `AarogyaNativeBridge` (`vibrateEmergency()`, battery/RAM/network telemetry).
+- Build & sign reproducibly via `cd apps/android-app && ./build_apk.sh` (Gradle-free JDK 21 + Android SDK 34).
 
 ---
 
