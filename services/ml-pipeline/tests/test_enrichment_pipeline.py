@@ -360,3 +360,75 @@ def test_pipeline_default_backends_instantiate_and_run_cleanly() -> None:
     assert len(emitted) == 2
     assert emitted[0].event_type == EventType.ENRICHMENT_COMPLETED
     assert emitted[1].event_type == EventType.ACTION_CARD_ISSUED
+
+
+@pytest.mark.parametrize(
+    ("raw_flag", "expected_rule"),
+    [
+        ("very_high_fever", "IMNCI_GDS_10"),
+        ("severe_bleeding", "IMNCI_GDS_09"),
+    ],
+)
+def test_pediatric_imnci_flags_preserve_red_emergency_after_slm_mapping(
+    raw_flag: str,
+    expected_rule: str,
+) -> None:
+    """CLINICAL SAFETY FLOOR: Pediatric IMNCI very_high_fever & severe_bleeding MUST force RED_EMERGENCY."""
+    from aarogya_ml_pipeline.slm_structurer import map_to_canonical_danger_flag
+
+    mapped = map_to_canonical_danger_flag(raw_flag)
+    slm = MockSlmWithDangerFlag(danger_flags=[mapped], symptoms=["fever"])
+    pipeline = EnrichmentPipeline(
+        structurer=slm,
+        risk_scorer=MockRiskScorerFixed(score=0.05, band="LOW"),
+    )
+
+    emitted = pipeline.process_voice_note(
+        _make_voice_event(patient_id="child-safety-01"),
+        hub_node_id="hub-01",
+        hlc=HlcTimestamp(wall_ms=1_700_001_000_000, logical=0, node_id="hub-01"),
+        patient_context={"age_months": 18},
+    )
+    triage = emitted[0].payload["triage_assessment"]
+    assert triage["severity"] == TriageSeverity.RED_EMERGENCY
+    assert triage["referral_required"] is True
+    assert expected_rule in triage["matched_rules"]
+
+    card = ActionCard.model_validate(emitted[1].payload)
+    assert card.severity == TriageSeverity.RED_EMERGENCY
+    assert card.priority == ActionCardPriority.CRITICAL
+
+
+@pytest.mark.parametrize(
+    "maternal_flag",
+    [
+        "vaginal_bleeding",
+        "severe_headache_or_blurred_vision",
+        "reduced_fetal_movement",
+        "leaking_fluid_before_labor",
+        "high_fever",
+    ],
+)
+def test_maternal_red_flags_force_red_emergency_without_patient_context(
+    maternal_flag: str,
+) -> None:
+    """CLINICAL SAFETY FLOOR: Maternal red flags MUST force RED_EMERGENCY even if patient_context=None."""
+    slm = MockSlmWithDangerFlag(danger_flags=[maternal_flag], symptoms=[])
+    pipeline = EnrichmentPipeline(
+        structurer=slm,
+        risk_scorer=MockRiskScorerFixed(score=0.05, band="LOW"),
+    )
+
+    emitted = pipeline.process_voice_note(
+        _make_voice_event(patient_id="mother-no-ctx-01"),
+        hub_node_id="hub-01",
+        hlc=HlcTimestamp(wall_ms=1_700_001_100_000, logical=0, node_id="hub-01"),
+        patient_context=None,
+    )
+    triage = emitted[0].payload["triage_assessment"]
+    assert triage["severity"] == TriageSeverity.RED_EMERGENCY
+    assert triage["referral_required"] is True
+
+    card = ActionCard.model_validate(emitted[1].payload)
+    assert card.severity == TriageSeverity.RED_EMERGENCY
+    assert card.priority == ActionCardPriority.CRITICAL

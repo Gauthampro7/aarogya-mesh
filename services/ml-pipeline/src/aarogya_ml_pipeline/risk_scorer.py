@@ -13,13 +13,8 @@ from __future__ import annotations
 
 import math
 import os
-import sys
 from pathlib import Path
 from typing import Any, Literal
-
-# Allow importing local virtualenv/cached wheels if present (e.g. /tmp/pylibs)
-if os.path.isdir("/tmp/pylibs") and "/tmp/pylibs" not in sys.path:
-    sys.path.insert(0, "/tmp/pylibs")
 
 try:
     import numpy as np
@@ -107,7 +102,7 @@ def extract_risk_features(triage_input: Any) -> dict[str, float | int | bool]:
         else int(raw.get("symptom_count", 0))
     )
 
-    features: dict[str, float | int | bool] = {
+    raw_features: dict[str, Any] = {
         "age_months": raw.get("age_months"),
         "fever_days": raw.get("fever_days", 0),
         "temperature_c": raw.get("temperature_c"),
@@ -122,7 +117,84 @@ def extract_risk_features(triage_input: Any) -> dict[str, float | int | bool]:
         "has_danger_sign": has_danger_sign,
         "symptom_count": symptom_count,
     }
-    return features
+    return {
+        k: v
+        for k, v in raw_features.items()
+        if isinstance(v, (bool, int, float)) and not (isinstance(v, float) and math.isnan(v))
+    }
+
+
+def _safe_float(value: Any) -> float | None:
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        num = float(value)
+    except (ValueError, TypeError):
+        return None
+    return None if math.isnan(num) or math.isinf(num) else num
+
+
+def _calibrate_stub_fallback_features(
+    features: dict[str, float | int | bool],
+) -> dict[str, float | int | bool]:
+    """Project canonical clinical vitals into bounded deficit/flag features for StubRiskScorer.
+
+    Prevents raw vital magnitudes (e.g. spo2_pct=99, systolic_bp=92, temperature_c=37.0)
+    from saturating StubRiskScorer's linear fallback at 1.0 on healthy patients.
+    """
+    calibrated: dict[str, float | int | bool] = {}
+
+    fever_days = _safe_float(features.get("fever_days"))
+    if fever_days is not None:
+        calibrated["fever_days"] = max(0.0, fever_days)
+
+    if "has_danger_sign" in features:
+        calibrated["has_danger_sign"] = bool(features["has_danger_sign"])
+
+    symptom_count = _safe_float(features.get("symptom_count"))
+    if symptom_count is not None:
+        calibrated["symptom_count"] = max(0.0, symptom_count)
+
+    age_months = _safe_float(features.get("age_months"))
+    if "age_under_2m" in features:
+        calibrated["age_under_2m"] = bool(features["age_under_2m"])
+    elif age_months is not None:
+        calibrated["age_under_2m"] = age_months < 2.0
+
+    systolic_bp = _safe_float(features.get("systolic_bp"))
+    diastolic_bp = _safe_float(features.get("diastolic_bp"))
+    if "high_bp" in features:
+        calibrated["high_bp"] = bool(features["high_bp"])
+    elif systolic_bp is not None or diastolic_bp is not None:
+        calibrated["high_bp"] = (systolic_bp is not None and systolic_bp >= 140.0) or (
+            diastolic_bp is not None and diastolic_bp >= 90.0
+        )
+
+    temperature_c = _safe_float(features.get("temperature_c"))
+    if temperature_c is not None:
+        calibrated["temp_excess"] = round(max(0.0, temperature_c - 37.5), 4)
+
+    spo2_pct = _safe_float(features.get("spo2_pct"))
+    if spo2_pct is not None:
+        calibrated["hypoxia_deficit"] = round(max(0.0, 95.0 - spo2_pct), 4)
+
+    rr_bpm = _safe_float(features.get("respiratory_rate_bpm"))
+    if rr_bpm is not None:
+        calibrated["tachypnea_excess"] = round(max(0.0, rr_bpm - 35.0), 4)
+    elif "respiratory_rate" in features:
+        rr_alt = _safe_float(features.get("respiratory_rate"))
+        if rr_alt is not None:
+            calibrated["tachypnea_excess"] = round(max(0.0, rr_alt - 35.0), 4)
+
+    hb = _safe_float(features.get("hemoglobin_g_dl"))
+    if hb is not None:
+        calibrated["anemia_deficit"] = round(max(0.0, 11.0 - hb), 4)
+
+    muac = _safe_float(features.get("muac_cm"))
+    if muac is not None and (age_months is None or age_months < 60.0):
+        calibrated["malnutrition_deficit"] = round(max(0.0, 12.5 - muac), 4)
+
+    return calibrated
 
 
 class LightGbmRiskScorer:
@@ -166,16 +238,24 @@ class LightGbmRiskScorer:
         """The resolved path to the LightGBM model file."""
         return self._model_path
 
+    def _score_with_fallback(self, features: dict[str, float | int | bool]) -> RiskScoreResult:
+        fallback_input = (
+            _calibrate_stub_fallback_features(features)
+            if isinstance(self._fallback_scorer, StubRiskScorer)
+            else features
+        )
+        fallback_res = self._fallback_scorer.score_risk(fallback_input)
+        return RiskScoreResult(
+            risk_score=fallback_res.risk_score,
+            risk_band=fallback_res.risk_band,
+            shap_attributions=fallback_res.shap_attributions,
+            backend="stub-lightgbm-fallback",
+        )
+
     def score_risk(self, features: dict[str, float | int | bool]) -> RiskScoreResult:
         """Compute calibrated risk score, risk band, and TreeSHAP attributions."""
         if self._is_fallback or self._booster is None or np is None:
-            fallback_res = self._fallback_scorer.score_risk(features)
-            return RiskScoreResult(
-                risk_score=fallback_res.risk_score,
-                risk_band=fallback_res.risk_band,
-                shap_attributions=fallback_res.shap_attributions,
-                backend="stub-lightgbm-fallback",
-            )
+            return self._score_with_fallback(features)
 
         # Build feature vector in canonical RISK_FEATURE_NAMES order
         row: list[float] = []
@@ -197,13 +277,7 @@ class LightGbmRiskScorer:
         try:
             raw_prob = float(self._booster.predict(x_vec)[0])
         except Exception:
-            fallback_res = self._fallback_scorer.score_risk(features)
-            return RiskScoreResult(
-                risk_score=fallback_res.risk_score,
-                risk_band=fallback_res.risk_band,
-                shap_attributions=fallback_res.shap_attributions,
-                backend="stub-lightgbm-fallback",
-            )
+            return self._score_with_fallback(features)
 
         risk_score = round(max(0.0, min(1.0, raw_prob)), 4)
 

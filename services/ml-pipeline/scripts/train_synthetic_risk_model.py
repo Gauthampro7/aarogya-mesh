@@ -13,15 +13,10 @@ Clinical Safety Invariant:
 from __future__ import annotations
 
 import argparse
-import os
 import sys
 from pathlib import Path
 
-# Ensure local libs (e.g. /tmp/pylibs) are accessible if present
-if os.path.isdir("/tmp/pylibs") and "/tmp/pylibs" not in sys.path:
-    sys.path.insert(0, "/tmp/pylibs")
-
-import numpy as np  # noqa: E402
+import numpy as np
 
 try:
     import lightgbm as lgb
@@ -73,25 +68,26 @@ def generate_synthetic_data(
 ) -> tuple[np.ndarray, np.ndarray]:
     """Generate synthetic maternal and pediatric clinical records with ground truth risk labels."""
     rng = np.random.RandomState(seed)
-    n_half = n_samples // 2
+    n_ped = n_samples // 2
+    n_mat = n_samples - n_ped
 
     # Cohort 1: Pediatric patients (0 - 59 months)
-    ped_age = rng.uniform(1.0, 59.0, size=n_half)
-    ped_is_pregnant = np.zeros(n_half, dtype=np.float64)
-    ped_gest_weeks = np.full(n_half, np.nan, dtype=np.float64)
-    ped_muac = rng.normal(14.0, 2.0, size=n_half).clip(9.0, 22.0)
-    ped_rr = rng.normal(32.0, 10.0, size=n_half).clip(18.0, 85.0)
-    ped_sbp = rng.normal(95.0, 10.0, size=n_half).clip(70.0, 130.0)
-    ped_dbp = rng.normal(60.0, 8.0, size=n_half).clip(40.0, 85.0)
+    ped_age = rng.uniform(1.0, 59.0, size=n_ped)
+    ped_is_pregnant = np.zeros(n_ped, dtype=np.float64)
+    ped_gest_weeks = np.full(n_ped, np.nan, dtype=np.float64)
+    ped_muac = rng.normal(14.0, 2.0, size=n_ped).clip(9.0, 22.0)
+    ped_rr = rng.normal(32.0, 10.0, size=n_ped).clip(18.0, 85.0)
+    ped_sbp = rng.normal(95.0, 10.0, size=n_ped).clip(70.0, 130.0)
+    ped_dbp = rng.normal(60.0, 8.0, size=n_ped).clip(40.0, 85.0)
 
     # Cohort 2: Maternal patients (180 - 500 months)
-    mat_age = rng.uniform(180.0, 480.0, size=n_half)
-    mat_is_pregnant = np.ones(n_half, dtype=np.float64)
-    mat_gest_weeks = rng.uniform(6.0, 41.0, size=n_half)
-    mat_muac = rng.normal(25.0, 3.5, size=n_half).clip(18.0, 38.0)
-    mat_rr = rng.normal(18.0, 4.0, size=n_half).clip(12.0, 45.0)
-    mat_sbp = rng.normal(118.0, 14.0, size=n_half).clip(85.0, 185.0)
-    mat_dbp = rng.normal(76.0, 10.0, size=n_half).clip(55.0, 120.0)
+    mat_age = rng.uniform(180.0, 480.0, size=n_mat)
+    mat_is_pregnant = np.ones(n_mat, dtype=np.float64)
+    mat_gest_weeks = rng.uniform(6.0, 41.0, size=n_mat)
+    mat_muac = rng.normal(25.0, 3.5, size=n_mat).clip(18.0, 38.0)
+    mat_rr = rng.normal(18.0, 4.0, size=n_mat).clip(12.0, 45.0)
+    mat_sbp = rng.normal(118.0, 14.0, size=n_mat).clip(85.0, 185.0)
+    mat_dbp = rng.normal(76.0, 10.0, size=n_mat).clip(55.0, 120.0)
 
     # Concatenate demographic features
     age_months = np.concatenate([ped_age, mat_age])

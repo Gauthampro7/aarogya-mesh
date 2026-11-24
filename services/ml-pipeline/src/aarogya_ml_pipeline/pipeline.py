@@ -14,7 +14,7 @@ from typing import Any
 from uuid import uuid4
 
 from aarogya_clinical_engine import evaluate_triage
-from aarogya_clinical_engine.triage import TriageInput
+from aarogya_clinical_engine.triage import PatientCategory, TriageInput
 from aarogya_contracts import (
     ActionCard,
     ActionCardPriority,
@@ -54,6 +54,23 @@ _TITLE_MAP: dict[TriageSeverity, str] = {
     TriageSeverity.YELLOW_PHC: "YELLOW: PHC / ANM Visit Required",
     TriageSeverity.GREEN_HOME: "GREEN: Home Care & Follow-Up",
 }
+
+_MATERNAL_ONLY_RED_FLAGS: frozenset[str] = frozenset({
+    "vaginal_bleeding",
+    "severe_headache_or_blurred_vision",
+    "reduced_fetal_movement",
+    "leaking_fluid_before_labor",
+    "high_fever",
+    "severe_anemia_signs",
+    "severe_abdominal_pain",
+    "swelling_face_and_hands",
+    "breathing_difficulty_or_chest_pain",
+    "convulsions_or_fits",
+    "eclampsia",
+    "pph",
+    "antepartum_bleeding",
+    "postpartum_bleeding",
+})
 
 
 class EnrichmentPipeline:
@@ -166,6 +183,19 @@ class EnrichmentPipeline:
 
         patient_id = voice_event.patient_id or context_kwargs.pop("patient_id", None)
         assessed_at_ms = context_kwargs.pop("assessed_at_ms", hlc.wall_ms)
+
+        # Ensure maternal-only danger flags never silently downgrade to GREEN_HOME
+        # when patient_context is omitted (matches Tier-2 Hub enrichment_worker.py).
+        if "patient_category" not in context_kwargs and not context_kwargs.get("is_pregnant"):
+            normalized_flags = {
+                str(f).strip().lower().replace("-", "_").replace(" ", "_")
+                for f in (*danger_signs, *symptoms)
+                if str(f).strip()
+            }
+            age_months = context_kwargs.get("age_months")
+            is_pediatric_age = isinstance(age_months, (int, float)) and age_months < 60
+            if (normalized_flags & _MATERNAL_ONLY_RED_FLAGS) and not is_pediatric_age:
+                context_kwargs["patient_category"] = PatientCategory.MATERNAL
 
         triage_input = TriageInput(
             patient_id=patient_id,
