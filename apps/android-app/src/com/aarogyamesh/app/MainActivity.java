@@ -3,13 +3,14 @@ package com.aarogyamesh.app;
 import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.ConnectivityManager;
@@ -21,9 +22,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.os.VibratorManager;
+import android.text.InputType;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -31,25 +35,32 @@ import android.view.WindowInsetsController;
 import android.webkit.ConsoleMessage;
 import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.window.OnBackInvokedCallback;
+import android.window.OnBackInvokedDispatcher;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Native Android shell for Aarogya Mesh (com.aarogyamesh.app).
  *
- * Hosts both the ASHA Field PWA (/phone/) and Tier-0 Watch / Family SOS companion (/watch/)
- * over a loopback 127.0.0.1 Secure Context with native microphone capture, tel:108 dialing,
- * emergency haptics, hardware telemetry bridge, and out-of-the-box LAN PHC Hub sync.
+ * Maintains two persistent WebView instances (phoneWebView for /phone/ and watchWebView for /watch/)
+ * toggled via VISIBLE/GONE so switching modes never reloads or wipes unsaved forms/recordings.
+ * Provides a slim EN / Shuddh Tatsama Hindi top bar, native Set Hub URL dialog, hardware bridge,
+ * microphone capture auto-grant for 127.0.0.1, tel:108 dialing, and OnBackInvokedCallback handling.
  */
 public class MainActivity extends Activity {
     private static final String TAG = "AarogyaMainActivity";
@@ -64,17 +75,25 @@ public class MainActivity extends Activity {
     private static final int COLOR_BADGE_TEXT = 0xFF5EEAD4;
 
     private LocalAssetServer assetServer;
-    private WebView webView;
+    private WebView phoneWebView;
+    private WebView watchWebView;
+    private boolean watchLoaded = false;
     private AarogyaNativeBridge nativeBridge;
     private PermissionRequest pendingWebPermissionRequest;
 
     private TextView tabPhone;
     private TextView tabWatch;
-    private TextView telemetryBadge;
-    private String activeMode = "phone";
-    private boolean receiverRegistered = false;
+    private TextView langToggle;
+    private TextView hubTelemetryPill;
 
-    private final BroadcastReceiver statusReceiver = new BroadcastReceiver() {
+    private String activeMode = "phone";
+    private String uiLang = "en";
+    private boolean batteryReceiverRegistered = false;
+    private boolean networkCallbackRegistered = false;
+    private ConnectivityManager.NetworkCallback networkCallback;
+    private OnBackInvokedCallback backInvokedCallback;
+
+    private final BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             updateTelemetryBadge();
@@ -98,14 +117,19 @@ public class MainActivity extends Activity {
         // Enable Chrome DevTools Protocol (CDP) inspection for automated testing & debugging.
         WebView.setWebContentsDebuggingEnabled(true);
 
+        nativeBridge = new AarogyaNativeBridge(this);
+
         View rootView = buildLayout();
         setContentView(rootView);
         configureSystemBars();
+        registerBackNavigation();
 
         requestMicrophonePermissionIfNeeded();
 
-        // Load ASHA Field App (/phone/) directly in the top-level Secure Context.
-        loadMode("phone");
+        // Load ASHA Field App (/phone/) on startup; watchWebView loads lazily on first tab switch.
+        phoneWebView.loadUrl(assetServer.getBaseUrl() + "/phone/");
+        showMode("phone");
+        applyTopBarLocale();
         updateTelemetryBadge();
     }
 
@@ -132,6 +156,44 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void registerBackNavigation() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            backInvokedCallback = new OnBackInvokedCallback() {
+                @Override
+                public void onBackInvoked() {
+                    handleBackNavigation();
+                }
+            };
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                    OnBackInvokedDispatcher.PRIORITY_DEFAULT,
+                    backInvokedCallback
+            );
+        }
+    }
+
+    private void handleBackNavigation() {
+        WebView active = getActiveWebView();
+        if (active != null && active.canGoBack()) {
+            active.goBack();
+            return;
+        }
+        if ("watch".equals(activeMode)) {
+            showMode("phone");
+            return;
+        }
+        // Minimize cleanly instead of tearing down local server & WebView state.
+        moveTaskToBack(true);
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK && Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            handleBackNavigation();
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
     private View buildLayout() {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
@@ -142,32 +204,30 @@ public class MainActivity extends Activity {
                 ViewGroup.LayoutParams.MATCH_PARENT
         ));
 
-        // Compact native mode switcher bar (ASHA Field <-> Watch / SOS + live telemetry)
+        // Slim native mode switcher bar (ASHA Field <-> Watch / SOS + Lang + Set Hub URL pill)
         LinearLayout topBar = new LinearLayout(this);
         topBar.setOrientation(LinearLayout.HORIZONTAL);
         topBar.setGravity(Gravity.CENTER_VERTICAL);
         topBar.setBackgroundColor(COLOR_BG_SLATE);
-        int padH = dp(10);
-        int padV = dp(6);
-        topBar.setPadding(padH, padV, padH, padV);
+        topBar.setPadding(dp(8), dp(4), dp(8), dp(4));
         topBar.setLayoutParams(new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         ));
 
-        tabPhone = createTabButton("ASHA Field", "Switch to ASHA Field App");
+        tabPhone = createPillButton();
         tabPhone.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                loadMode("phone");
+                showMode("phone");
             }
         });
 
-        tabWatch = createTabButton("Watch / SOS", "Switch to Watch and Family SOS");
+        tabWatch = createPillButton();
         tabWatch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                loadMode("watch");
+                showMode("watch");
             }
         });
 
@@ -175,7 +235,7 @@ public class MainActivity extends Activity {
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
-        phoneLp.setMarginEnd(dp(6));
+        phoneLp.setMarginEnd(dp(5));
         topBar.addView(tabPhone, phoneLp);
 
         LinearLayout.LayoutParams watchLp = new LinearLayout.LayoutParams(
@@ -187,27 +247,38 @@ public class MainActivity extends Activity {
         View spacer = new View(this);
         topBar.addView(spacer, new LinearLayout.LayoutParams(0, 1, 1.0f));
 
-        telemetryBadge = new TextView(this);
-        telemetryBadge.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f);
-        telemetryBadge.setTypeface(Typeface.DEFAULT_BOLD);
-        telemetryBadge.setTextColor(COLOR_BADGE_TEXT);
-        telemetryBadge.setPadding(dp(8), dp(4), dp(8), dp(4));
-        telemetryBadge.setContentDescription("Device battery and connectivity status");
-        telemetryBadge.setBackground(pillDrawable(0xFF042F2E, 0xFF0D9488));
-        telemetryBadge.setOnClickListener(new View.OnClickListener() {
+        langToggle = createPillButton();
+        langToggle.setPadding(dp(8), dp(3), dp(8), dp(3));
+        langToggle.setBackground(pillDrawable(COLOR_TAB_INACTIVE, 0xFF475569));
+        langToggle.setTextColor(0xFFF8FAFC);
+        langToggle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (nativeBridge != null) {
-                    String summary = Build.MODEL
-                            + " • " + nativeBridge.getBatteryPercent() + "%"
-                            + " • " + nativeBridge.getNetworkType()
-                            + " • " + nativeBridge.getTotalRamMb() + " MB RAM"
-                            + " • Hub " + LocalAssetServer.DEFAULT_HUB_URL;
-                    Toast.makeText(MainActivity.this, summary, Toast.LENGTH_SHORT).show();
-                }
+                toggleUiLanguage();
             }
         });
-        topBar.addView(telemetryBadge);
+        LinearLayout.LayoutParams langLp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        langLp.setMarginEnd(dp(5));
+        topBar.addView(langToggle, langLp);
+
+        hubTelemetryPill = new TextView(this);
+        hubTelemetryPill.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10.5f);
+        hubTelemetryPill.setTypeface(Typeface.DEFAULT_BOLD);
+        hubTelemetryPill.setTextColor(COLOR_BADGE_TEXT);
+        hubTelemetryPill.setPadding(dp(8), dp(3), dp(8), dp(3));
+        hubTelemetryPill.setClickable(true);
+        hubTelemetryPill.setFocusable(true);
+        hubTelemetryPill.setBackground(pillDrawable(0xFF042F2E, COLOR_TEAL_ACTIVE));
+        hubTelemetryPill.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openSetHubUrlDialog();
+            }
+        });
+        topBar.addView(hubTelemetryPill);
 
         root.addView(topBar);
 
@@ -218,8 +289,22 @@ public class MainActivity extends Activity {
                 dp(1)
         ));
 
-        webView = createConfiguredWebView();
-        root.addView(webView, new LinearLayout.LayoutParams(
+        // Persistent dual-WebView container: VISIBLE/GONE toggling preserves unsaved forms & recordings.
+        FrameLayout webContainer = new FrameLayout(this);
+        webContainer.setBackgroundColor(COLOR_BG_SLATE);
+
+        phoneWebView = createConfiguredWebView("phone");
+        watchWebView = createConfiguredWebView("watch");
+        watchWebView.setVisibility(View.GONE);
+
+        FrameLayout.LayoutParams fill = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+        );
+        webContainer.addView(phoneWebView, fill);
+        webContainer.addView(watchWebView, fill);
+
+        root.addView(webContainer, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 0,
                 1.0f
@@ -228,14 +313,12 @@ public class MainActivity extends Activity {
         return root;
     }
 
-    private TextView createTabButton(String label, String contentDesc) {
+    private TextView createPillButton() {
         TextView btn = new TextView(this);
-        btn.setText(label);
-        btn.setContentDescription(contentDesc);
-        btn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f);
+        btn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f);
         btn.setTypeface(Typeface.DEFAULT_BOLD);
         btn.setGravity(Gravity.CENTER);
-        btn.setPadding(dp(12), dp(5), dp(12), dp(5));
+        btn.setPadding(dp(10), dp(3), dp(10), dp(3));
         btn.setClickable(true);
         btn.setFocusable(true);
         return btn;
@@ -248,6 +331,71 @@ public class MainActivity extends Activity {
         d.setColor(fillColor);
         d.setStroke(dp(1), strokeColor);
         return d;
+    }
+
+    private boolean isHindi() {
+        return "hi".equals(uiLang);
+    }
+
+    private void applyTopBarLocale() {
+        boolean hi = isHindi();
+        if (tabPhone != null) {
+            tabPhone.setText(hi ? "आशा क्षेत्र" : "ASHA Field");
+            tabPhone.setContentDescription(hi ? "आशा क्षेत्र अनुप्रयोग खोलें" : "Switch to ASHA Field App");
+        }
+        if (tabWatch != null) {
+            tabWatch.setText(hi ? "घटिका / आपात" : "Watch / SOS");
+            tabWatch.setContentDescription(hi ? "घटिका एवं परिवार आपात अनुप्रयोग खोलें" : "Switch to Watch and Family SOS");
+        }
+        if (langToggle != null) {
+            langToggle.setText(hi ? "EN" : "हिन्दी");
+            langToggle.setContentDescription(hi ? "Switch language to English" : "भाषा हिन्दी में बदलें");
+        }
+        if (hubTelemetryPill != null) {
+            hubTelemetryPill.setContentDescription(hi ? "स्वास्थ्य केन्द्र का संजाल पता निर्धारित करें" : "Set Hub URL and device status");
+        }
+        updateTelemetryBadge();
+    }
+
+    private void setUiLanguage(String lang, boolean propagateToWeb) {
+        String normalized = "hi".equalsIgnoreCase(lang) ? "hi" : "en";
+        boolean changed = !normalized.equals(uiLang);
+        uiLang = normalized;
+        applyTopBarLocale();
+        if (propagateToWeb && changed) {
+            String js = "(function(){try{localStorage.setItem('aarogya.lang','" + normalized + "');"
+                    + "window.dispatchEvent(new StorageEvent('storage',{key:'aarogya.lang',newValue:'" + normalized + "'}));"
+                    + "}catch(e){}})();";
+            WebView active = getActiveWebView();
+            if (active != null) {
+                active.evaluateJavascript(js, null);
+            }
+        }
+    }
+
+    private void toggleUiLanguage() {
+        setUiLanguage(isHindi() ? "en" : "hi", true);
+    }
+
+    private void syncLocaleFromWebView(WebView view) {
+        if (view == null) {
+            return;
+        }
+        view.evaluateJavascript(
+                "(function(){try{return localStorage.getItem('aarogya.lang')||'';}catch(e){return '';}})();",
+                new ValueCallback<String>() {
+                    @Override
+                    public void onReceiveValue(String value) {
+                        String cleaned = unquoteJsString(value);
+                        if ("hi".equals(cleaned) || "en".equals(cleaned)) {
+                            if (!cleaned.equals(uiLang)) {
+                                uiLang = cleaned;
+                                applyTopBarLocale();
+                            }
+                        }
+                    }
+                }
+        );
     }
 
     private void updateTabStyles(String mode) {
@@ -269,7 +417,27 @@ public class MainActivity extends Activity {
         }
     }
 
-    private WebView createConfiguredWebView() {
+    private void showMode(String mode) {
+        if (assetServer == null || phoneWebView == null || watchWebView == null) {
+            return;
+        }
+        String normalized = "watch".equals(mode) ? "watch" : "phone";
+        boolean isWatch = "watch".equals(normalized);
+        if (isWatch && !watchLoaded) {
+            watchLoaded = true;
+            watchWebView.loadUrl(assetServer.getBaseUrl() + "/watch/");
+        }
+        phoneWebView.setVisibility(isWatch ? View.GONE : View.VISIBLE);
+        watchWebView.setVisibility(isWatch ? View.VISIBLE : View.GONE);
+        updateTabStyles(normalized);
+        syncLocaleFromWebView(getActiveWebView());
+    }
+
+    private WebView getActiveWebView() {
+        return "watch".equals(activeMode) ? watchWebView : phoneWebView;
+    }
+
+    private WebView createConfiguredWebView(final String ownerMode) {
         WebView wv = new WebView(this);
         wv.setBackgroundColor(COLOR_BG_SLATE);
         wv.setOverScrollMode(WebView.OVER_SCROLL_NEVER);
@@ -288,7 +456,6 @@ public class MainActivity extends Activity {
         settings.setDisplayZoomControls(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
 
-        nativeBridge = new AarogyaNativeBridge(this);
         wv.addJavascriptInterface(nativeBridge, "AarogyaNativeBridge");
 
         wv.setWebViewClient(new WebViewClient() {
@@ -298,7 +465,7 @@ public class MainActivity extends Activity {
                 if (uri == null) {
                     return false;
                 }
-                String scheme = uri.getScheme() != null ? uri.getScheme().toLowerCase() : "";
+                String scheme = uri.getScheme() != null ? uri.getScheme().toLowerCase(Locale.US) : "";
                 if ("tel".equals(scheme)) {
                     openDialer(uri);
                     return true;
@@ -307,9 +474,19 @@ public class MainActivity extends Activity {
                     openExternalIntent(new Intent(Intent.ACTION_VIEW, uri));
                     return true;
                 }
-                String host = uri.getHost() != null ? uri.getHost().toLowerCase() : "";
+                String host = uri.getHost() != null ? uri.getHost().toLowerCase(Locale.US) : "";
                 if ("127.0.0.1".equals(host) || "localhost".equals(host)) {
-                    syncTabFromPath(uri.getPath());
+                    String path = uri.getPath();
+                    if (path != null) {
+                        if (path.startsWith("/watch") && !"watch".equals(ownerMode)) {
+                            showMode("watch");
+                            return true;
+                        }
+                        if (path.startsWith("/phone") && !"phone".equals(ownerMode)) {
+                            showMode("phone");
+                            return true;
+                        }
+                    }
                     return false;
                 }
                 if ("http".equals(scheme) || "https".equals(scheme)) {
@@ -320,18 +497,9 @@ public class MainActivity extends Activity {
             }
 
             @Override
-            public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
-                super.onPageStarted(view, url, favicon);
-                if (url != null) {
-                    Uri parsed = Uri.parse(url);
-                    syncTabFromPath(parsed.getPath());
-                }
-            }
-
-            @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                seedDefaultHubUrlIfUnset(view);
+                syncLocaleFromWebView(view);
             }
         });
 
@@ -360,7 +528,8 @@ public class MainActivity extends Activity {
             public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
                 if (consoleMessage != null) {
                     Log.d("AarogyaWebView",
-                            consoleMessage.messageLevel() + " [" + consoleMessage.sourceId() + ":"
+                            "[" + ownerMode + "] " + consoleMessage.messageLevel()
+                                    + " [" + consoleMessage.sourceId() + ":"
                                     + consoleMessage.lineNumber() + "] " + consoleMessage.message());
                 }
                 return super.onConsoleMessage(consoleMessage);
@@ -370,9 +539,165 @@ public class MainActivity extends Activity {
         return wv;
     }
 
+    private void openSetHubUrlDialog() {
+        WebView active = getActiveWebView();
+        if (active == null) {
+            return;
+        }
+        active.evaluateJavascript(
+                "(function(){try{return localStorage.getItem('aarogya.hubUrl')||localStorage.getItem('aarogya.watch.hubUrl')||'';}catch(e){return '';}})();",
+                new ValueCallback<String>() {
+                    @Override
+                    public void onReceiveValue(String value) {
+                        showHubUrlAlertDialog(unquoteJsString(value));
+                    }
+                }
+        );
+    }
+
+    private void showHubUrlAlertDialog(String currentHubUrl) {
+        final boolean hi = isHindi();
+        String netLabel = localizedNetworkLabel(nativeBridge.getNetworkType(), hi);
+        int pct = nativeBridge.getBatteryPercent();
+        String telemetry = Build.MODEL
+                + " · " + (pct >= 0 ? pct + "%" : "--%")
+                + " · " + netLabel
+                + " · " + nativeBridge.getTotalRamMb() + " MB";
+        String currentDisplay = (currentHubUrl == null || currentHubUrl.isEmpty())
+                ? (hi ? "निर्धारित नहीं (स्वतः)" : "Not set (auto)")
+                : currentHubUrl;
+
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(dp(20), dp(10), dp(20), dp(4));
+
+        TextView info = new TextView(this);
+        info.setText(telemetry + "\n" + (hi ? "वर्तमान केन्द्र: " : "Current Hub: ") + currentDisplay);
+        info.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f);
+        info.setPadding(0, 0, 0, dp(10));
+        box.addView(info);
+
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
+        input.setSingleLine(true);
+        input.setHint(LocalAssetServer.DEFAULT_HUB_URL);
+        if (currentHubUrl != null && !currentHubUrl.isEmpty()) {
+            input.setText(currentHubUrl);
+            input.setSelection(currentHubUrl.length());
+        }
+        box.addView(input);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(hi ? "स्वास्थ्य केन्द्र का संजाल पता" : "Set Hub URL");
+        builder.setView(box);
+        builder.setPositiveButton(hi ? "संचित करें" : "Save", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String raw = input.getText() != null ? input.getText().toString().trim() : "";
+                while (raw.endsWith("/")) {
+                    raw = raw.substring(0, raw.length() - 1);
+                }
+                if (raw.isEmpty()) {
+                    clearSavedHubUrl(hi);
+                    return;
+                }
+                if (!isValidHttpUrl(raw)) {
+                    Toast.makeText(
+                            MainActivity.this,
+                            hi ? "कृपया मान्य http:// अथवा https:// पता भरें" : "Enter a valid http:// or https:// URL",
+                            Toast.LENGTH_SHORT
+                    ).show();
+                    return;
+                }
+                applySavedHubUrl(raw, hi);
+            }
+        });
+        builder.setNeutralButton(hi ? "हटाएँ" : "Clear", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                clearSavedHubUrl(hi);
+            }
+        });
+        builder.setNegativeButton(hi ? "निरस्त करें" : "Cancel", null);
+        builder.show();
+    }
+
+    private void applySavedHubUrl(String url, boolean hi) {
+        String escaped = escapeJsSingleQuoted(url);
+        String js = "(function(){try{"
+                + "localStorage.setItem('aarogya.hubUrl','" + escaped + "');"
+                + "localStorage.setItem('aarogya.watch.hubUrl','" + escaped + "');"
+                + "var el=document.querySelector('input[name=\"hub\"],input[data-hub-url]');"
+                + "if(el){el.value='" + escaped + "';el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));}"
+                + "}catch(e){}})();";
+        evalOnLoadedWebViews(js);
+        Toast.makeText(
+                this,
+                (hi ? "संजाल पता संचित हुआ: " : "Hub URL saved: ") + url,
+                Toast.LENGTH_SHORT
+        ).show();
+    }
+
+    private void clearSavedHubUrl(boolean hi) {
+        String js = "(function(){try{"
+                + "localStorage.removeItem('aarogya.hubUrl');"
+                + "localStorage.removeItem('aarogya.watch.hubUrl');"
+                + "var el=document.querySelector('input[name=\"hub\"],input[data-hub-url]');"
+                + "if(el){el.value='';el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));}"
+                + "}catch(e){}})();";
+        evalOnLoadedWebViews(js);
+        Toast.makeText(
+                this,
+                hi ? "संजाल पता हटाया गया" : "Hub URL cleared",
+                Toast.LENGTH_SHORT
+        ).show();
+    }
+
+    private void evalOnLoadedWebViews(String js) {
+        if (phoneWebView != null) {
+            phoneWebView.evaluateJavascript(js, null);
+        }
+        if (watchWebView != null && watchLoaded) {
+            watchWebView.evaluateJavascript(js, null);
+        }
+    }
+
+    private static boolean isValidHttpUrl(String raw) {
+        try {
+            Uri uri = Uri.parse(raw);
+            String scheme = uri.getScheme();
+            String host = uri.getHost();
+            return scheme != null
+                    && ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme))
+                    && host != null
+                    && !host.isEmpty();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static String unquoteJsString(String raw) {
+        if (raw == null || "null".equals(raw) || "undefined".equals(raw)) {
+            return "";
+        }
+        String s = raw.trim();
+        if (s.length() >= 2 && s.startsWith("\"") && s.endsWith("\"")) {
+            s = s.substring(1, s.length() - 1);
+            s = s.replace("\\\"", "\"").replace("\\\\", "\\");
+        }
+        return s;
+    }
+
+    private static String escapeJsSingleQuoted(String s) {
+        if (s == null) {
+            return "";
+        }
+        return s.replace("\\", "\\\\").replace("'", "\\'").replace("\n", "").replace("\r", "");
+    }
+
     private void handleWebPermissionRequest(PermissionRequest request) {
         Uri origin = request.getOrigin();
-        String host = origin != null && origin.getHost() != null ? origin.getHost().toLowerCase() : "";
+        String host = origin != null && origin.getHost() != null ? origin.getHost().toLowerCase(Locale.US) : "";
         boolean isLocalOrigin = "127.0.0.1".equals(host) || "localhost".equals(host);
         if (!isLocalOrigin) {
             Log.w(TAG, "Denied WebView permission request for non-local origin: " + origin);
@@ -428,38 +753,6 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void seedDefaultHubUrlIfUnset(WebView view) {
-        if (view == null) {
-            return;
-        }
-        String js = "(function(){try{var d='" + LocalAssetServer.DEFAULT_HUB_URL + "';"
-                + "if(!localStorage.getItem('aarogya.hubUrl')){localStorage.setItem('aarogya.hubUrl',d);}"
-                + "if(!localStorage.getItem('aarogya.watch.hubUrl')){localStorage.setItem('aarogya.watch.hubUrl',d);}"
-                + "}catch(e){}})();";
-        view.evaluateJavascript(js, null);
-    }
-
-    private void loadMode(String mode) {
-        if (webView == null || assetServer == null) {
-            return;
-        }
-        String normalized = "watch".equals(mode) ? "watch" : "phone";
-        updateTabStyles(normalized);
-        String targetUrl = assetServer.getBaseUrl() + "/" + normalized + "/";
-        webView.loadUrl(targetUrl);
-    }
-
-    private void syncTabFromPath(String path) {
-        if (path == null) {
-            return;
-        }
-        if (path.startsWith("/watch")) {
-            updateTabStyles("watch");
-        } else if (path.startsWith("/phone")) {
-            updateTabStyles("phone");
-        }
-    }
-
     private void openDialer(Uri telUri) {
         Intent intent = new Intent(Intent.ACTION_DIAL, telUri);
         openExternalIntent(intent);
@@ -469,82 +762,172 @@ public class MainActivity extends Activity {
         try {
             startActivity(intent);
         } catch (ActivityNotFoundException e) {
-            Toast.makeText(this, "No app available to handle action", Toast.LENGTH_SHORT).show();
+            Toast.makeText(
+                    this,
+                    isHindi() ? "इस क्रिया हेतु कोई अनुप्रयोग उपलब्ध नहीं" : "No app available to handle action",
+                    Toast.LENGTH_SHORT
+            ).show();
         }
     }
 
+    private static String localizedNetworkLabel(String netType, boolean hi) {
+        if ("OFFLINE".equals(netType)) {
+            return hi ? "संजाल-रहित" : "OFFLINE";
+        }
+        if (hi) {
+            return "संजाल";
+        }
+        if ("CELLULAR".equals(netType)) {
+            return "CELL";
+        }
+        if ("ETHERNET".equals(netType)) {
+            return "LAN";
+        }
+        return netType;
+    }
+
     private void updateTelemetryBadge() {
-        if (telemetryBadge == null || nativeBridge == null) {
+        if (hubTelemetryPill == null || nativeBridge == null) {
             return;
         }
         int pct = nativeBridge.getBatteryPercent();
-        String net = nativeBridge.getNetworkType();
-        String label = (pct >= 0 ? pct + "%" : "--%") + " · " + net;
-        telemetryBadge.setText(label);
+        String net = localizedNetworkLabel(nativeBridge.getNetworkType(), isHindi());
+        String label = (pct >= 0 ? pct + "%" : "--%") + " · " + net + " ⚙";
+        hubTelemetryPill.setText(label);
+    }
+
+    private void registerConnectivityCallback() {
+        if (networkCallbackRegistered) {
+            return;
+        }
+        try {
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (cm == null) {
+                return;
+            }
+            networkCallback = new ConnectivityManager.NetworkCallback() {
+                @Override
+                public void onAvailable(Network network) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateTelemetryBadge();
+                        }
+                    });
+                }
+
+                @Override
+                public void onLost(Network network) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateTelemetryBadge();
+                        }
+                    });
+                }
+
+                @Override
+                public void onCapabilitiesChanged(Network network, NetworkCapabilities caps) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateTelemetryBadge();
+                        }
+                    });
+                }
+            };
+            cm.registerDefaultNetworkCallback(networkCallback);
+            networkCallbackRegistered = true;
+        } catch (Exception e) {
+            Log.w(TAG, "Connectivity callback registration failed", e);
+        }
+    }
+
+    private void unregisterConnectivityCallback() {
+        if (!networkCallbackRegistered || networkCallback == null) {
+            return;
+        }
+        try {
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (cm != null) {
+                cm.unregisterNetworkCallback(networkCallback);
+            }
+        } catch (Exception ignored) {
+        }
+        networkCallbackRegistered = false;
+        networkCallback = null;
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (webView != null) {
-            webView.onResume();
+        if (phoneWebView != null) {
+            phoneWebView.onResume();
         }
-        if (!receiverRegistered) {
-            IntentFilter filter = new IntentFilter();
-            filter.addAction(Intent.ACTION_BATTERY_CHANGED);
-            filter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
+        if (watchWebView != null && watchLoaded) {
+            watchWebView.onResume();
+        }
+        if (!batteryReceiverRegistered) {
+            IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                registerReceiver(statusReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+                registerReceiver(batteryReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
             } else {
-                registerReceiver(statusReceiver, filter);
+                registerReceiver(batteryReceiver, filter);
             }
-            receiverRegistered = true;
+            batteryReceiverRegistered = true;
         }
+        registerConnectivityCallback();
+        syncLocaleFromWebView(getActiveWebView());
         updateTelemetryBadge();
     }
 
     @Override
     protected void onPause() {
-        if (receiverRegistered) {
+        unregisterConnectivityCallback();
+        if (batteryReceiverRegistered) {
             try {
-                unregisterReceiver(statusReceiver);
+                unregisterReceiver(batteryReceiver);
             } catch (IllegalArgumentException ignored) {
             }
-            receiverRegistered = false;
+            batteryReceiverRegistered = false;
         }
-        if (webView != null) {
-            webView.onPause();
+        if (phoneWebView != null) {
+            phoneWebView.onPause();
+        }
+        if (watchWebView != null && watchLoaded) {
+            watchWebView.onPause();
         }
         super.onPause();
     }
 
     @Override
-    public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
-            return;
-        }
-        // Minimize cleanly instead of tearing down local server & WebView state.
-        moveTaskToBack(true);
-    }
-
-    @Override
     protected void onDestroy() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && backInvokedCallback != null) {
+            getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback(backInvokedCallback);
+            backInvokedCallback = null;
+        }
         if (pendingWebPermissionRequest != null) {
             pendingWebPermissionRequest.deny();
             pendingWebPermissionRequest = null;
         }
-        if (webView != null) {
-            webView.removeJavascriptInterface("AarogyaNativeBridge");
-            webView.stopLoading();
-            webView.destroy();
-            webView = null;
-        }
+        destroyWebView(phoneWebView);
+        phoneWebView = null;
+        destroyWebView(watchWebView);
+        watchWebView = null;
         if (assetServer != null) {
             assetServer.stop();
             assetServer = null;
         }
         super.onDestroy();
+    }
+
+    private static void destroyWebView(WebView wv) {
+        if (wv == null) {
+            return;
+        }
+        wv.removeJavascriptInterface("AarogyaNativeBridge");
+        wv.stopLoading();
+        wv.destroy();
     }
 
     private int dp(int value) {
@@ -555,8 +938,21 @@ public class MainActivity extends Activity {
         ));
     }
 
+    private Vibrator resolveVibrator(Context appContext) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            VibratorManager vm = (VibratorManager) appContext.getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
+            return vm != null ? vm.getDefaultVibrator() : null;
+        }
+        return resolveLegacyVibrator(appContext);
+    }
+
+    @SuppressWarnings("deprecation")
+    private static Vibrator resolveLegacyVibrator(Context appContext) {
+        return (Vibrator) appContext.getSystemService(Context.VIBRATOR_SERVICE);
+    }
+
     /**
-     * Native JavaScript bridge exposed to WebView pages as window.AarogyaNativeBridge.
+     * Native JavaScript bridge exposed to both WebViews as window.AarogyaNativeBridge.
      */
     public final class AarogyaNativeBridge {
         private final Context appContext;
@@ -687,16 +1083,12 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void vibrateEmergency() {
             try {
-                Vibrator vibrator = (Vibrator) appContext.getSystemService(Context.VIBRATOR_SERVICE);
+                Vibrator vibrator = resolveVibrator(appContext);
                 if (vibrator == null || !vibrator.hasVibrator()) {
                     return;
                 }
                 long[] pattern = new long[]{0, 280, 120, 280, 120, 480};
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1));
-                } else {
-                    vibrator.vibrate(pattern, -1);
-                }
+                vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1));
             } catch (Exception e) {
                 Log.w(TAG, "Emergency vibration failed", e);
             }
@@ -706,15 +1098,11 @@ public class MainActivity extends Activity {
         public void vibratePulse(long durationMs) {
             try {
                 long clamped = Math.max(10L, Math.min(durationMs, 2000L));
-                Vibrator vibrator = (Vibrator) appContext.getSystemService(Context.VIBRATOR_SERVICE);
+                Vibrator vibrator = resolveVibrator(appContext);
                 if (vibrator == null || !vibrator.hasVibrator()) {
                     return;
                 }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    vibrator.vibrate(VibrationEffect.createOneShot(clamped, VibrationEffect.DEFAULT_AMPLITUDE));
-                } else {
-                    vibrator.vibrate(clamped);
-                }
+                vibrator.vibrate(VibrationEffect.createOneShot(clamped, VibrationEffect.DEFAULT_AMPLITUDE));
             } catch (Exception ignored) {
             }
         }
@@ -735,7 +1123,32 @@ public class MainActivity extends Activity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    loadMode(mode);
+                    showMode(mode);
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void setLanguage(final String lang) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    setUiLanguage(lang, false);
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public String getLanguage() {
+            return uiLang;
+        }
+
+        @JavascriptInterface
+        public void openHubSettings() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    openSetHubUrlDialog();
                 }
             });
         }
@@ -780,7 +1193,8 @@ public class MainActivity extends Activity {
                     + "\"networkType\":\"" + escapeJson(getNetworkType()) + "\","
                     + "\"defaultHubUrl\":\"" + escapeJson(LocalAssetServer.DEFAULT_HUB_URL) + "\","
                     + "\"localServerPort\":" + port + ","
-                    + "\"activeMode\":\"" + escapeJson(activeMode) + "\""
+                    + "\"activeMode\":\"" + escapeJson(activeMode) + "\","
+                    + "\"language\":\"" + escapeJson(uiLang) + "\""
                     + "}";
         }
 
