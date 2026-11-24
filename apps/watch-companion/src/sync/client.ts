@@ -14,45 +14,22 @@ import {
   type SyncEnvelope,
 } from "../../../../packages/contracts/ts/index";
 import type { WatchStore } from "../core";
+import {
+  MemoryWatchBlobQueue,
+  resolveDefaultBlobQueue,
+  type QueuedWatchBlob,
+  type WatchBlobQueue,
+} from "./blob_queue";
 import { isValidBlobKey, uploadWatchBlobIfMissing } from "./blobs";
 import { validateSyncEnvelope } from "./validate";
 
 export const DEFAULT_HUB_URL = "http://127.0.0.1:8000";
 
-export interface QueuedWatchBlob {
-  blob: Blob | Uint8Array;
-  contentType: string;
-}
-
-export interface WatchBlobQueue {
-  get(blobKey: string): QueuedWatchBlob | undefined | Promise<QueuedWatchBlob | undefined>;
-  set(blobKey: string, entry: QueuedWatchBlob): void | Promise<void>;
-  delete(blobKey: string): void | Promise<void>;
-}
-
-export class MemoryWatchBlobQueue implements WatchBlobQueue {
-  private readonly items = new Map<string, QueuedWatchBlob>();
-
-  public get(blobKey: string): QueuedWatchBlob | undefined {
-    return this.items.get(blobKey);
-  }
-
-  public set(blobKey: string, entry: QueuedWatchBlob): void {
-    this.items.set(blobKey, entry);
-  }
-
-  public delete(blobKey: string): void {
-    this.items.delete(blobKey);
-  }
-
-  public has(blobKey: string): boolean {
-    return this.items.has(blobKey);
-  }
-
-  public size(): number {
-    return this.items.size;
-  }
-}
+export {
+  MemoryWatchBlobQueue,
+  type QueuedWatchBlob,
+  type WatchBlobQueue,
+};
 
 export interface WatchSyncClientOptions {
   hubUrl?: string;
@@ -161,7 +138,7 @@ export class WatchSyncClient {
     this.ramMb = opts.ramMb ?? 256;
     this.cpuCores = opts.cpuCores ?? 2;
     this.timeoutMs = opts.timeoutMs ?? 15_000;
-    this.blobQueue = opts.blobQueue ?? new MemoryWatchBlobQueue();
+    this.blobQueue = opts.blobQueue ?? resolveDefaultBlobQueue(store.getNodeId());
   }
 
   public getHubUrl(): string {
