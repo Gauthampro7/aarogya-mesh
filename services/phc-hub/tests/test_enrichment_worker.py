@@ -24,7 +24,15 @@ from aarogya_contracts import (
     WatchMode,
 )
 from aarogya_crdt_sync import EventStore, HlcClock, project_state
-from aarogya_ml_pipeline.interfaces import StructuredClinicalNote
+from aarogya_ml_pipeline import (
+    RISK_FEATURE_NAMES,
+    EwmaOutbreakDetector,
+    LightGbmRiskScorer,
+    LlamaCppSlmStructurer,
+    RiskScoreResult,
+    StructuredClinicalNote,
+    WhisperVoiceTranscriber,
+)
 from aarogya_phc_hub.blob_store import LocalBlobStore
 from aarogya_phc_hub.enrichment_worker import (
     EnrichmentRunSummary,
@@ -768,4 +776,124 @@ def test_three_notes_and_stub_binary_audio_do_not_spam_outbreak_alerts(tmp_path:
     assert summary.processed == 11
     assert summary.outbreak_alerts == 0
     assert project_state(store.get_all_events()).outbreak_alerts == []
+
+
+def test_default_worker_wires_real_ml_pipeline_backends(tmp_path: Path) -> None:
+    """T1-04 Part 2: default EnrichmentWorker uses real aarogya_ml_pipeline adapters."""
+    store = EventStore(":memory:")
+    blob_store = LocalBlobStore(tmp_path / "blobs")
+    clock = HlcClock("phc-hub-real-ml")
+    manifest = _make_hub_manifest("phc-hub-real-ml")
+
+    worker = EnrichmentWorker(store, blob_store, clock, manifest)
+    assert isinstance(worker._transcriber, WhisperVoiceTranscriber)
+    assert isinstance(worker._structurer, LlamaCppSlmStructurer)
+    assert isinstance(worker._risk_scorer, LightGbmRiskScorer)
+    assert isinstance(worker._outbreak_detector, EwmaOutbreakDetector)
+    assert worker._outbreak_detector.alpha == 0.35
+    assert worker._outbreak_detector.min_baseline_days == 3
+
+    _register_patient(store, patient_id="pat-healthy-check", age_months=30)
+    store.append(
+        CrdtEvent(
+            event_id="evt-voice-healthy-check",
+            hlc=HlcTimestamp(wall_ms=_BASE_DAY_MS + 40_000, logical=0, node_id="phone-asha-01"),
+            origin_node_id="phone-asha-01",
+            patient_id="pat-healthy-check",
+            event_type=EventType.VOICE_NOTE_RECORDED,
+            enrichment_state=EnrichmentState.PENDING,
+            payload={
+                "transcript_hint": "Routine child follow-up, child is eating well.",
+                "language": "en",
+                "temperature_c": 36.8,
+                "spo2_pct": 99,
+                "respiratory_rate_bpm": 26,
+            },
+        )
+    )
+
+    summary = worker.run_once()
+    assert summary.processed == 1
+    projected = project_state(store.get_all_events())
+    enr = projected.enrichments["evt-voice-healthy-check"]
+    assert enr.payload["transcription"]["backend"] in ("whisper-int8-cpu", "stub-asr-fallback")
+    assert enr.payload["structured_note"]["backend"] in (
+        "llama-cpp-qwen2.5-3b-gbnf",
+        "stub-slm-fallback",
+    )
+    assert enr.payload["risk_score"]["backend"] in ("lightgbm-treeshap", "stub-lightgbm-fallback")
+    # Healthy child with normal vitals must not saturate risk score in fallback mode.
+    assert enr.payload["risk_score"]["risk_band"] == "LOW"
+    assert enr.payload["risk_score"]["risk_score"] < 0.35
+
+
+def test_risk_features_strictly_conform_to_canonical_risk_feature_names(tmp_path: Path) -> None:
+    """T1-04 Part 2: risk scorer receives canonical RISK_FEATURE_NAMES without stray keys."""
+    captured_features: list[dict[str, float | int | bool]] = []
+
+    class _SpyRiskScorer:
+        def score_risk(self, features: dict[str, float | int | bool]) -> RiskScoreResult:
+            captured_features.append(dict(features))
+            return RiskScoreResult(
+                risk_score=0.42,
+                risk_band="MODERATE",
+                shap_attributions={"fever_days": 0.16},
+                backend="spy-risk-scorer",
+            )
+
+    store = EventStore(":memory:")
+    blob_store = LocalBlobStore(tmp_path / "blobs")
+    clock = HlcClock("phc-hub-features")
+    manifest = _make_hub_manifest("phc-hub-features")
+
+    _register_patient(store, patient_id="pat-feat-1", age_months=16)
+    store.append(
+        CrdtEvent(
+            event_id="evt-voice-feat-1",
+            hlc=HlcTimestamp(wall_ms=_BASE_DAY_MS + 50_000, logical=0, node_id="phone-asha-01"),
+            origin_node_id="phone-asha-01",
+            patient_id="pat-feat-1",
+            event_type=EventType.VOICE_NOTE_RECORDED,
+            enrichment_state=EnrichmentState.PENDING,
+            payload={
+                "transcript_hint": "Child has fever and cough.",
+                "language": "en",
+                "fever_days": 3,
+                "temperature_c": 38.6,
+                "respiratory_rate_bpm": 44,
+                "spo2_pct": 95,
+                "systolic_bp": 95,
+                "diastolic_bp": 60,
+                "hemoglobin_g_dl": 10.2,
+                "muac_cm": 12.1,
+            },
+        )
+    )
+
+    worker = EnrichmentWorker(
+        store,
+        blob_store,
+        clock,
+        manifest,
+        risk_scorer=_SpyRiskScorer(),
+    )
+    summary = worker.run_once()
+    assert summary.processed == 1
+    assert len(captured_features) == 1
+
+    feats = captured_features[0]
+    assert set(feats.keys()).issubset(set(RISK_FEATURE_NAMES))
+    assert feats["age_months"] == 16
+    assert feats["fever_days"] == 3
+    assert feats["temperature_c"] == 38.6
+    assert feats["respiratory_rate_bpm"] == 44
+    assert feats["spo2_pct"] == 95
+    assert feats["systolic_bp"] == 95
+    assert feats["diastolic_bp"] == 60
+    assert feats["hemoglobin_g_dl"] == 10.2
+    assert feats["muac_cm"] == 12.1
+    assert feats["is_pregnant"] is False
+    assert feats["has_danger_sign"] is False
+    assert feats["symptom_count"] >= 2
+
 

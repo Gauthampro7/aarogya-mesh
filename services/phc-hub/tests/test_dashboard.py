@@ -121,9 +121,12 @@ def test_showcase_stage_and_static_assets_zero_cdn() -> None:
     html = stage_resp.text
     assert "/static/showcase.css" in html
     assert "/static/showcase.js" in html
-    assert 'src="/watch/"' in html
+    assert 'src="/watch/?embed=1"' in html
     assert 'src="/phone/"' in html
     assert 'href="/"' in html
+    assert 'id="btn-stage-theme"' in html
+    for tab_id in ("alerts", "shap", "stream"):
+        assert f'data-hub-tab="{tab_id}"' in html
     for scenario_id in (
         "maternal_sos",
         "pediatric_voice_offload",
@@ -141,6 +144,7 @@ def test_showcase_stage_and_static_assets_zero_cdn() -> None:
     css_resp = client.get("/static/showcase.css")
     assert css_resp.status_code == 200
     assert "text/css" in css_resp.headers["content-type"]
+    assert '[data-theme="light"]' in css_resp.text
     assert "http://" not in css_resp.text.lower()
     assert "https://" not in css_resp.text.lower()
 
@@ -148,6 +152,9 @@ def test_showcase_stage_and_static_assets_zero_cdn() -> None:
     assert js_resp.status_code == 200
     assert "javascript" in js_resp.headers["content-type"]
     js_text = js_resp.text
+    assert "aarogya.theme" in js_text
+    assert "aarogya.lang" in js_text
+    assert "contentWindow.location.reload()" in js_text
     assert "http://" not in js_text.lower()
     assert "https://" not in js_text.lower()
     assert "innerHTML" not in js_text

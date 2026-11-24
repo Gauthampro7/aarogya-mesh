@@ -11,33 +11,34 @@
     <header class="stage-topbar">
       <div class="stage-brand">
         <div class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 28 28" width="22" height="22" fill="none">
+          <svg viewBox="0 0 28 28" width="20" height="20" fill="none">
             <rect x="2" y="2" width="24" height="24" rx="6" stroke="currentColor" stroke-width="2" />
             <path d="M14 7v14M7 14h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
           </svg>
         </div>
-        <div>
-          <h1 id="stage-title" class="stage-title">Aarogya Mesh — 3-Tier Live Stage</h1>
-          <p id="stage-subtitle" class="stage-subtitle">Watch ↔ Phone ↔ PHC Hub · Live CRDT Telemetry Every 2s</p>
+        <div class="brand-text">
+          <h1 id="stage-title" class="stage-title">Aarogya Mesh — 3-Tier Stage</h1>
+          <p id="stage-subtitle" class="stage-subtitle">Watch ↔ Phone ↔ Hub · Live 2s Sync</p>
         </div>
       </div>
 
       <nav class="scenario-pills" aria-label="1-Click Hackathon Demo Scenarios">
-        <button class="pill-btn" type="button" data-scenario="maternal_sos" data-i18n="scMaternal">1. Maternal Watch SOS</button>
-        <button class="pill-btn" type="button" data-scenario="pediatric_voice_offload" data-i18n="scVoice">2. Offline Voice → AI</button>
-        <button class="pill-btn" type="button" data-scenario="village_outbreak" data-i18n="scOutbreak">3. Village Outbreak</button>
-        <button class="pill-btn" type="button" data-scenario="crdt_conflict_merge" data-i18n="scCrdt">4. CRDT Merge Proof</button>
+        <button class="pill-btn" type="button" data-scenario="maternal_sos" data-i18n="scMaternal">1. Watch SOS</button>
+        <button class="pill-btn" type="button" data-scenario="pediatric_voice_offload" data-i18n="scVoice">2. Voice → AI</button>
+        <button class="pill-btn" type="button" data-scenario="village_outbreak" data-i18n="scOutbreak">3. Outbreak</button>
+        <button class="pill-btn" type="button" data-scenario="crdt_conflict_merge" data-i18n="scCrdt">4. CRDT Merge</button>
         <button id="btn-stage-reset" class="pill-btn pill-reset" type="button" data-i18n="scReset">Reset</button>
       </nav>
 
       <div class="stage-actions">
-        <button id="btn-stage-enrich" class="btn btn-primary" type="button" data-i18n="runEnrichment">Run Hub Enrichment</button>
+        <button id="btn-stage-enrich" class="btn btn-primary" type="button" data-i18n="runEnrichment">Run AI</button>
         <span class="pill pill-offline">
           <span class="pulse-dot" aria-hidden="true"></span>
-          <span id="stage-offline-text" data-i18n="badgeOffline">AIRPLANE-MODE SAFE</span>
+          <span id="stage-offline-text" data-i18n="badgeOffline">OFFLINE SAFE</span>
         </span>
+        <button id="btn-stage-theme" class="btn btn-secondary" type="button">Light</button>
         <button id="btn-stage-lang" class="btn btn-secondary" type="button">हिन्दी</button>
-        <a id="link-command-center" class="btn btn-secondary" href="/" data-i18n="backToHub">← Command Center</a>
+        <a id="link-command-center" class="btn btn-secondary" href="/" data-i18n="backToHub">← Hub</a>
       </div>
     </header>
 
@@ -48,7 +49,7 @@
           <span id="sync-pulse-label" data-i18n="syncIdle">LIVE SYNC READY</span>
         </span>
         <span id="narrative-text" class="narrative-text" data-i18n="defaultNarrative">
-          Tap a danger sign on the Watch, register a patient on the Phone, or launch a 1-click clinical scenario above.
+          Tap a danger sign on Watch, register a patient on Phone, or run a 1-click clinical scenario above.
         </span>
       </div>
       <div class="narrative-metrics mono">
@@ -61,88 +62,92 @@
     <main class="stage-columns">
       <section class="tier-column tier-col-watch" aria-labelledby="col-watch-title">
         <div class="col-header">
-          <div>
+          <div class="col-title-wrap">
             <span class="tier-eyebrow mono">TIER 0 · 256 MB</span>
             <h2 id="col-watch-title" class="col-title" data-i18n="colWatchTitle">Watch Companion</h2>
-            <p class="col-sub" data-i18n="colWatchSub">Normal Person / Patient-Family &amp; CHW</p>
+            <p class="col-sub" data-i18n="colWatchSub">Patient-Family &amp; CHW</p>
           </div>
           <div class="col-header-right">
-            <span id="watch-peer-badge" class="badge">0</span>
+            <span id="watch-peer-badge" class="badge mono">0</span>
             <button id="btn-reload-watch" class="icon-btn" type="button" title="Reload Watch">↻</button>
           </div>
         </div>
 
         <div class="watch-stage-wrap">
-          <div class="watch-chassis">
-            <div class="watch-strap watch-strap-top" aria-hidden="true"></div>
-            <div class="watch-body">
-              <div class="watch-crown" aria-hidden="true"></div>
-              <div class="watch-side-btn" aria-hidden="true"></div>
-              <div class="watch-screen-ring">
-                <iframe
-                  id="iframe-watch"
-                  class="watch-iframe"
-                  src="/watch/"
-                  title="Tier-0 Watch Companion"
-                  width="360"
-                  height="360"
-                ></iframe>
+          <div class="watch-scale-box">
+            <div class="watch-chassis">
+              <div class="watch-strap watch-strap-top" aria-hidden="true"></div>
+              <div class="watch-body">
+                <div class="watch-crown" aria-hidden="true"></div>
+                <div class="watch-side-btn" aria-hidden="true"></div>
+                <div class="watch-screen-ring">
+                  <iframe
+                    id="iframe-watch"
+                    class="watch-iframe"
+                    src="/watch/?embed=1"
+                    title="Tier-0 Watch Companion"
+                    width="360"
+                    height="360"
+                  ></iframe>
+                </div>
               </div>
+              <div class="watch-strap watch-strap-bottom" aria-hidden="true"></div>
             </div>
-            <div class="watch-strap watch-strap-bottom" aria-hidden="true"></div>
           </div>
         </div>
 
         <div class="col-footer">
           <span class="cap-chip" data-i18n="watchCap1">Standalone SOS</span>
           <span class="cap-chip" data-i18n="watchCap2">1-Tap Danger Signs</span>
-          <span class="cap-chip" data-i18n="watchCap3">Action Card Alerts</span>
+          <span class="cap-chip" data-i18n="watchCap3">Action Alerts</span>
         </div>
       </section>
 
       <section class="tier-column tier-col-phone" aria-labelledby="col-phone-title">
         <div class="col-header">
-          <div>
+          <div class="col-title-wrap">
             <span class="tier-eyebrow mono">TIER 1 · 4 GB</span>
             <h2 id="col-phone-title" class="col-title" data-i18n="colPhoneTitle">ASHA Field Phone</h2>
-            <p class="col-sub" data-i18n="colPhoneSub">Offline WHO IMNCI + IndexedDB + CRDT Sync</p>
+            <p class="col-sub" data-i18n="colPhoneSub">WHO IMNCI + Offline IndexedDB</p>
           </div>
           <div class="col-header-right">
-            <span id="phone-peer-badge" class="badge">0</span>
+            <span id="phone-peer-badge" class="badge mono">0</span>
             <button id="btn-reload-phone" class="icon-btn" type="button" title="Reload Phone">↻</button>
           </div>
         </div>
 
         <div class="phone-stage-wrap">
-          <div class="phone-chassis">
-            <div class="phone-speaker" aria-hidden="true"></div>
-            <div class="phone-screen">
-              <iframe
-                id="iframe-phone"
-                class="phone-iframe"
-                src="/phone/"
-                title="Tier-1 ASHA Field Phone"
-                width="360"
-                height="640"
-              ></iframe>
+          <div class="phone-scale-box">
+            <div class="phone-chassis">
+              <div class="phone-speaker" aria-hidden="true"></div>
+              <div class="phone-screen">
+                <iframe
+                  id="iframe-phone"
+                  class="phone-iframe"
+                  src="/phone/"
+                  title="Tier-1 ASHA Field Phone"
+                  width="360"
+                  height="640"
+                ></iframe>
+              </div>
+              <div class="phone-home-bar" aria-hidden="true"></div>
             </div>
-            <div class="phone-home-bar" aria-hidden="true"></div>
           </div>
         </div>
 
         <div class="col-footer">
-          <span class="cap-chip" data-i18n="phoneCap1">Deterministic IMNCI</span>
-          <span class="cap-chip" data-i18n="phoneCap2">Offline Voice Queue</span>
-          <span class="cap-chip" data-i18n="phoneCap3">HLC Delta Sync</span>
+          <span class="cap-chip" data-i18n="phoneCap1">WHO IMNCI</span>
+          <span class="cap-chip" data-i18n="phoneCap2">Voice Queue</span>
+          <span class="cap-chip" data-i18n="phoneCap3">HLC Sync</span>
         </div>
       </section>
 
       <section id="hub-brain-panel" class="tier-column tier-col-hub" aria-labelledby="col-hub-title">
         <div class="col-header">
-          <div>
-            <span class="tier-eyebrow mono">TIER 2 · 32 GB PHC HUB BRAIN</span>
+          <div class="col-title-wrap">
+            <span id="hub-tier-eyebrow" class="tier-eyebrow mono">TIER 2 · PHC HUB BRAIN</span>
             <h2 id="col-hub-title" class="col-title" data-i18n="colHubTitle">PHC Clinical Intelligence</h2>
-            <p class="col-sub" data-i18n="colHubSub">Whisper + SLM + LightGBM SHAP + EWMA Outbreak</p>
+            <p class="col-sub" data-i18n="colHubSub">Whisper + SLM + LightGBM SHAP + EWMA</p>
           </div>
           <div class="col-header-right">
             <span id="hub-last-tick" class="badge mono">--:--:--</span>
@@ -174,45 +179,95 @@
           </div>
         </div>
 
-        <div class="hub-scroll-body">
-          <div class="hub-block">
-            <div class="hub-block-head">
-              <h3 class="hub-block-title" data-i18n="hubPeersTitle">Live Synced Peers</h3>
-              <span id="hub-peers-count" class="badge mono">0</span>
+        <div class="hub-peers-strip">
+          <span class="peers-strip-label" data-i18n="hubPeersTitle">Peers</span>
+          <div id="hub-peers-list" class="peer-chips"></div>
+        </div>
+
+        <div class="hub-tabs" role="tablist" aria-label="PHC Hub Telemetry Views">
+          <button
+            id="tab-btn-alerts"
+            class="hub-tab-btn active"
+            type="button"
+            role="tab"
+            aria-selected="true"
+            aria-controls="hub-panel-alerts"
+            data-hub-tab="alerts"
+          >
+            <span data-i18n="tabAlerts">Alerts &amp; Cards</span>
+            <span id="tab-count-alerts" class="tab-badge mono">0</span>
+          </button>
+          <button
+            id="tab-btn-shap"
+            class="hub-tab-btn"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="hub-panel-shap"
+            data-hub-tab="shap"
+          >
+            <span data-i18n="tabShap">SHAP &amp; Triage</span>
+            <span id="tab-count-shap" class="tab-badge mono">0</span>
+          </button>
+          <button
+            id="tab-btn-stream"
+            class="hub-tab-btn"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="hub-panel-stream"
+            data-hub-tab="stream"
+          >
+            <span data-i18n="tabStream">CRDT Stream</span>
+            <span id="tab-count-stream" class="tab-badge mono">0</span>
+          </button>
+        </div>
+
+        <div class="hub-tab-panels">
+          <div id="hub-panel-alerts" class="hub-tab-panel" role="tabpanel" aria-labelledby="tab-btn-alerts">
+            <div class="hub-block">
+              <div class="hub-block-head">
+                <h3 class="hub-block-title" data-i18n="hubActionsTitle">Action Cards → Watch &amp; Phone</h3>
+                <span id="hub-actions-count" class="badge mono">0</span>
+              </div>
+              <div id="hub-actions-list" class="hub-stack"></div>
             </div>
-            <div id="hub-peers-list" class="peer-chips"></div>
+
+            <div class="hub-block">
+              <div class="hub-block-head">
+                <h3 class="hub-block-title" data-i18n="hubOutbreaksTitle">EWMA Outbreak Alerts</h3>
+                <span id="hub-outbreaks-count" class="badge mono">0</span>
+              </div>
+              <div id="hub-outbreaks-list" class="hub-stack"></div>
+            </div>
           </div>
 
-          <div class="hub-block">
-            <div class="hub-block-head">
-              <h3 class="hub-block-title" data-i18n="hubTriageTitle">Real-Time Triage Alerts</h3>
-              <span id="hub-triage-count" class="badge mono">0</span>
+          <div id="hub-panel-shap" class="hub-tab-panel hidden" role="tabpanel" aria-labelledby="tab-btn-shap">
+            <div class="hub-block">
+              <div class="hub-block-head">
+                <h3 class="hub-block-title" data-i18n="hubShapTitle">SHAP Risk Attributions</h3>
+                <span id="hub-shap-count" class="badge mono">0</span>
+              </div>
+              <div id="hub-shap-list" class="hub-stack"></div>
             </div>
-            <div id="hub-triage-list" class="hub-stack"></div>
+
+            <div class="hub-block">
+              <div class="hub-block-head">
+                <h3 class="hub-block-title" data-i18n="hubTriageTitle">Real-Time Triage Decisions</h3>
+                <span id="hub-triage-count" class="badge mono">0</span>
+              </div>
+              <div id="hub-triage-list" class="hub-stack"></div>
+            </div>
           </div>
 
-          <div class="hub-block">
-            <div class="hub-block-head">
-              <h3 class="hub-block-title" data-i18n="hubShapTitle">SHAP Risk Attributions</h3>
-              <span id="hub-shap-count" class="badge mono">0</span>
+          <div id="hub-panel-stream" class="hub-tab-panel hidden" role="tabpanel" aria-labelledby="tab-btn-stream">
+            <div class="hub-block">
+              <div class="hub-block-head">
+                <h3 class="hub-block-title" data-i18n="hubEventsTitle">Latest CRDT Sync Stream</h3>
+                <span id="hub-events-count" class="badge mono">0</span>
+              </div>
+              <div id="hub-events-list" class="hub-events-stream"></div>
             </div>
-            <div id="hub-shap-list" class="hub-stack"></div>
-          </div>
-
-          <div class="hub-block">
-            <div class="hub-block-head">
-              <h3 class="hub-block-title" data-i18n="hubActionsTitle">Action Cards → Watch &amp; Phone</h3>
-              <span id="hub-actions-count" class="badge mono">0</span>
-            </div>
-            <div id="hub-actions-list" class="hub-stack"></div>
-          </div>
-
-          <div class="hub-block">
-            <div class="hub-block-head">
-              <h3 class="hub-block-title" data-i18n="hubEventsTitle">Latest CRDT Sync Stream</h3>
-              <span id="hub-events-count" class="badge mono">0</span>
-            </div>
-            <div id="hub-events-list" class="hub-events-stream"></div>
           </div>
         </div>
       </section>
