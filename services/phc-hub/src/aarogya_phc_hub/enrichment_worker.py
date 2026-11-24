@@ -43,17 +43,18 @@ from aarogya_crdt_sync import (
     project_state,
     select_offloadable_jobs,
 )
-from aarogya_ml_pipeline.interfaces import (
+from aarogya_ml_pipeline import (
     ClinicalSlmStructurer,
+    EwmaOutbreakDetector,
+    LightGbmRiskScorer,
+    LlamaCppSlmStructurer,
     OutbreakDetector,
     RiskScorer,
     StructuredClinicalNote,
-    StubClinicalSlmStructurer,
-    StubOutbreakDetector,
-    StubRiskScorer,
-    StubVoiceTranscriber,
     VoiceTranscriber,
+    WhisperVoiceTranscriber,
 )
+from aarogya_ml_pipeline.risk_scorer import extract_risk_features
 from aarogya_phc_hub.blob_store import LocalBlobStore
 from aarogya_phc_hub.capability_router import WorkloadKind, route_workload
 
@@ -199,6 +200,8 @@ def _build_triage_input(
     spo2_pct = _safe_int(payload.get("spo2_pct"), min_val=0, max_val=100)
     systolic_bp = _safe_int(payload.get("systolic_bp"), min_val=40, max_val=300)
     diastolic_bp = _safe_int(payload.get("diastolic_bp"), min_val=20, max_val=200)
+    hemoglobin_g_dl = _safe_float(payload.get("hemoglobin_g_dl"), min_val=1.0, max_val=25.0)
+    muac_cm = _safe_float(payload.get("muac_cm"), min_val=5.0, max_val=50.0)
     fever_days = _safe_int(payload.get("fever_days"), min_val=0, max_val=365) or 0
     if fever_days == 0 and "fever" in all_flags:
         fever_days = 1
@@ -222,6 +225,8 @@ def _build_triage_input(
         spo2_pct=spo2_pct,
         systolic_bp=systolic_bp,
         diastolic_bp=diastolic_bp,
+        hemoglobin_g_dl=hemoglobin_g_dl,
+        muac_cm=muac_cm,
         has_cough_or_difficult_breathing=has_cough_or_breathing,
         chest_indrawing=bool(payload.get("chest_indrawing") is True),
         has_diarrhea=bool(payload.get("has_diarrhea") is True or "diarrhea" in all_flags),
@@ -231,18 +236,7 @@ def _build_triage_input(
         assessed_at_ms=voice_event.hlc.wall_ms,
     )
 
-    features: dict[str, float | int | bool] = {
-        "fever_days": fever_days,
-        "symptom_count": len(symptoms),
-        "age_under_2m": age_months is not None and age_months < 2,
-        "high_bp": (
-            (systolic_bp is not None and systolic_bp >= 140)
-            or (diastolic_bp is not None and diastolic_bp >= 90)
-        ),
-    }
-    if respiratory_rate_bpm is not None:
-        features["respiratory_rate"] = respiratory_rate_bpm
-
+    features = extract_risk_features(triage_input)
     return triage_input, features
 
 
@@ -392,10 +386,12 @@ class EnrichmentWorker:
         self._blob_store = blob_store
         self._clock = clock
         self._manifest = manifest
-        self._transcriber: VoiceTranscriber = transcriber or StubVoiceTranscriber()
-        self._structurer: ClinicalSlmStructurer = structurer or StubClinicalSlmStructurer()
-        self._risk_scorer: RiskScorer = risk_scorer or StubRiskScorer()
-        self._outbreak_detector: OutbreakDetector = outbreak_detector or StubOutbreakDetector()
+        self._transcriber: VoiceTranscriber = transcriber or WhisperVoiceTranscriber()
+        self._structurer: ClinicalSlmStructurer = structurer or LlamaCppSlmStructurer()
+        self._risk_scorer: RiskScorer = risk_scorer or LightGbmRiskScorer()
+        self._outbreak_detector: OutbreakDetector = (
+            outbreak_detector or EwmaOutbreakDetector(alpha=0.35, min_baseline_days=3)
+        )
         self._poll_interval_sec = float(poll_interval_sec)
 
         self._run_lock = threading.Lock()
@@ -677,6 +673,12 @@ class EnrichmentWorker:
             signal = self._outbreak_detector.detect_outbreak(village_id, syndrome, daily_counts)
             if not signal.alert_triggered:
                 continue
+
+            if (
+                signal.severity != TriageSeverity.RED_EMERGENCY
+                and daily_counts[-1] >= 2.0 * signal.threshold
+            ):
+                signal = signal.model_copy(update={"severity": TriageSeverity.RED_EMERGENCY})
 
             dedupe_key = f"{village_id}:{syndrome}:{latest_day}"
             if dedupe_key in existing_alert_keys:
