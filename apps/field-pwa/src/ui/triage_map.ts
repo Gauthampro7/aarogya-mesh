@@ -5,6 +5,14 @@
 import { tx } from "../i18n";
 import { IMNCI_PEDIATRIC_RULES, MATERNAL_ANC_RULES, validateTriageInput } from "../clinical";
 import type { PatientCategory, TriageInput } from "../clinical";
+import type { PatientSex } from "../../../../packages/contracts/ts/index";
+
+export const FAST_EMERGENCY_FLAGS = ["lethargic_or_unconscious", "convulsions", "severe_breathing_difficulty", "vaginal_bleeding"] as const;
+
+/** Display-only filter for the fast-emergency choices (omits vaginal bleeding for male patients); the engine remains the sole severity authority. */
+export function fastEmergencyOptions(sex: PatientSex | null | undefined): string[] {
+  return FAST_EMERGENCY_FLAGS.filter((f) => !(sex === "M" && f === "vaginal_bleeding"));
+}
 
 export interface FlagOption {
   flag: string;
@@ -18,6 +26,15 @@ export const maternalRedOptions = (): FlagOption[] =>
   MATERNAL_ANC_RULES.red_flag_symptoms.map(({ flag, label }) => ({ flag, label }));
 export const maternalYellowOptions = (): FlagOption[] =>
   MATERNAL_ANC_RULES.yellow_flag_symptoms.map(({ flag, label }) => ({ flag, label }));
+
+/** IMNCI danger signs that only make sense for a child (hidden for MATERNAL/GENERAL). */
+export const PEDIATRIC_ONLY_DANGER_FLAGS: ReadonlySet<string> = new Set(["stridor_in_calm_child"]);
+
+/** Danger-sign options shown for a category: all for PEDIATRIC, minus child-only signs otherwise. */
+export function dangerOptionsForCategory(category: PatientCategory): FlagOption[] {
+  const all = pediatricDangerOptions();
+  return category === "PEDIATRIC" ? all : all.filter((o) => !PEDIATRIC_ONLY_DANGER_FLAGS.has(o.flag));
+}
 
 /** Dehydration signs from the diarrhoea table, minus those already shown as danger signs. */
 export function dehydrationFlags(): string[] {
@@ -67,11 +84,14 @@ export type BuildResult =
   | { ok: true; input: TriageInput }
   | { ok: false; errors: NumError[]; message?: string; needsCategory?: boolean; hiddenFlags?: string[] };
 
-/** Flags the form actually shows for a category. Universal IMNCI danger signs appear in every category. */
+/**
+ * Flags the form actually shows for a category. IMNCI danger signs appear in every
+ * category except the child-only ones (PEDIATRIC_ONLY_DANGER_FLAGS), shown for PEDIATRIC only.
+ */
 export function visibleFlags(category: PatientCategory | null): Set<string> {
   const out = new Set<string>();
   if (category === null) return out;
-  for (const o of pediatricDangerOptions()) out.add(o.flag);
+  for (const o of dangerOptionsForCategory(category)) out.add(o.flag);
   if (category === "MATERNAL") {
     for (const o of [...maternalRedOptions(), ...maternalYellowOptions()]) out.add(o.flag);
   }

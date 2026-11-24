@@ -57,3 +57,14 @@ legend { font-weight: 700; padding: 0 6px; }
 .prio-CRITICAL { border: 3px solid #f87171; } .prio-HIGH { border: 3px solid var(--yellow); }
 details summary { min-height: 48px; display: flex; align-items: center; cursor: pointer; font-weight: 700; }
 @media (max-width: 380px) { .grid2 { grid-template-columns: 1fr; } .tools { width: 100%; } }
+/* === T2-04 === */
+.rostersearch { margin: 8px 0; }
+.roster li a { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; text-decoration: none; color: var(--fg); min-height: 48px; }
+.sevbadge { padding: 2px 8px; border-radius: 999px; font-weight: 800; font-size: 0.75rem; margin-left: auto; border: 2px solid; }
+.sevbadge.sev-RED_EMERGENCY { background: #7f1d1d; color: #fff; border-color: #fecaca; }
+.sevbadge.sev-YELLOW_PHC { background: #facc15; color: #1c1917; border-color: #422006; }
+.sevbadge.sev-GREEN_HOME { background: #14532d; color: #fff; border-color: #bbf7d0; }
+.agerow { display: flex; gap: 8px; align-items: flex-end; } .agerow .field { flex: 1; } .agerow select { width: auto; min-width: 7rem; }
+.fastpanel { background: #450a0a; border: 3px solid #f87171; border-radius: 12px; padding: 10px 12px; margin: 8px 0; }
+.fastpanel .row button { flex: 1; } .fastpanel button.confirm { background: var(--red); border-color: #fecaca; }
+.ckcount { font-weight: 800; font-size: 1.1rem; margin: 8px 0; }

@@ -237,6 +237,23 @@ export const en = {
   "cki.pnc_nb_weight_lbw": "Birth/visit weight recorded and LBW (<2.5 kg) flagged",
   "cki.pnc_nb_jaundice_activity": "Checked for yellow palms/soles (jaundice) and normal limb activity",
   "cki.pnc_nb_birth_vaccines": "Birth doses (BCG, OPV-0, HepB-Birth) verified on MCP card",
+  // === T2-04 ===
+  "roster.title": "Patients",
+  "roster.empty": "No patients registered yet.",
+  "roster.search": "Search by name, village or household",
+  "roster.noMatch": "No patient matches this search.",
+  "roster.ageYm": "{y} years {m} months",
+  "roster.village": "Village {v}",
+  "reg.age": "Age",
+  "reg.ageUnit": "Age unit",
+  "reg.unitMonths": "Months",
+  "reg.unitYears": "Years",
+  "reg.ageHintYears": "Fill age in years (0 to 125) if date of birth is unknown",
+  "reg.err.ageYears": "Age must be a whole number from 0 to 125 years.",
+  "triage.fastAsk": "Confirm the emergency: which danger sign is present?",
+  "triage.fastConfirm": "Confirm emergency",
+  "triage.fastCancel": "Cancel",
+  "ck.prefilled": "Items saved earlier are already ticked.",
 } as const;
 
 export type Key = keyof typeof en;
