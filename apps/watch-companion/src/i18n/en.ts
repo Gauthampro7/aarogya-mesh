@@ -3,8 +3,9 @@ export const en = {
   "app.title": "Aarogya Watch",
   "lang.toggle": "हिं",
 
-  "mode.CHW_COMPANION": "CHW",
-  "mode.PATIENT_FAMILY": "Family",
+  "mode.CHW_COMPANION": "CHW ⇄",
+  "mode.PATIENT_FAMILY": "Family ⇄",
+  "mode.switchAria": "Switch between CHW and Family modes",
   "mode.full.CHW_COMPANION": "CHW Companion",
   "mode.full.PATIENT_FAMILY": "Patient / Family",
 
@@ -25,6 +26,9 @@ export const en = {
   "danger.anon": "Walk-in patient",
   "danger.submit": "Screen Now",
   "danger.noneBtn": "No Danger Signs",
+  "danger.confirmPrompt": "Confirm RED Emergency?",
+  "danger.confirmBtn": "Confirm RED",
+  "danger.cancelBtn": "Cancel",
   "danger.reset": "Reset",
   "danger.redTitle": "RED - EMERGENCY",
   "danger.redBanner": "Call 108 · Immediate hospital referral",
@@ -67,19 +71,20 @@ export const en = {
   "sos.recordStop": "Stop & Save SOS",
   "sos.recording": "Recording ({sec})...",
   "sos.textPlaceholder": "Type emergency note...",
+  "sos.textRequired": "Type an emergency note first.",
   "sos.sendText": "Send Text SOS",
   "sos.queued": "SOS queued offline (pending Hub analysis).",
   "sos.micUnavailable": "Mic unavailable · Use text SOS",
 
   "sync.title": "Hub Sync",
-  "sync.hubLabel": "Tier-2 Hub URL",
+  "sync.hubLabel": "Health Centre Address",
   "sync.hubHint": "http://127.0.0.1:8000",
   "sync.now": "Sync Now",
   "sync.syncing": "Syncing...",
   "sync.queued": "{count} queued",
   "sync.success": "Synced ({sent} sent, {received} received)",
   "sync.offlineFail": "Hub unreachable · Saved locally",
-  "sync.footer": "TIER_0_WATCH · {count} queued",
+  "sync.footer": "Watch · {count} pending",
 } as const;
 
 export type Key = keyof typeof en;

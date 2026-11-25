@@ -22,6 +22,11 @@
         place-items: center;
         background: #020617;
       }
+      body.embed-mode {
+        min-height: auto;
+        background: transparent;
+        overflow: hidden;
+      }
       .watch-bezel {
         width: 360px;
         height: 360px;
@@ -36,6 +41,10 @@
         padding: 22px 30px 18px;
         overflow: hidden;
         text-align: center;
+      }
+      .embed-mode .watch-bezel {
+        box-shadow: none;
+        margin: 0;
       }
       .watch-top-bar {
         display: flex;
@@ -94,7 +103,7 @@
         flex: 1;
         overflow-y: auto;
         margin: 8px 0 6px;
-        padding: 0 4px;
+        padding: 4px 14px 12px;
         display: flex;
         flex-direction: column;
         gap: 6px;
@@ -147,9 +156,33 @@
         cursor: pointer;
         text-align: left;
       }
-      .sign-btn:active {
+      .sign-btn:active,
+      .sign-btn.armed {
         background: #dc2626;
+        border-color: #fca5a5;
         color: #ffffff;
+      }
+      .confirm-bar {
+        border-radius: 10px;
+        border: 2px solid #ef4444;
+        background: #7f1d1d;
+        padding: 7px 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .confirm-title {
+        font-size: 0.74rem;
+        font-weight: 800;
+        color: #ffffff;
+      }
+      .confirm-sub {
+        font-size: 0.68rem;
+        color: #fecaca;
+      }
+      .confirm-actions {
+        display: flex;
+        gap: 6px;
       }
       .action-btn {
         display: block;
@@ -314,6 +347,7 @@
       .watch-footer {
         font-size: 0.68rem;
         color: #94a3b8;
+        margin: 0 28px;
         flex-shrink: 0;
       }
     </style>

@@ -6,14 +6,15 @@ import {
   type VaccinationDueItem,
 } from "../../../../packages/contracts/ts/index";
 import { MemoryStorage } from "../../src/core/index";
-import { WatchSyncClient } from "../../src/sync/index";
-import { WatchUiController } from "../../src/ui/state";
+import { WatchSyncClient, type BrowserLocationLike } from "../../src/sync/index";
+import { DEFAULT_HUB_URL_STORAGE_KEY, WatchUiController } from "../../src/ui/state";
 import { WatchKernel } from "../../src/watch_kernel";
 
 function makeController(options: {
   storage?: MemoryStorage;
   fetchImpl?: typeof fetch;
   vaccinations?: VaccinationDueItem[];
+  location?: BrowserLocationLike | null;
 } = {}) {
   const storage = options.storage ?? new MemoryStorage();
   const kernel = new WatchKernel("watch-test-01", "CHW_COMPANION", { storage });
@@ -26,6 +27,7 @@ function makeController(options: {
     syncClient,
     storage,
     initialVaccinations: options.vaccinations,
+    location: options.location,
   });
   return { storage, kernel, syncClient, controller };
 }
@@ -227,5 +229,50 @@ describe("WatchUiController dual-mode state transitions", () => {
     expect(seenMethods.some((m) => m.startsWith("HEAD /api/v1/blobs/"))).toBe(true);
     expect(seenMethods.some((m) => m.startsWith("PUT /api/v1/blobs/"))).toBe(true);
     expect(seenMethods.some((m) => m === "POST /api/v1/sync")).toBe(true);
+  });
+
+  it("blocks empty Text SOS, guards danger signs with 2-tap confirm, and drops stale loopback URLs (T3-05)", async () => {
+    const storage = new MemoryStorage();
+    storage.setItem(DEFAULT_HUB_URL_STORAGE_KEY, "http://127.0.0.1:8000");
+
+    const { controller } = makeController({
+      storage,
+      location: {
+        protocol: "http:",
+        origin: "http://192.168.1.14:8000",
+        hostname: "192.168.1.14",
+      },
+    });
+    expect(controller.getHubUrl()).toBe("http://192.168.1.14:8000");
+
+    // 2-tap danger-sign confirm guard
+    controller.armDangerSign("convulsions");
+    expect(controller.getPendingConfirmFlag()).toBe("convulsions");
+    expect(controller.getOutboxCount()).toBe(0);
+
+    controller.cancelArmedDangerSign();
+    expect(controller.getPendingConfirmFlag()).toBeNull();
+    expect(controller.getOutboxCount()).toBe(0);
+
+    controller.armDangerSign("convulsions");
+    const confirmed = controller.confirmArmedDangerSign("pat-guard-1");
+    expect(confirmed?.severity).toBe("RED_EMERGENCY");
+    expect(controller.getPendingConfirmFlag()).toBeNull();
+    expect(controller.getOutboxCount()).toBe(2);
+
+    // Non-empty Text SOS guard
+    controller.setMode("PATIENT_FAMILY");
+    controller.setTab("sos");
+    const blocked = await controller.submitTextSos("   ");
+    expect(blocked).toBeNull();
+    expect(controller.getSosTextError()).toBe(true);
+    expect(controller.getOutboxCount()).toBe(2);
+
+    controller.setSosTextDraft("Need urgent help");
+    expect(controller.getSosTextError()).toBe(false);
+    const queued = await controller.submitTextSos();
+    expect(queued?.event_type).toBe("VOICE_NOTE_RECORDED");
+    expect(controller.getSosTextError()).toBe(false);
+    expect(controller.getOutboxCount()).toBe(3);
   });
 });

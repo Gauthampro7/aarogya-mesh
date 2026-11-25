@@ -3,7 +3,7 @@
  * Bundled via `esbuild` into `dist/watch.js` and loaded by `index.html`.
  */
 
-import { DEFAULT_HUB_URL, WatchSyncClient } from "../sync/index";
+import { resolveDefaultHubUrl, WatchSyncClient } from "../sync/index";
 import { WatchKernel } from "../watch_kernel";
 import { mountWatchUi } from "./render";
 import { WatchUiController } from "./state";
@@ -14,9 +14,20 @@ function bootstrap(): void {
     return;
   }
 
+  if (typeof window !== "undefined" && typeof document !== "undefined") {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("embed") === "1") {
+      document.body.classList.add("embed-mode");
+    }
+  }
+
+  const loc = typeof window !== "undefined" ? window.location : null;
   const kernel = new WatchKernel("watch-node-01", "CHW_COMPANION");
-  const syncClient = new WatchSyncClient(kernel.getStore(), DEFAULT_HUB_URL);
-  const controller = new WatchUiController({ kernel, syncClient });
+  const syncClient = new WatchSyncClient(
+    kernel.getStore(),
+    resolveDefaultHubUrl(loc),
+  );
+  const controller = new WatchUiController({ kernel, syncClient, location: loc });
 
   mountWatchUi(root, controller);
 
