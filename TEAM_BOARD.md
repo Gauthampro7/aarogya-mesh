@@ -12,8 +12,8 @@ Each teammate owns one isolated directory so all 4 tracks can develop, test, and
 | Track | Module Directory | Owner | Status | Primary Stack |
 | --- | --- | --- | --- | --- |
 | **Track 1** | `packages/contracts`, `packages/clinical-engine`, `packages/crdt-sync`, `services/phc-hub` | **Core Bedrock — Gautham (`@Gauthampro7`)** | Built & Verified (Core + T1-01..04) | Python 3.12, Pydantic v2, SQLite, FastAPI |
-| **Track 2** | `apps/field-pwa` | **Srivastava (`@Akarshx-x`)** | Merged (#2–#7, #15–#17, #26, #30–#33) · Next: `T2-04`, `T2-05` | TypeScript, Offline PWA, Service Worker, IndexedDB |
-| **Track 3** | `apps/watch-companion` | **Travis (`@aril-travass`)** | Merged (#18–#21) · Next: `T3-05`, `T3-06` | TypeScript, Dual-Mode 360x360 Watch UI |
+| **Track 2** | `apps/field-pwa` | **Srivastava (`@Akarshx-x`)** | Complete & Merged (#2–#7, #15–#17, #26, #30–#33, #40, #41) | TypeScript, Offline PWA, Service Worker, IndexedDB |
+| **Track 3** | `apps/watch-companion` | **Travis (`@aril-travass`)** | Merged (#18–#21, #34) · Next: `T3-05` | TypeScript, Dual-Mode 360x360 Watch UI |
 | **Track 4** | `services/ml-pipeline` & Hub `/` Quick-Wins | **Krishna / Tiwari (`@Krishnanand-10`)** | Merged (#22) · Next: `T1-05`, `T4-07` | Python 3.12, `whisper.cpp`, `Qwen2.5-3B` GBNF, `LightGBM+SHAP`, `EWMA` |
 | **Track 5** | `apps/android-app` | **Core Bedrock — Gautham (`@Gauthampro7`)** | Built & Verified (`T5-01`, signed APK `v0.1.0`) | Java (JDK 21), Android SDK 34, Dual `WebView` + `LocalAssetServer` |
 
