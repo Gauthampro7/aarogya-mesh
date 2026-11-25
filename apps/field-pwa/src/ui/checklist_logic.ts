@@ -1,5 +1,7 @@
 import { evaluateChecklist, getChecklistDefinition, listChecklistTypes, selectAncChecklistForGestationalWeeks } from "../clinical";
 import type { ChecklistEvaluation, ChecklistType } from "../clinical";
+import type { CrdtEvent } from "../../../../packages/contracts/ts/index";
+import { compareHlc } from "../core/hlc";
 
 export const checklistTypes = (): ChecklistType[] => listChecklistTypes();
 
@@ -35,3 +37,15 @@ export function buildChecklistPayload(ev: ChecklistEvaluation): Record<string, u
 
 export const evaluate = (type: ChecklistType, done: string[], patientId: string | null) =>
   evaluateChecklist(type, done, { patient_id: patientId, target_tier: "TIER_1_PHONE", watch_mode: null });
+
+/** Completed item ids from the patient's latest CHECKLIST_RECORDED of `type` (by HLC); empty if none. */
+export function latestCompletedChecks(events: readonly CrdtEvent[], patientId: string | null, type: ChecklistType): Set<string> {
+  if (patientId === null) return new Set();
+  let latest: CrdtEvent | null = null;
+  for (const e of events) {
+    if (e.event_type !== "CHECKLIST_RECORDED" || e.patient_id !== patientId || e.payload.checklist_type !== type) continue;
+    if (latest === null || compareHlc(e.hlc, latest.hlc) > 0) latest = e;
+  }
+  const items = latest?.payload.completed_items;
+  return new Set(Array.isArray(items) ? items.filter((i): i is string => typeof i === "string") : []);
+}

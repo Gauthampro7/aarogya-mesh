@@ -239,6 +239,23 @@ export const hi: Record<Key, string> = {
   "cki.pnc_nb_weight_lbw": "जन्म अथवा भेंट के समय भार अंकित तथा अल्प जन्म भार (2.5 किलोग्राम से कम) चिह्नित",
   "cki.pnc_nb_jaundice_activity": "पीली हथेलियों एवं तलवों (कामला) तथा अंगों की सामान्य सक्रियता की जाँच की गई",
   "cki.pnc_nb_birth_vaccines": "जन्म के समय की मात्राएँ (क्षयरोग, मुख बाल-पक्षाघात शून्य, यकृतशोथ-ब जन्म) मातृ-शिशु सुरक्षा पत्रक पर सत्यापित",
+  // === T2-04 ===
+  "roster.title": "रोगी सूची",
+  "roster.empty": "अभी तक कोई रोगी पंजीकृत नहीं है।",
+  "roster.search": "नाम, ग्राम अथवा परिवार क्रमांक से अन्वेषण करें",
+  "roster.noMatch": "कोई रोगी इस अन्वेषण के अनुरूप नहीं है।",
+  "roster.ageYm": "{y} वर्ष {m} मास",
+  "roster.village": "ग्राम {v}",
+  "reg.age": "आयु",
+  "reg.ageUnit": "आयु की इकाई",
+  "reg.unitMonths": "मास",
+  "reg.unitYears": "वर्ष",
+  "reg.ageHintYears": "जन्म तिथि अज्ञात हो तो आयु वर्षों में भरें (0 से 125)",
+  "reg.err.ageYears": "आयु 0 से 125 वर्ष के मध्य पूर्ण संख्या होनी चाहिए।",
+  "triage.fastAsk": "आपातकाल की पुष्टि करें: कौन-सा संकट लक्षण उपस्थित है?",
+  "triage.fastConfirm": "आपातकाल की पुष्टि करें",
+  "triage.fastCancel": "निरस्त करें",
+  "ck.prefilled": "पूर्व में संचित मद पहले से चिह्नित हैं।",
 
   // === T2-05 ===
   "voice.insecureContext": "ध्वनि अभिलेखन केवल सुरक्षित संयोजन वाले पृष्ठ, इसी उपकरण के स्थानीय पते अथवा आरोग्य जाल उपकरण-अनुप्रयोग में सम्भव है। नीचे टिप्पणी लिखें; वह इसी उपकरण पर संचित होगी।",
@@ -248,10 +265,11 @@ export const hi: Record<Key, string> = {
   "sync.cardPatient": "{name}, ग्राम {v}",
   "sync.cardPatientId": "रोगी परिचय-संख्या: {id}",
   "result.originalEn": "मूल पाठ (आंग्ल भाषा)",
-};
 
 // === T2-05 === Display-only Hindi for engine triage output (stored English strings stay exact).
 /** Keyed by the exact English immediate_actions string emitted by the triage engine. */
+};
+
 export const HI_TRIAGE_ACTIONS: Readonly<Record<string, string>> = {
   "Urgent referral to nearest FRU/PHC immediately (call 108/102 ambulance)": "निकटतम प्रथम सन्दर्भन इकाई/प्राथमिक स्वास्थ्य केन्द्र में तत्काल भेजें (रोगी वाहन हेतु 108/102 पर दूरभाष करें)",
   "Keep child warm and prevent hypoglycemia during transport": "परिवहन के समय शिशु को उष्ण रखें तथा रक्तशर्करा की न्यूनता से बचाएँ",
@@ -361,8 +379,9 @@ export const HI_TRIAGE_ACTIONS: Readonly<Record<string, string>> = {
   "Immediate emergency referral to FRU/Hospital (call 108)": "आपातकाल: प्रथम सन्दर्भन इकाई/चिकित्सालय में तत्काल भेजें (108 पर दूरभाष करें)",
   "No immediate danger signs detected on Watch screen. Continue monitoring or run full Phone assessment if symptoms persist.": "मणिबन्ध उपकरण के परीक्षण में कोई तात्कालिक संकट लक्षण नहीं मिला। अवेक्षण निरन्तर रखें; लक्षण बने रहें तो चल-दूरभाष पर पूर्ण परीक्षण करें।",
   "Immediate 108 emergency transfer to oxygen-equipped FRU/PHC": "108 द्वारा प्राणवायु सुविधा युक्त प्रथम सन्दर्भन इकाई/प्राथमिक स्वास्थ्य केन्द्र में तत्काल आपात स्थानान्तरण करें",
-};
 /** Keyed by rule ID; fixed thresholds only (measured values stay in the English line). */
+};
+
 export const HI_TRIAGE_RATIONALE: Readonly<Record<string, string>> = {
   "IMNCI_GDS_01": "विश्व स्वास्थ्य संगठन बाल रोग समेकित प्रबन्धन का सामान्य संकट लक्षण: पान अथवा स्तनपान में असमर्थता गम्भीर सर्वांगी रोग का सूचक है।",
   "IMNCI_GDS_02": "विश्व स्वास्थ्य संगठन बाल रोग समेकित प्रबन्धन का सामान्य संकट लक्षण: निरन्तर वमन मुख से पुनर्जलीकरण तथा औषधि ग्रहण को रोकता है।",

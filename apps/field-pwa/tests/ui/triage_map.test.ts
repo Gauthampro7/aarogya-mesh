@@ -10,6 +10,10 @@ import {
   parseNum,
   patientAgeMonths,
   pediatricDangerOptions,
+  dangerOptionsForCategory,
+  fastEmergencyOptions,
+  FAST_EMERGENCY_FLAGS,
+  PEDIATRIC_ONLY_DANGER_FLAGS,
   suggestCategory,
   type TriageFormState,
 } from "../../src/ui/triage_map";
@@ -27,11 +31,19 @@ const run = (s: TriageFormState) => {
 
 describe("canonical flag options", () => {
   it("every pediatric danger-sign checkbox flag triages RED with no aliasing", () => {
-    for (const o of pediatricDangerOptions()) {
-      for (const category of ["PEDIATRIC", "GENERAL"] as const) {
+    for (const category of ["PEDIATRIC", "GENERAL"] as const) {
+      for (const o of dangerOptionsForCategory(category)) {
         expect(run(base({ category, dangerFlags: [o.flag] })).severity, `${category}:${o.flag}`).toBe("RED_EMERGENCY");
       }
     }
+  });
+  it("dangerOptionsForCategory hides only child-only signs outside PEDIATRIC", () => {
+    const flags = (os: { flag: string }[]) => os.map((o) => o.flag);
+    expect(dangerOptionsForCategory("PEDIATRIC")).toEqual(pediatricDangerOptions());
+    const expected = flags(pediatricDangerOptions()).filter((f) => !PEDIATRIC_ONLY_DANGER_FLAGS.has(f));
+    for (const c of ["MATERNAL", "GENERAL"] as const) expect(flags(dangerOptionsForCategory(c))).toEqual(expected);
+    expect(flags(pediatricDangerOptions())).toContain("stridor_in_calm_child");
+    expect(flags(pediatricDangerOptions()).length - expected.length).toBe(PEDIATRIC_ONLY_DANGER_FLAGS.size);
   });
   it("every maternal red flag triages RED", () => {
     for (const o of maternalRedOptions()) {
@@ -124,10 +136,12 @@ describe("category safety (no silent default, no hidden flags)", () => {
     expect(applyCategory(s, null).cleared).toEqual(["convulsions"]);
   });
 
-  it("(c) every IMNCI general danger sign is offered in maternal and general forms and triages RED", () => {
+  it("(c) every non-child-only IMNCI general danger sign is offered in maternal and general forms and triages RED", () => {
     for (const category of ["MATERNAL", "GENERAL"] as const) {
       const vis = visibleFlags(category);
-      for (const o of pediatricDangerOptions()) {
+      expect(vis.has("stridor_in_calm_child")).toBe(false);
+      expect(visibleFlags("PEDIATRIC").has("stridor_in_calm_child")).toBe(true);
+      for (const o of dangerOptionsForCategory(category)) {
         expect(vis.has(o.flag), `${category} offers ${o.flag}`).toBe(true);
         const s = base({ category, isPregnant: category === "MATERNAL", dangerFlags: [o.flag] });
         expect(hiddenTickedFlags(s)).toEqual([]);
@@ -135,4 +149,32 @@ describe("category safety (no silent default, no hidden flags)", () => {
       }
     }
   });
+});
+
+describe("fast-emergency options and stridor clearing", () => {
+  it("fastEmergencyOptions omits vaginal_bleeding only for M", () => {
+    expect(fastEmergencyOptions("M")).toEqual(["lethargic_or_unconscious", "convulsions", "severe_breathing_difficulty"]);
+    for (const sex of ["F", "O", "U", null, undefined] as const) {
+      expect(fastEmergencyOptions(sex), String(sex)).toEqual([...FAST_EMERGENCY_FLAGS]);
+    }
+  });
+  it("every returned option triages RED", () => {
+    for (const sex of ["M", "F", "O", "U", null, undefined] as const) {
+      for (const flag of fastEmergencyOptions(sex)) {
+        const r = evaluateWatchRapidTriage([flag], { patient_id: null, assessed_at_ms: 1_700_000_000_000 });
+        expect(r.severity, `${String(sex)}:${flag}`).toBe("RED_EMERGENCY");
+      }
+    }
+  });
+  for (const target of ["MATERNAL", "GENERAL"] as const) {
+    it(`applyCategory(${target}) clears stridor_in_calm_child and it is not restored`, () => {
+      const s = base({ category: "PEDIATRIC", dangerFlags: ["stridor_in_calm_child", "convulsions"] });
+      const { cleared } = applyCategory(s, target);
+      expect(cleared).toEqual(["stridor_in_calm_child"]);
+      expect(s.dangerFlags).toEqual(["convulsions"]);
+      expect(hiddenTickedFlags(s)).toEqual([]);
+      applyCategory(s, "PEDIATRIC");
+      expect(s.dangerFlags).toEqual(["convulsions"]);
+    });
+  }
 });
