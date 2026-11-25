@@ -254,6 +254,15 @@ export const en = {
   "triage.fastConfirm": "Confirm emergency",
   "triage.fastCancel": "Cancel",
   "ck.prefilled": "Items saved earlier are already ticked.",
+
+  // === T2-05 ===
+  "voice.insecureContext": "Microphone recording needs a secure page (https or localhost) or the Aarogya Android app. Type the note below; it is saved on this device.",
+  "voice.discard": "Discard recording",
+  "voice.discarded": "Recording discarded.",
+  "voice.elapsed": "Recording time",
+  "sync.cardPatient": "{name}, village {v}",
+  "sync.cardPatientId": "Patient ID: {id}",
+  "result.originalEn": "Original (English)",
 } as const;
 
 export type Key = keyof typeof en;
