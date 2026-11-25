@@ -25,6 +25,70 @@ import { validateSyncEnvelope } from "./validate";
 
 export const DEFAULT_HUB_URL = "http://127.0.0.1:8000";
 
+export interface BrowserLocationLike {
+  protocol: string;
+  origin: string;
+  hostname?: string;
+}
+
+function isLoopbackHost(hostname: string): boolean {
+  const host = hostname.trim().toLowerCase();
+  return (
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host === "::1" ||
+    host === "[::1]" ||
+    host.startsWith("127.")
+  );
+}
+
+function extractHostname(urlString: string): string {
+  try {
+    return new URL(urlString).hostname;
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Resolve the Hub URL for the current browser/WebView origin while guarding
+ * against stale `localhost`/`127.*` overrides when opened from a LAN IP.
+ */
+export function resolveDefaultHubUrl(
+  loc?: BrowserLocationLike | null,
+  savedHubUrl?: string | null,
+): string {
+  const hasHttpOrigin =
+    loc != null &&
+    (loc.protocol === "http:" || loc.protocol === "https:") &&
+    typeof loc.origin === "string" &&
+    loc.origin.trim().length > 0 &&
+    loc.origin !== "null";
+
+  const autoOrigin = hasHttpOrigin
+    ? loc.origin.trim().replace(/\/+$/, "")
+    : DEFAULT_HUB_URL;
+  const locHostname = hasHttpOrigin
+    ? (loc.hostname?.trim() || extractHostname(autoOrigin))
+    : "";
+
+  const trimmedSaved = savedHubUrl?.trim().replace(/\/+$/, "") ?? "";
+  if (trimmedSaved.length > 0) {
+    const savedHost = extractHostname(trimmedSaved);
+    if (
+      savedHost &&
+      isLoopbackHost(savedHost) &&
+      locHostname.length > 0 &&
+      !isLoopbackHost(locHostname)
+    ) {
+      return autoOrigin;
+    }
+    return trimmedSaved;
+  }
+
+  return autoOrigin;
+}
+
 export {
   MemoryWatchBlobQueue,
   type QueuedWatchBlob,
@@ -124,7 +188,9 @@ export class WatchSyncClient {
 
   constructor(
     private readonly store: WatchStore,
-    hubUrlOrOptions: string | WatchSyncClientOptions = DEFAULT_HUB_URL,
+    hubUrlOrOptions: string | WatchSyncClientOptions = resolveDefaultHubUrl(
+      typeof window !== "undefined" ? window.location : null,
+    ),
     fetchImpl?: typeof fetch,
   ) {
     const opts: WatchSyncClientOptions =
@@ -132,7 +198,10 @@ export class WatchSyncClient {
         ? { hubUrl: hubUrlOrOptions, fetchImpl }
         : hubUrlOrOptions;
 
-    this.hubUrl = (opts.hubUrl ?? DEFAULT_HUB_URL).replace(/\/+$/, "");
+    const fallbackHubUrl = resolveDefaultHubUrl(
+      typeof window !== "undefined" ? window.location : null,
+    );
+    this.hubUrl = (opts.hubUrl ?? fallbackHubUrl).replace(/\/+$/, "");
     this.fetchImpl = opts.fetchImpl ?? fetchImpl ?? globalThis.fetch;
     this.batteryPctProvider = opts.batteryPct ?? (() => 100);
     this.ramMb = opts.ramMb ?? 256;

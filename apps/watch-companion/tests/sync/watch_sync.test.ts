@@ -7,8 +7,10 @@ import {
 } from "../../../../packages/contracts/ts/index";
 import { MemoryStorage, WatchStore } from "../../src/core";
 import {
+  DEFAULT_HUB_URL,
   MemoryWatchBlobQueue,
   WatchSyncClient,
+  resolveDefaultHubUrl,
   uploadWatchBlobIfMissing,
 } from "../../src/sync";
 
@@ -557,5 +559,31 @@ describe("WatchSyncClient", () => {
     expect(r4.ok).toBe(false);
     if (!r4.ok) expect(r4.reason).toContain("schema_version");
     expect(store.getOutboxEvents()).toHaveLength(1);
+  });
+});
+
+describe("resolveDefaultHubUrl (T3-05)", () => {
+  it("resolves LAN origin, loopback origin, stale-loopback override, and non-HTTP fallbacks", () => {
+    const lanLoc = {
+      protocol: "http:",
+      origin: "http://192.168.1.14:8000",
+      hostname: "192.168.1.14",
+    };
+
+    expect(resolveDefaultHubUrl(lanLoc)).toBe("http://192.168.1.14:8000");
+    expect(resolveDefaultHubUrl(lanLoc, "http://127.0.0.1:8000")).toBe("http://192.168.1.14:8000");
+    expect(resolveDefaultHubUrl(lanLoc, "http://localhost:8000/")).toBe("http://192.168.1.14:8000");
+    expect(resolveDefaultHubUrl(lanLoc, "http://192.168.43.1:8000/")).toBe("http://192.168.43.1:8000");
+
+    const localLoc = {
+      protocol: "http:",
+      origin: "http://127.0.0.1:5174",
+      hostname: "127.0.0.1",
+    };
+    expect(resolveDefaultHubUrl(localLoc)).toBe("http://127.0.0.1:5174");
+    expect(resolveDefaultHubUrl(localLoc, "http://127.0.0.1:8000")).toBe("http://127.0.0.1:8000");
+
+    expect(resolveDefaultHubUrl({ protocol: "file:", origin: "null" })).toBe(DEFAULT_HUB_URL);
+    expect(resolveDefaultHubUrl(null)).toBe(DEFAULT_HUB_URL);
   });
 });
