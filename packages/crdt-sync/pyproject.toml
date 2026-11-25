@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aarogya-crdt-sync"
-version = "0.1.0"
+version = "0.2.0"
 description = "Event-sourced Hybrid Logical Clock (HLC), SQLite event store, CRDT state projector, and offline peer delta-sync engine for Aarogya Mesh"
 requires-python = ">=3.12,<3.13"
 dependencies = [
