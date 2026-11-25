@@ -92,10 +92,10 @@ body {
 .app-shell {
   max-width: 1480px;
   margin: 0 auto;
-  padding: 16px 20px 36px;
+  padding: 10px 18px 28px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
 }
 
 /* Header */
@@ -104,24 +104,24 @@ body {
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px 16px;
+  border-radius: 11px;
+  padding: 9px 14px;
   box-shadow: var(--shadow);
 }
 
 .brand-group {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .brand-mark {
-  width: 38px;
-  height: 38px;
-  border-radius: 9px;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
   background: var(--brand-bg);
   color: var(--brand);
   border: 1px solid rgba(20, 184, 166, 0.35);
@@ -132,14 +132,14 @@ body {
 
 .app-title {
   margin: 0;
-  font-size: 1.08rem;
+  font-size: 1.02rem;
   font-weight: 700;
   letter-spacing: -0.015em;
 }
 
 .app-subtitle {
-  margin: 2px 0 0;
-  font-size: 0.78rem;
+  margin: 1px 0 0;
+  font-size: 0.75rem;
   color: var(--text-muted);
 }
 
@@ -235,12 +235,12 @@ body {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
   background: var(--surface);
   border: 1px solid var(--border-strong);
   border-left: 4px solid var(--brand);
-  border-radius: 12px;
-  padding: 10px 14px;
+  border-radius: 10px;
+  padding: 7px 12px;
   box-shadow: var(--shadow);
 }
 
@@ -308,17 +308,81 @@ body {
 }
 
 .demo-status {
-  padding: 9px 14px;
-  border-radius: 10px;
+  padding: 7px 12px;
+  border-radius: 9px;
   border: 1px solid var(--brand);
   background: var(--brand-bg);
   color: var(--text);
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+
+/* Scenario Narrative Card */
+.scenario-narrative {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-left: 4px solid var(--accent);
+  border-radius: 10px;
+  padding: 10px 14px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.scenario-narrative-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.scenario-narrative-title-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.scenario-narrative-title {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.scenario-narrative-sub {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.scenario-steps-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+}
+
+.scenario-steps {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.77rem;
+  color: var(--text);
+}
+
+.btn-dismiss {
+  padding: 3px 9px;
+  font-size: 0.74rem;
+  border-radius: 6px;
 }
 
 /* Outbreak Alert Banner */
@@ -328,7 +392,7 @@ body {
   border-left: 5px solid var(--red-solid);
   color: var(--text);
   border-radius: 10px;
-  padding: 12px 16px;
+  padding: 9px 14px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -340,11 +404,11 @@ body {
 .arch-bar {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px 16px;
+  border-radius: 10px;
+  padding: 9px 13px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 7px;
   box-shadow: var(--shadow);
 }
 
@@ -388,11 +452,11 @@ body {
 .arch-tier-card {
   background: var(--surface-elevated);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 11px 13px;
+  border-radius: 9px;
+  padding: 8px 11px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   transition: border-color 0.2s ease, background 0.2s ease;
 }
 
@@ -489,23 +553,23 @@ body {
 /* KPI Strip */
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
 }
 
 .kpi-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px 14px;
+  border-radius: 9px;
+  padding: 9px 12px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   box-shadow: var(--shadow);
 }
 
 .kpi-label {
-  font-size: 0.73rem;
+  font-size: 0.7rem;
   color: var(--text-muted);
   font-weight: 600;
   text-transform: uppercase;
@@ -513,7 +577,7 @@ body {
 }
 
 .kpi-value {
-  font-size: 1.6rem;
+  font-size: 1.42rem;
   font-weight: 800;
   line-height: 1.1;
 }
@@ -885,9 +949,73 @@ body {
 }
 
 .payload-cell {
-  max-width: 340px;
+  max-width: 360px;
+  color: var(--text-muted);
+}
+
+.payload-toggle {
+  display: block;
+  width: 100%;
+  max-width: 360px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 2px 5px;
+  margin: -2px -5px;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  text-align: left;
+  cursor: pointer;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.payload-toggle:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+  background: var(--surface);
+}
+
+.payload-toggle.expanded {
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 460px;
+  padding: 6px 8px;
+  margin: 0;
+  border-color: var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.patient-id-sub {
+  font-size: 0.72rem;
+  font-weight: 500;
   color: var(--text-muted);
+  margin-left: 6px;
+}
+
+.patient-cell-name {
+  display: block;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.patient-cell-id {
+  display: block;
+  font-size: 0.71rem;
+  color: var(--text-muted);
+}
+
+.more-counter {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+  border: 1px dashed var(--border-strong);
 }

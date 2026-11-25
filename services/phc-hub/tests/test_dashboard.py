@@ -85,6 +85,7 @@ def test_dashboard_static_assets_and_zero_cdn() -> None:
     assert "/static/app.css" in html
     assert "/static/app.js" in html
     assert 'href="/showcase"' in html
+    assert 'id="scenario-narrative-card"' in html
     for scenario_id in (
         "maternal_sos",
         "pediatric_voice_offload",
@@ -98,6 +99,9 @@ def test_dashboard_static_assets_and_zero_cdn() -> None:
     css_resp = client.get("/static/app.css")
     assert css_resp.status_code == 200
     assert "text/css" in css_resp.headers["content-type"]
+    assert ".scenario-narrative" in css_resp.text
+    assert ".more-counter" in css_resp.text
+    assert ".payload-toggle" in css_resp.text
     assert "http://" not in css_resp.text.lower()
     assert "https://" not in css_resp.text.lower()
 
@@ -105,6 +109,14 @@ def test_dashboard_static_assets_and_zero_cdn() -> None:
     assert js_resp.status_code == 200
     assert "javascript" in js_resp.headers["content-type"]
     js_text = js_resp.text
+    assert "aarogya.lang" in js_text
+    assert "aarogya.theme" in js_text
+    assert "buildPatientNameMap" in js_text
+    assert "formatPatientLabel" in js_text
+    assert "/api/v1/demo/scenarios" in js_text
+    assert "more-counter" in js_text
+    assert "payload-toggle" in js_text
+    assert "state.eventsExpanded = true" in js_text
     assert "http://" not in js_text.lower()
     assert "https://" not in js_text.lower()
     assert "innerHTML" not in js_text
@@ -415,6 +427,9 @@ def test_shuddh_tatsama_hindi_purity() -> None:
     assert "आपातकाल" in combined
     assert "संक्रमण प्रकोप चेतावनी" in combined
     assert "त्रि-स्तरीय जीवन्त मंच" in combined
+    assert "अतिरिक्त" in combined
+    assert "अति गम्भीर" in combined
+    assert "ग्राम:" in combined
 
     # Zero nukta characters anywhere in static assets (including NFD-decomposed forms)
     normalized = unicodedata.normalize("NFD", combined)

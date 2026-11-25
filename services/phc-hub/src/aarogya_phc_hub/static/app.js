@@ -1,6 +1,9 @@
 (() => {
   "use strict";
 
+  const STORAGE_LANG_KEY = "aarogya.lang";
+  const STORAGE_THEME_KEY = "aarogya.theme";
+
   const I18N = {
     en: {
       appTitle: "Aarogya Mesh — Tier-2 PHC Command Center",
@@ -25,6 +28,8 @@
       demoResetting: "Resetting Hub state...",
       demoResetDone: "Hub SQLite event store and peer registry cleared.",
       demoUnavailable: "Demo scenario endpoint unavailable.",
+      scenarioStepsLabel: "Clinical Flow",
+      dismiss: "Dismiss",
       archTitle: "Compute-Proportional 3-Tier Autonomous Mesh",
       tier0Label: "Tier-0 Watch",
       tier0Desc: "Standalone SOS & Reminders for Normal Public & CHW",
@@ -70,7 +75,7 @@
       colHlc: "HLC Timestamp",
       colOrigin: "Origin Node",
       colType: "Event Type",
-      colPatient: "Patient ID",
+      colPatient: "Patient",
       colEnrichment: "Enrichment",
       colSummary: "Payload",
       noPatients: "No patients synced yet. Launch a scenario above or sync a peer.",
@@ -87,6 +92,31 @@
       referralYes: "PHC Referral",
       eventsUnit: "events",
       peersUnit: "peers",
+      moreCount: "+{n} more",
+      villagePrefix: "Village:",
+      sevRed: "RED_EMERGENCY",
+      sevYellow: "YELLOW_PHC",
+      sevGreen: "GREEN_HOME",
+      prioCritical: "CRITICAL",
+      prioHigh: "HIGH",
+      prioMedium: "MEDIUM",
+      prioLow: "LOW",
+      statusOpen: "OPEN",
+      statusAcknowledged: "ACKNOWLEDGED",
+      statusCompleted: "COMPLETED",
+      statusDismissed: "DISMISSED",
+      riskHigh: "HIGH",
+      riskModerate: "MODERATE",
+      riskLow: "LOW",
+      riskEnriched: "ENRICHED",
+      enrPending: "PENDING",
+      enrCompleted: "COMPLETED",
+      enrNotNeeded: "NOT_NEEDED",
+      enrFailed: "FAILED",
+      watchModeChw: "CHW_COMPANION",
+      watchModeFamily: "PATIENT_FAMILY",
+      expandPayload: "Click to expand JSON payload",
+      collapsePayload: "Click to collapse JSON payload",
     },
     hi: {
       appTitle: "आरोग्य संजाल — प्राथमिक स्वास्थ्य केन्द्र नियन्त्रण कक्ष",
@@ -111,6 +141,8 @@
       demoResetting: "मुख्य केन्द्र पुनःस्थापित हो रहा है...",
       demoResetDone: "घटना अभिलेख एवं सहकर्मी सूची स्वच्छ हुई।",
       demoUnavailable: "परिदृश्य सेवा अभी संयोजित नहीं है।",
+      scenarioStepsLabel: "चिकित्सकीय क्रम",
+      dismiss: "बन्द करें",
       archTitle: "क्षमता-आधारित त्रि-स्तरीय स्वावलम्बी संजाल संरचना",
       tier0Label: "स्तर-० घटिका",
       tier0Desc: "सामान्य जन एवं स्वास्थ्य कार्यकर्ता हेतु स्वावलम्बी आपात संकेत एवं स्मरण",
@@ -156,7 +188,7 @@
       colHlc: "कालक्रम मुहर",
       colOrigin: "उद्गम केन्द्र",
       colType: "घटना प्रकार",
-      colPatient: "रोगी पहचान",
+      colPatient: "रोगी",
       colEnrichment: "संवर्धन स्थिति",
       colSummary: "विवरण",
       noPatients: "अभी कोई रोगी पंजीकृत नहीं है। ऊपर से परिदृश्य चुनें।",
@@ -173,6 +205,31 @@
       referralYes: "शीघ्र स्वास्थ्य केन्द्र प्रेषण",
       eventsUnit: "घटनाएँ",
       peersUnit: "सहकर्मी",
+      moreCount: "+{n} अतिरिक्त",
+      villagePrefix: "ग्राम:",
+      sevRed: "रक्त · आपातकाल",
+      sevYellow: "पीत · स्वास्थ्य केन्द्र",
+      sevGreen: "हरित · गृह देखभाल",
+      prioCritical: "अति गम्भीर",
+      prioHigh: "उच्च",
+      prioMedium: "मध्यम",
+      prioLow: "सामान्य",
+      statusOpen: "सक्रिय",
+      statusAcknowledged: "स्वीकृत",
+      statusCompleted: "पूर्ण",
+      statusDismissed: "निरस्त",
+      riskHigh: "उच्च संकट",
+      riskModerate: "मध्यम संकट",
+      riskLow: "न्यून संकट",
+      riskEnriched: "संवर्धित",
+      enrPending: "प्रतीक्षारत",
+      enrCompleted: "पूर्ण",
+      enrNotNeeded: "अनावश्यक",
+      enrFailed: "विफल",
+      watchModeChw: "स्वास्थ्य कर्मी सहायक",
+      watchModeFamily: "रोगी परिवार",
+      expandPayload: "पूर्ण विवरण देखने हेतु स्पर्श करें",
+      collapsePayload: "विवरण संक्षिप्त करने हेतु स्पर्श करें",
     },
   };
 
@@ -184,11 +241,32 @@
     selectedEventType: "",
     eventsExpanded: false,
     activeScenario: null,
+    scenarioCatalog: {},
+    narrativeDismissed: false,
+    expandedEventIds: new Set(),
     lastSummary: null,
     lastPeers: [],
     lastConnectInfo: null,
     lastEvents: [],
   };
+
+  function readStoredPref(key, allowed, fallback) {
+    try {
+      const value = window.localStorage.getItem(key);
+      if (value && allowed.includes(value)) return value;
+    } catch (_err) {
+      // Ignore storage access errors in restricted contexts
+    }
+    return fallback;
+  }
+
+  function writeStoredPref(key, value) {
+    try {
+      window.localStorage.setItem(key, value);
+    } catch (_err) {
+      // Ignore storage access errors in restricted contexts
+    }
+  }
 
   function t(key) {
     return (I18N[state.lang] && I18N[state.lang][key]) || I18N.en[key] || key;
@@ -234,6 +312,96 @@
   function formatHlc(hlc) {
     if (!hlc) return "--";
     return `${hlc.wall_ms}:${hlc.logical}:${hlc.node_id}`;
+  }
+
+  function buildPatientNameMap(patients) {
+    const map = new Map();
+    if (!Array.isArray(patients)) return map;
+    for (const pat of patients) {
+      if (pat && pat.patient_id && pat.full_name) {
+        map.set(String(pat.patient_id), String(pat.full_name));
+      }
+    }
+    return map;
+  }
+
+  function formatPatientLabel(patientId, nameMap) {
+    if (!patientId) return "--";
+    const idStr = String(patientId);
+    const fullName = nameMap && nameMap.get(idStr);
+    return fullName ? `${fullName} (${idStr})` : idStr;
+  }
+
+  function buildPatientHeadingNode(patientId, nameMap, fallbackId) {
+    const idStr = patientId ? String(patientId) : "";
+    const fullName = idStr && nameMap ? nameMap.get(idStr) : null;
+    if (fullName) {
+      return el(
+        "span",
+        { className: "item-card-title", title: formatPatientLabel(idStr, nameMap) },
+        fullName,
+        el("span", { className: "patient-id-sub mono" }, idStr)
+      );
+    }
+    return el("span", { className: "item-card-title mono" }, idStr || fallbackId || "--");
+  }
+
+  function formatMoreCounter(remaining) {
+    return t("moreCount").replace("{n}", String(remaining));
+  }
+
+  function translateSeverity(severity) {
+    if (severity === "RED_EMERGENCY") return t("sevRed");
+    if (severity === "YELLOW_PHC") return t("sevYellow");
+    if (severity === "GREEN_HOME") return t("sevGreen");
+    return severity || "--";
+  }
+
+  function translatePriority(priority) {
+    if (priority === "CRITICAL") return t("prioCritical");
+    if (priority === "HIGH") return t("prioHigh");
+    if (priority === "MEDIUM") return t("prioMedium");
+    if (priority === "LOW") return t("prioLow");
+    return priority || t("prioMedium");
+  }
+
+  function translateActionStatus(status) {
+    if (status === "OPEN") return t("statusOpen");
+    if (status === "ACKNOWLEDGED") return t("statusAcknowledged");
+    if (status === "COMPLETED") return t("statusCompleted");
+    if (status === "DISMISSED") return t("statusDismissed");
+    return status || t("statusOpen");
+  }
+
+  function translateRiskBand(band) {
+    if (band === "RED_EMERGENCY") return t("sevRed");
+    if (band === "YELLOW_PHC") return t("sevYellow");
+    if (band === "GREEN_HOME") return t("sevGreen");
+    if (band === "HIGH") return t("riskHigh");
+    if (band === "MODERATE" || band === "MEDIUM") return t("riskModerate");
+    if (band === "LOW") return t("riskLow");
+    return band || t("riskEnriched");
+  }
+
+  function translateEnrichmentState(enrState) {
+    if (enrState === "PENDING") return t("enrPending");
+    if (enrState === "COMPLETED") return t("enrCompleted");
+    if (enrState === "FAILED") return t("enrFailed");
+    if (enrState === "NOT_NEEDED" || !enrState) return t("enrNotNeeded");
+    return enrState;
+  }
+
+  function translateTier(tier) {
+    if (tier === "TIER_0_WATCH") return t("tier0Label");
+    if (tier === "TIER_1_PHONE") return t("tier1Label");
+    if (tier === "TIER_2_HUB") return t("tier2Label");
+    return tier || "";
+  }
+
+  function translateWatchMode(mode) {
+    if (mode === "CHW_COMPANION") return t("watchModeChw");
+    if (mode === "PATIENT_FAMILY") return t("watchModeFamily");
+    return mode || "";
   }
 
   function applyTranslations() {
@@ -307,7 +475,8 @@
       return;
     }
 
-    const cards = list.slice(0, 8).map((pat) => {
+    const limit = 8;
+    const cards = list.slice(0, limit).map((pat) => {
       const chips = [];
       if (pat.village_id) chips.push(el("span", { className: "meta-chip mono" }, pat.village_id));
       if (pat.is_pregnant) {
@@ -332,10 +501,13 @@
         chips.length > 0 ? el("div", { className: "meta-chips" }, ...chips) : null
       );
     });
+    if (list.length > limit) {
+      cards.push(el("span", { className: "more-counter" }, formatMoreCounter(list.length - limit)));
+    }
     container.replaceChildren(...cards);
   }
 
-  function renderTriageHistory(summary) {
+  function renderTriageHistory(summary, nameMap) {
     const container = document.getElementById("triage-list");
     if (!container) return;
 
@@ -357,7 +529,8 @@
       return;
     }
 
-    const cards = combined.slice(0, 6).map((item) => {
+    const limit = 6;
+    const cards = combined.slice(0, limit).map((item) => {
       const style = severityStyle(item.severity);
       const rules = Array.isArray(item.matched_rules) ? item.matched_rules.join(", ") : "";
       return el(
@@ -366,8 +539,8 @@
         el(
           "div",
           { className: "item-card-head" },
-          el("span", { className: "item-card-title mono" }, item.patient_id || item.assessment_id),
-          el("span", { className: style.badge }, item.severity)
+          buildPatientHeadingNode(item.patient_id, nameMap, item.assessment_id),
+          el("span", { className: style.badge }, translateSeverity(item.severity))
         ),
         item.rationale ? el("div", { className: "item-card-meta" }, item.rationale) : null,
         rules
@@ -378,6 +551,11 @@
           : null
       );
     });
+    if (combined.length > limit) {
+      cards.push(
+        el("span", { className: "more-counter" }, formatMoreCounter(combined.length - limit))
+      );
+    }
     container.replaceChildren(...cards);
   }
 
@@ -413,7 +591,7 @@
       const nodeId = m.node_id || peer.node_id || "unknown-peer";
       const tier = m.tier || peer.tier || "PEER";
       const battery = m.battery_pct !== undefined ? `${t("battery")}: ${m.battery_pct}%` : "";
-      const mode = m.watch_mode ? ` · ${m.watch_mode}` : "";
+      const mode = m.watch_mode ? ` · ${translateWatchMode(m.watch_mode)}` : "";
       const source = peer.source ? ` · ${peer.source}` : "";
       const metaParts = [battery, mode, source].filter(Boolean).join(" ");
 
@@ -424,7 +602,7 @@
           "div",
           { className: "item-card-head" },
           el("span", { className: "item-card-title mono" }, nodeId),
-          el("span", { className: "badge badge-accent" }, tier)
+          el("span", { className: "badge badge-accent" }, translateTier(tier))
         ),
         metaParts ? el("div", { className: "item-card-meta" }, metaParts) : null
       );
@@ -463,7 +641,7 @@
     const cards = list.map((alert) => {
       const p = alert.payload || {};
       const title = p.syndrome || p.disease || p.title || alert.event_type;
-      const village = p.village_id ? `Village: ${p.village_id}` : "EWMA";
+      const village = p.village_id ? `${t("villagePrefix")} ${p.village_id}` : "EWMA";
       const detail = p.message || p.rationale || JSON.stringify(p);
       return el(
         "div",
@@ -502,7 +680,7 @@
     return [];
   }
 
-  function renderShap(enrichments) {
+  function renderShap(enrichments, nameMap) {
     const container = document.getElementById("shap-list");
     if (!container) return;
 
@@ -513,13 +691,14 @@
       return;
     }
 
-    const cards = list.slice(0, 6).map((item) => {
+    const limit = 6;
+    const cards = list.slice(0, limit).map((item) => {
       const entries = normalizeShapEntries(item.shap_attributions);
       const maxAbs = Math.max(0.01, ...entries.map((entry) => Math.abs(entry.value)));
       const scoreText =
         item.risk_score !== null && item.risk_score !== undefined
           ? `${t("riskScore")}: ${Number(item.risk_score).toFixed(2)}`
-          : item.risk_band || "ENRICHED";
+          : translateRiskBand(item.risk_band);
 
       const barNodes = entries.slice(0, 5).map((entry) => {
         const pct = Math.min(100, Math.round((Math.abs(entry.value) / maxAbs) * 100));
@@ -546,17 +725,20 @@
         el(
           "div",
           { className: "item-card-head" },
-          el("span", { className: "item-card-title mono" }, item.patient_id || item.ref_event_id || item.event_id),
+          buildPatientHeadingNode(item.patient_id, nameMap, item.ref_event_id || item.event_id),
           el("span", { className: badgeClass }, scoreText)
         ),
         item.summary ? el("div", { className: "item-card-meta" }, item.summary) : null,
         ...barNodes
       );
     });
+    if (list.length > limit) {
+      cards.push(el("span", { className: "more-counter" }, formatMoreCounter(list.length - limit)));
+    }
     container.replaceChildren(...cards);
   }
 
-  function renderActionCards(cardsData) {
+  function renderActionCards(cardsData, nameMap) {
     const container = document.getElementById("action-cards-list");
     if (!container) return;
 
@@ -581,6 +763,7 @@
           : priority === "HIGH"
             ? "item-card item-card-yellow"
             : "item-card item-card-green";
+      const targetLabel = card.target_tier ? ` → ${translateTier(card.target_tier)}` : "";
 
       return el(
         "div",
@@ -589,18 +772,26 @@
           "div",
           { className: "item-card-head" },
           el("span", { className: "item-card-title" }, card.title || card.card_id),
-          el("span", { className: badgeClass }, `${priority} · ${card.status || "OPEN"}`)
+          el(
+            "span",
+            { className: badgeClass },
+            `${translatePriority(priority)} · ${translateActionStatus(card.status || "OPEN")}`
+          )
         ),
         el("div", { className: "item-card-meta" }, card.summary || ""),
         card.patient_id
-          ? el("div", { className: "item-card-meta mono" }, `${card.patient_id} → ${card.target_tier || ""}`)
+          ? el(
+              "div",
+              { className: "item-card-meta", title: formatPatientLabel(card.patient_id, nameMap) },
+              `${formatPatientLabel(card.patient_id, nameMap)}${targetLabel}`
+            )
           : null
       );
     });
     container.replaceChildren(...cards);
   }
 
-  function renderEvents(events) {
+  function renderEvents(events, nameMap) {
     const tbody = document.getElementById("events-tbody");
     if (!tbody) return;
 
@@ -616,19 +807,120 @@
     }
 
     const rows = list.map((evt) => {
-      const payloadStr = JSON.stringify(evt.payload || {});
+      const eventKey = evt.event_id || formatHlc(evt.hlc);
+      const isExpanded = state.expandedEventIds.has(eventKey);
+      const compactPayload = JSON.stringify(evt.payload || {});
+      const prettyPayload = JSON.stringify(evt.payload || {}, null, 2);
+
+      let patientCell;
+      if (evt.patient_id) {
+        const pid = String(evt.patient_id);
+        const fullName = nameMap && nameMap.get(pid);
+        if (fullName) {
+          patientCell = el(
+            "td",
+            { title: formatPatientLabel(pid, nameMap) },
+            el("span", { className: "patient-cell-name" }, fullName),
+            el("span", { className: "patient-cell-id mono" }, pid)
+          );
+        } else {
+          patientCell = el("td", { className: "mono" }, pid);
+        }
+      } else {
+        patientCell = el("td", { className: "mono" }, "--");
+      }
+
+      const payloadBtn = el(
+        "button",
+        {
+          type: "button",
+          className: isExpanded ? "payload-toggle mono expanded" : "payload-toggle mono",
+          "aria-expanded": String(isExpanded),
+          title: isExpanded ? t("collapsePayload") : t("expandPayload"),
+        },
+        isExpanded ? prettyPayload : compactPayload
+      );
+      payloadBtn.addEventListener("click", () => {
+        if (state.expandedEventIds.has(eventKey)) {
+          state.expandedEventIds.delete(eventKey);
+        } else {
+          state.expandedEventIds.add(eventKey);
+        }
+        renderEvents(state.lastEvents, buildPatientNameMap(state.lastSummary && state.lastSummary.patients));
+      });
+
       return el(
         "tr",
         null,
         el("td", { className: "mono" }, formatHlc(evt.hlc)),
         el("td", { className: "mono" }, evt.origin_node_id || "--"),
         el("td", null, el("span", { className: "badge badge-accent" }, evt.event_type)),
-        el("td", { className: "mono" }, evt.patient_id || "--"),
-        el("td", null, el("span", { className: "badge" }, evt.enrichment_state || "NOT_NEEDED")),
-        el("td", { className: "payload-cell mono", title: payloadStr }, payloadStr)
+        patientCell,
+        el("td", null, el("span", { className: "badge" }, translateEnrichmentState(evt.enrichment_state))),
+        el("td", { className: "payload-cell" }, payloadBtn)
       );
     });
     tbody.replaceChildren(...rows);
+  }
+
+  function renderScenarioNarrative() {
+    const card = document.getElementById("scenario-narrative-card");
+    if (!card) return;
+
+    const info =
+      state.activeScenario && !state.narrativeDismissed
+        ? state.scenarioCatalog[state.activeScenario]
+        : null;
+    if (!info) {
+      card.classList.add("hidden");
+      card.replaceChildren();
+      return;
+    }
+
+    const closeBtn = el(
+      "button",
+      { type: "button", className: "btn btn-secondary btn-dismiss", "aria-label": t("dismiss") },
+      t("dismiss")
+    );
+    closeBtn.addEventListener("click", () => {
+      state.narrativeDismissed = true;
+      renderScenarioNarrative();
+    });
+
+    const stepNodes = Array.isArray(info.steps)
+      ? info.steps.map((step) => el("li", null, String(step)))
+      : [];
+
+    card.classList.remove("hidden");
+    card.replaceChildren(
+      el(
+        "div",
+        { className: "scenario-narrative-head" },
+        el(
+          "div",
+          { className: "scenario-narrative-title-group" },
+          el("h3", { className: "scenario-narrative-title" }, info.title || info.id),
+          info.persona ? el("span", { className: "badge badge-accent" }, info.persona) : null
+        ),
+        closeBtn
+      ),
+      info.subtitle ? el("p", { className: "scenario-narrative-sub" }, info.subtitle) : null,
+      stepNodes.length > 0 ? el("span", { className: "scenario-steps-label" }, t("scenarioStepsLabel")) : null,
+      stepNodes.length > 0 ? el("ol", { className: "scenario-steps" }, ...stepNodes) : null
+    );
+  }
+
+  async function loadScenarioCatalog() {
+    const catalog = await fetchJsonSafe("/api/v1/demo/scenarios");
+    if (!Array.isArray(catalog)) return;
+    const byId = {};
+    for (const item of catalog) {
+      if (item && item.id) {
+        byId[String(item.id)] = item;
+      }
+    }
+    state.scenarioCatalog = byId;
+    renderScenarioNarrative();
   }
 
   function showDemoStatus(message, meta) {
@@ -663,7 +955,9 @@
       }
       const data = await res.json();
       state.activeScenario = scenarioId;
+      state.narrativeDismissed = false;
       updateScenarioButtons();
+      renderScenarioNarrative();
       const meta = `${data.events_added ?? 0} ${t("eventsUnit")} · ${data.peers_registered ?? 0} ${t("peersUnit")}`;
       showDemoStatus(`${t("demoLoaded")} ${scenarioId}`, meta);
       await refreshAll();
@@ -685,8 +979,11 @@
         return;
       }
       state.activeScenario = null;
+      state.narrativeDismissed = false;
+      state.expandedEventIds.clear();
       updateScenarioButtons();
-      showDemoStatus(t("demoResetDone"), "0 events");
+      renderScenarioNarrative();
+      showDemoStatus(t("demoResetDone"), `0 ${t("eventsUnit")}`);
       await refreshAll();
     } catch (_err) {
       showDemoStatus(t("demoUnavailable"), null);
@@ -731,16 +1028,19 @@
   }
 
   function renderAll() {
+    const patients = state.lastSummary ? state.lastSummary.patients : [];
+    const nameMap = buildPatientNameMap(patients);
     applyTranslations();
+    renderScenarioNarrative();
     renderManifest(state.lastSummary, state.lastConnectInfo);
     renderKpis(state.lastSummary);
-    renderPatients(state.lastSummary ? state.lastSummary.patients : []);
-    renderTriageHistory(state.lastSummary);
+    renderPatients(patients);
+    renderTriageHistory(state.lastSummary, nameMap);
     renderPeers(state.lastPeers);
     renderOutbreaks(state.lastSummary ? state.lastSummary.outbreak_alerts : []);
-    renderShap(state.lastSummary ? state.lastSummary.enrichments : []);
-    renderActionCards(state.lastSummary ? state.lastSummary.action_cards : []);
-    renderEvents(state.lastEvents);
+    renderShap(state.lastSummary ? state.lastSummary.enrichments : [], nameMap);
+    renderActionCards(state.lastSummary ? state.lastSummary.action_cards : [], nameMap);
+    renderEvents(state.lastEvents, nameMap);
   }
 
   async function triggerEnrichment() {
@@ -788,6 +1088,7 @@
     if (langBtn) {
       langBtn.addEventListener("click", () => {
         state.lang = state.lang === "en" ? "hi" : "en";
+        writeStoredPref(STORAGE_LANG_KEY, state.lang);
         renderAll();
       });
     }
@@ -797,6 +1098,7 @@
       themeBtn.addEventListener("click", () => {
         state.theme = state.theme === "dark" ? "light" : "dark";
         document.documentElement.setAttribute("data-theme", state.theme);
+        writeStoredPref(STORAGE_THEME_KEY, state.theme);
         applyTranslations();
       });
     }
@@ -826,16 +1128,25 @@
       });
     }
 
+    const toggleEventsBtn = document.getElementById("btn-toggle-events");
+    const eventsCollapsible = document.getElementById("events-collapsible");
+
     const filterSelect = document.getElementById("event-type-filter");
     if (filterSelect) {
       filterSelect.addEventListener("change", (ev) => {
         state.selectedEventType = ev.target.value || "";
+        if (!state.eventsExpanded) {
+          state.eventsExpanded = true;
+          if (eventsCollapsible) eventsCollapsible.classList.remove("hidden");
+          if (toggleEventsBtn) {
+            toggleEventsBtn.setAttribute("aria-expanded", "true");
+            toggleEventsBtn.textContent = t("hideEventLog");
+          }
+        }
         refreshAll();
       });
     }
 
-    const toggleEventsBtn = document.getElementById("btn-toggle-events");
-    const eventsCollapsible = document.getElementById("events-collapsible");
     if (toggleEventsBtn && eventsCollapsible) {
       toggleEventsBtn.addEventListener("click", () => {
         state.eventsExpanded = !state.eventsExpanded;
@@ -862,8 +1173,12 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
+    state.lang = readStoredPref(STORAGE_LANG_KEY, ["en", "hi"], "en");
+    state.theme = readStoredPref(STORAGE_THEME_KEY, ["dark", "light"], "dark");
+    document.documentElement.setAttribute("data-theme", state.theme);
     bindEvents();
     applyTranslations();
+    loadScenarioCatalog();
     refreshAll();
     syncAutoRefreshTimer();
   });
