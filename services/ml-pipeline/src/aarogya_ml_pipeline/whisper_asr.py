@@ -59,10 +59,8 @@ class WhisperVoiceTranscriber:
 
         if model is not None:
             self._model = model
-            self._model_loaded = True
         else:
             self._model = None
-            self._model_loaded = False
             self._load_model()
 
     @property
@@ -72,7 +70,6 @@ class WhisperVoiceTranscriber:
 
     def _load_model(self) -> None:
         """Attempt to load faster-whisper or pywhispercpp offline."""
-        self._model_loaded = True
 
         # Check path existence if path was explicitly specified
         if self.model_path:

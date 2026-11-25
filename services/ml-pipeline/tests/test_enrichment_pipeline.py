@@ -1,5 +1,6 @@
 """Tests for EnrichmentPipeline deferred enrichment orchestrator (Track 4 / Slice T4-05)."""
 
+import unicodedata
 from typing import Any
 
 import pytest
@@ -132,7 +133,7 @@ def test_single_danger_sign_convulsions_forces_red_emergency_despite_low_risk_sc
     card = ActionCard.model_validate(card_evt.payload)
     assert card.priority == ActionCardPriority.CRITICAL
     assert card.severity == TriageSeverity.RED_EMERGENCY
-    assert "RED EMERGENCY" in card.title
+    assert "रक्त आपातकाल" in card.title
 
 
 def test_single_danger_sign_vaginal_bleeding_maternal_forces_red_emergency() -> None:
@@ -432,3 +433,73 @@ def test_maternal_red_flags_force_red_emergency_without_patient_context(
     card = ActionCard.model_validate(emitted[1].payload)
     assert card.severity == TriageSeverity.RED_EMERGENCY
     assert card.priority == ActionCardPriority.CRITICAL
+
+
+def test_hindi_action_card_uses_pure_shuddh_tatsama_labels() -> None:
+    """Hindi voice notes must emit pure Shuddh Tatsama ActionCard titles, summaries, and steps."""
+    class MockHindiSlm:
+        def structure_note(self, transcript: str, language: str = "hi") -> StructuredClinicalNote:
+            return StructuredClinicalNote(
+                extracted_symptoms=["तेज़ बुख़ार", "श्वास कष्ट"],
+                candidate_danger_flags=[],
+                recommended_follow_up="मरीज़ को फ़ौरन अस्पताल में दिखाएं।",
+                language=language,
+                backend="mock-hi-slm",
+            )
+
+    pipeline = EnrichmentPipeline(
+        structurer=MockHindiSlm(),
+        risk_scorer=MockRiskScorerFixed(score=0.45, band="MODERATE"),
+    )
+    voice_event = _make_voice_event(
+        event_id="evt-voice-hi-01",
+        patient_id="pat-hi-01",
+        payload={"language": "hi", "transcript_hint": "रोगी को तीव्र ज्वर है।"},
+    )
+    emitted = pipeline.process_voice_note(
+        voice_event,
+        hub_node_id="hub-01",
+        hlc=HlcTimestamp(wall_ms=1_700_001_200_000, logical=0, node_id="hub-01"),
+    )
+    card = ActionCard.model_validate(emitted[1].payload)
+
+    assert card.language == "hi"
+    assert card.title == "हरित — स्वर टिप्पणी चिकित्सीय सारांश"
+    assert "रोगी" in card.summary
+    assert "तत्काल" in card.summary
+    assert "प्राथमिक स्वास्थ्य केन्द्र" in card.summary
+    assert "अस्पताल" not in card.summary
+    assert any(step.startswith("लक्षित लक्षण:") and "तीव्र ज्वर" in step for step in card.action_steps)
+    assert any(step == "संकट स्तर: मध्यम (0.45)" for step in card.action_steps)
+    assert not any("Observed symptoms:" in step for step in card.action_steps)
+    assert not any("ML risk band:" in step for step in card.action_steps)
+
+    for text in (card.title, card.summary, *card.action_steps):
+        assert "\u093c" not in unicodedata.normalize("NFD", text)
+        assert "आउटपुट" not in text
+
+
+def test_english_action_card_formatting_remains_unchanged() -> None:
+    """English voice notes must keep English ActionCard titles and step labels unchanged."""
+    slm = MockSlmWithDangerFlag(danger_flags=["convulsions"], symptoms=["fever", "convulsions"])
+    pipeline = EnrichmentPipeline(
+        structurer=slm,
+        risk_scorer=MockRiskScorerFixed(score=0.12, band="LOW"),
+    )
+    voice_event = _make_voice_event(
+        event_id="evt-voice-en-01",
+        patient_id="pat-en-01",
+        payload={"language": "en", "transcript_hint": "Child has fever and convulsions."},
+    )
+    emitted = pipeline.process_voice_note(
+        voice_event,
+        hub_node_id="hub-01",
+        hlc=HlcTimestamp(wall_ms=1_700_001_300_000, logical=0, node_id="hub-01"),
+        patient_context={"age_months": 18},
+    )
+    card = ActionCard.model_validate(emitted[1].payload)
+
+    assert card.language == "en"
+    assert card.title == "RED EMERGENCY: Immediate Referral"
+    assert any(step == "Observed symptoms: fever, convulsions" for step in card.action_steps)
+    assert any(step == "ML risk band: LOW (0.12)" for step in card.action_steps)

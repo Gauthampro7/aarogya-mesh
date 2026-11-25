@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import unicodedata
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -193,12 +194,13 @@ def test_mocked_llm_hindi_structuring() -> None:
 
     assert note.backend == "llama-cpp-qwen2.5-3b-gbnf"
     assert note.language == "hi"
-    assert "तेज ज्वर" in note.extracted_symptoms
+    assert "तीव्र ज्वर" in note.extracted_symptoms
     assert "श्वास कष्ट" in note.extracted_symptoms
     assert note.candidate_danger_flags == ["convulsions"]
     assert "रोगी" in note.recommended_follow_up
     assert "प्राथमिक स्वास्थ्य केन्द्र" in note.recommended_follow_up
     assert "अस्पताल" not in note.recommended_follow_up
+    assert "\u093c" not in unicodedata.normalize("NFD", note.recommended_follow_up)
 
 
 def test_rejection_of_extra_severity_keys_in_json() -> None:
@@ -264,3 +266,26 @@ def test_env_var_model_path_configuration(monkeypatch: pytest.MonkeyPatch) -> No
 
     structurer = LlamaCppSlmStructurer()
     assert structurer.model_path == Path(fake_path)
+
+
+def test_hindi_system_prompt_uses_pure_tatsama_no_hinglish() -> None:
+    """Hindi SLM prompt must use pure Shuddh Tatsama (निर्गत) with zero Hinglish or nukta."""
+    structurer = LlamaCppSlmStructurer(model_path=None)
+    prompt = structurer._build_prompt("शिशु को तीव्र ज्वर है।", language="hi")
+
+    assert "निर्गत" in prompt
+    assert "आउटपुट" not in prompt
+    assert "\u093c" not in unicodedata.normalize("NFD", prompt)
+
+
+def test_sanitize_hindi_text_strips_nukta_and_replaces_tez_and_hinglish() -> None:
+    """Sanitizer converts तेज़/तेज -> तीव्र, आउटपुट -> निर्गत, and strips all NFD nukta."""
+    sanitized = sanitize_hindi_text("तेज़ बुख़ार और फ़ौरन आउटपुट")
+    assert sanitized == "तीव्र ज्वर और तत्काल निर्गत"
+    assert "\u093c" not in unicodedata.normalize("NFD", sanitized)
+
+    # Stray precomposed/decomposed nuktas are removed without damaging matras or anusvara
+    stray = sanitize_hindi_text("क़ख़ग़ज़फ़ और श्वास कष्ट तथा संदेह")
+    assert "\u093c" not in unicodedata.normalize("NFD", stray)
+    assert "श्वास कष्ट" in stray
+    assert "संदेह" in stray

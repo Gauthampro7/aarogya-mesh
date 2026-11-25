@@ -41,7 +41,31 @@ Implement concrete adapters for the 4 `@runtime_checkable` protocols:
 
 ---
 
-## 3. Running Tests Locally
+## 3. Optional Local Weights, Synthetic Model Training & Offline Fallback
+
+Base workspace installation (`uv sync --all-packages`) intentionally excludes heavy native wheels and model weights so CI and fresh clones stay fast and free of PyTorch/CUDA bloat. Each concrete backend degrades cleanly to a deterministic stub when optional dependencies or local weight files are absent:
+
+| Backend | Protocol | Optional Extra / Runtime | Environment Variable(s) | Offline Fallback |
+| --- | --- | --- | --- | --- |
+| `WhisperVoiceTranscriber` | `VoiceTranscriber` | `asr` (`faster-whisper` / `pywhispercpp` CPU INT8) | `AAROGYA_WHISPER_MODEL_PATH`, `AAROGYA_WHISPER_MODEL_SIZE` | `StubVoiceTranscriber` (`stub-asr-fallback`) |
+| `LlamaCppSlmStructurer` | `ClinicalSlmStructurer` | `slm` (`llama-cpp-python` + `clinical_note.gbnf`) | `AAROGYA_SLM_GGUF_PATH` | `StubClinicalSlmStructurer` (`stub-slm-fallback`) |
+| `LightGbmRiskScorer` | `RiskScorer` | `risk` (`lightgbm` + TreeSHAP `pred_contrib=True`) | `AAROGYA_RISK_MODEL_PATH` | `StubRiskScorer` (`stub-lightgbm-fallback`) |
+| `EwmaOutbreakDetector` | `OutbreakDetector` | Pure Python stdlib (`math`, `statistics`) | — | Always active natively |
+
+### Training the Local LightGBM Risk Model
+
+`services/ml-pipeline/models/` is gitignored (`models/risk_lgbm.txt` is generated locally, not checked into git). To generate a deterministic (`seed=42`) CPU LightGBM model locally after installing optional `risk` dependencies:
+
+```bash
+uv run python services/ml-pipeline/scripts/train_synthetic_risk_model.py \
+  --output services/ml-pipeline/models/risk_lgbm.txt \
+  --samples 3000 \
+  --seed 42
+```
+
+---
+
+## 4. Running Tests Locally
 
 From the repo root (`aarogya-mesh/`):
 
@@ -53,6 +77,6 @@ uv run ruff check services/ml-pipeline/
 
 ---
 
-## 4. Wiring into Tier-2 Hub
+## 5. Wiring into Tier-2 Hub
 
-`services/phc-hub` fetches pending `VOICE_NOTE_RECORDED` (`ENRICHMENT_PENDING`) events via `GET /api/v1/enrichment/pending` and processes them with `enrich_voice_note_event(...)`, appending `ENRICHMENT_COMPLETED` + `ACTION_CARD_ISSUED` to the CRDT store so they sync back to Tier-1 Phone and Tier-0 Watch.
+`services/phc-hub` fetches pending `VOICE_NOTE_RECORDED` (`ENRICHMENT_PENDING`) events via `GET /api/v1/enrichment/pending` and processes them with `EnrichmentPipeline` / `enrich_voice_note_event(...)`, appending `ENRICHMENT_COMPLETED`, `ACTION_CARD_ISSUED`, and conditional `OUTBREAK_ALERT_RAISED` events to the CRDT store so they sync back to Tier-1 Phone and Tier-0 Watch.

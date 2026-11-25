@@ -67,6 +67,8 @@ def generate_synthetic_data(
     seed: int = 42,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Generate synthetic maternal and pediatric clinical records with ground truth risk labels."""
+    if n_samples < 1:
+        raise ValueError(f"n_samples must be >= 1, got {n_samples}")
     rng = np.random.RandomState(seed)
     n_ped = n_samples // 2
     n_mat = n_samples - n_ped

@@ -38,7 +38,7 @@ from aarogya_ml_pipeline.interfaces import (
 )
 from aarogya_ml_pipeline.outbreak_detector import EwmaOutbreakDetector
 from aarogya_ml_pipeline.risk_scorer import LightGbmRiskScorer, extract_risk_features
-from aarogya_ml_pipeline.slm_structurer import LlamaCppSlmStructurer
+from aarogya_ml_pipeline.slm_structurer import LlamaCppSlmStructurer, sanitize_hindi_text
 from aarogya_ml_pipeline.whisper_asr import WhisperVoiceTranscriber
 
 logger = logging.getLogger(__name__)
@@ -53,6 +53,18 @@ _TITLE_MAP: dict[TriageSeverity, str] = {
     TriageSeverity.RED_EMERGENCY: "RED EMERGENCY: Immediate Referral",
     TriageSeverity.YELLOW_PHC: "YELLOW: PHC / ANM Visit Required",
     TriageSeverity.GREEN_HOME: "GREEN: Home Care & Follow-Up",
+}
+
+_TITLE_MAP_HI: dict[TriageSeverity, str] = {
+    TriageSeverity.RED_EMERGENCY: "रक्त आपातकाल — तत्काल प्राथमिक स्वास्थ्य केन्द्र प्रेषण",
+    TriageSeverity.YELLOW_PHC: "पीत चेतावनी — प्राथमिक स्वास्थ्य केन्द्र परामर्श आवश्यक",
+    TriageSeverity.GREEN_HOME: "हरित — स्वर टिप्पणी चिकित्सीय सारांश",
+}
+
+_RISK_BAND_HI: dict[str, str] = {
+    "HIGH": "उच्च",
+    "MODERATE": "मध्यम",
+    "LOW": "न्यून",
 }
 
 _MATERNAL_ONLY_RED_FLAGS: frozenset[str] = frozenset({
@@ -260,25 +272,45 @@ class EnrichmentPipeline:
         card_priority = _PRIORITY_MAP.get(
             triage_assessment.severity, ActionCardPriority.MEDIUM
         )
-        card_title = _TITLE_MAP.get(
-            triage_assessment.severity, "Voice Note Clinical Summary"
-        )
-        summary_text = (
-            structured.recommended_follow_up
-            or triage_assessment.rationale[:1000]
-            or "Deterministic triage follow-up required."
-        )
+        is_hindi = asr_result.language.strip().lower().startswith("hi")
+        if is_hindi:
+            card_title = _TITLE_MAP_HI.get(
+                triage_assessment.severity, "स्वर टिप्पणी चिकित्सीय सारांश"
+            )
+            raw_summary = (
+                structured.recommended_follow_up
+                or triage_assessment.rationale[:1000]
+                or "प्राथमिक स्वास्थ्य केन्द्र स्तर पर अनुवर्ती परीक्षण आवश्यक।"
+            )
+            summary_text = sanitize_hindi_text(raw_summary)
+        else:
+            card_title = _TITLE_MAP.get(
+                triage_assessment.severity, "Voice Note Clinical Summary"
+            )
+            summary_text = (
+                structured.recommended_follow_up
+                or triage_assessment.rationale[:1000]
+                or "Deterministic triage follow-up required."
+            )
 
         action_steps: list[str] = []
         if triage_assessment.immediate_actions:
             action_steps.extend(triage_assessment.immediate_actions)
         if structured.extracted_symptoms:
+            if is_hindi:
+                sanitized_symptoms = [sanitize_hindi_text(s) for s in structured.extracted_symptoms]
+                action_steps.append(f"लक्षित लक्षण: {', '.join(sanitized_symptoms)}")
+            else:
+                action_steps.append(
+                    f"Observed symptoms: {', '.join(structured.extracted_symptoms)}"
+                )
+        if is_hindi:
+            band_hi = _RISK_BAND_HI.get(risk_result.risk_band, risk_result.risk_band)
+            action_steps.append(f"संकट स्तर: {band_hi} ({risk_result.risk_score:.2f})")
+        else:
             action_steps.append(
-                f"Observed symptoms: {', '.join(structured.extracted_symptoms)}"
+                f"ML risk band: {risk_result.risk_band} ({risk_result.risk_score:.2f})"
             )
-        action_steps.append(
-            f"ML risk band: {risk_result.risk_band} ({risk_result.risk_score:.2f})"
-        )
 
         action_card = ActionCard(
             patient_id=voice_event.patient_id,

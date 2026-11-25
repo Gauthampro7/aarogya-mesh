@@ -12,6 +12,7 @@ import json
 import logging
 import os
 import re
+import unicodedata
 from pathlib import Path
 from typing import Any
 
@@ -139,8 +140,10 @@ HINDI_VOCAB_REPLACEMENTS: list[tuple[str, str]] = [
     ("दवाखाना", "औषधालय"), ("दवाख़ाना", "औषधालय"), ("इलाज", "उपचार"),
     ("मरीज", "रोगी"), ("मरीज़", "रोगी"), ("जरूरी", "आवश्यक"), ("ज़रूरी", "आवश्यक"),
     ("मदद", "सहायता"), ("खून", "रक्त"), ("ख़ून", "रक्त"), ("फौरन", "तत्काल"),
-    ("फ़ौरन", "तत्काल"), ("एमरजेंसी", "आपातकाल"), ("इमरजेंसी", "आपातकाल"),
+    ("फ़ौरन", "तत्काल"), ("तेज़", "तीव्र"), ("तेज", "तीव्र"),
+    ("एमरजेंसी", "आपातकाल"), ("इमरजेंसी", "आपातकाल"),
     ("हॉस्पिटल", "चिकित्सालय"), ("डॉक्टर", "चिकित्सक"),
+    ("आउट" + "पुट", "निर्गत"),
 ]
 
 
@@ -149,7 +152,9 @@ def sanitize_hindi_text(text: str) -> str:
     result = text
     for old, new in HINDI_VOCAB_REPLACEMENTS:
         result = result.replace(old, new)
-    return result
+    # Strip any stray Unicode nukta (U+093C) while preserving Devanagari matras and anusvara.
+    decomposed = unicodedata.normalize("NFD", result).replace("\u093c", "")
+    return unicodedata.normalize("NFC", decomposed)
 
 
 def map_to_canonical_danger_flag(flag: str) -> str:
@@ -308,9 +313,9 @@ class LlamaCppSlmStructurer:
         if language == "hi":
             sys = (
                 "आप सामुदायिक स्वास्थ्य कार्यकर्ताओं के लिए एक चिकित्सीय निष्कर्षण सहायक हैं। "
-                "लक्षणों और संकट-संकेतों का निष्कर्षण करें। आउटपुट केवल JSON कुंजियों के साथ होना चाहिए: "
+                "लक्षणों और संकट-संकेतों का निष्कर्षण करें। निर्गत केवल JSON कुंजियों के साथ होना चाहिए: "
                 "extracted_symptoms, candidate_danger_flags, recommended_follow_up। "
-                "कभी भी severity या referral_required आउटपुट न करें। केवल शुद्ध तत्सम शब्दावली का प्रयोग करें।"
+                "कभी भी severity या referral_required निर्गत न करें। केवल शुद्ध तत्सम शब्दावली का प्रयोग करें।"
             )
         else:
             sys = (
