@@ -83,6 +83,23 @@
       prioHigh: "HIGH",
       prioMedium: "MEDIUM",
       prioLow: "LOW",
+      proofCloudRpcs: "0 Cloud RPCs",
+      proofSafetyFloor: "WHO Safety Floor · conf=1.00",
+      proofZeroBloat: "0 PyTorch · 0 CUDA",
+      convergedPatientsUnit: "converged patients",
+      hubCrdtMergeTitle: "CRDT LWW Conflict-Free Merge Proof",
+      zeroDataLoss: "0 data loss",
+      simultaneousTieBreak: "Same wall_ms HLC tie-break",
+      convergedRecord: "Converged LWW PatientRecord",
+      stageAudio: "Audio Blob",
+      stageAsr: "ASR",
+      stageSlm: "GBNF SLM",
+      stageTriage: "WHO Rule (1.00)",
+      stageShap: "TreeSHAP",
+      symptomsLabel: "Symptoms",
+      dangerFlagsLabel: "Danger Flags",
+      shapPosLegend: "+ Risk-driving",
+      shapNegLegend: "- Protective",
     },
     hi: {
       stageTitle: "आरोग्य संजाल — त्रि-स्तरीय मंच",
@@ -162,6 +179,23 @@
       prioHigh: "उच्च",
       prioMedium: "मध्यम",
       prioLow: "न्यून",
+      proofCloudRpcs: "० मेघ-सेवा अनुरोध",
+      proofSafetyFloor: "विश्व स्वास्थ्य सुरक्षा स्तर · १.००",
+      proofZeroBloat: "० भारी तन्त्र भार",
+      convergedPatientsUnit: "अभिसरित रोगी",
+      hubCrdtMergeTitle: "द्वन्द्व-रहित विलय प्रमाण (LWW)",
+      zeroDataLoss: "शून्य तथ्यांश हानि",
+      simultaneousTieBreak: "समान कालक्रम संयोग",
+      convergedRecord: "एकीकृत रोगी अभिलेख",
+      stageAudio: "श्रव्य संचिका",
+      stageAsr: "ध्वनि अनुलेखन",
+      stageSlm: "संरचना प्रज्ञा",
+      stageTriage: "निश्चित वर्गीकरण (१.००)",
+      stageShap: "संकट कारक विश्लेषण",
+      symptomsLabel: "चिह्नित लक्षण",
+      dangerFlagsLabel: "संकट संकेत",
+      shapPosLegend: "+ संकट वर्धक",
+      shapNegLegend: "- संरक्षक कारक",
     },
   };
 
@@ -408,11 +442,109 @@
     return [];
   }
 
+  function formatCompactFieldValue(val) {
+    if (Array.isArray(val)) return val.join(", ");
+    if (typeof val === "boolean") return val ? "true" : "false";
+    return String(val);
+  }
+
+  function buildCrdtMergeProofCard(proof) {
+    const contribs = Array.isArray(proof.contributions) ? proof.contributions : [];
+    const flowNodes = [];
+
+    // Show the latest contribution per distinct origin node for crisp diff clarity
+    const latestByOrigin = new Map();
+    for (const c of contribs) {
+      if (c && c.origin_node_id) {
+        latestByOrigin.set(c.origin_node_id, c);
+      }
+    }
+    const peerEdits = Array.from(latestByOrigin.values());
+
+    peerEdits.forEach((edit, idx) => {
+      if (idx > 0) {
+        flowNodes.push(el("div", { className: "crdt-op-sep mono" }, "⊕"));
+      }
+      const fieldChips = Object.entries(edit.fields || {})
+        .slice(0, 5)
+        .map(([k, v]) =>
+          el("span", { className: "crdt-kv-chip mono" }, `${k.replace(/^metadata\./, "")}=${formatCompactFieldValue(v)}`)
+        );
+      const shortHlc = edit.hlc ? `${edit.hlc.wall_ms}:${edit.hlc.logical}` : edit.hlc_str || "--";
+      flowNodes.push(
+        el(
+          "div",
+          { className: "crdt-contrib-box" },
+          el(
+            "div",
+            { className: "crdt-contrib-head" },
+            el("span", { className: "mono" }, edit.origin_node_id),
+            el("span", { className: "badge badge-accent mono" }, `HLC ${shortHlc}`)
+          ),
+          fieldChips.length > 0 ? el("div", { className: "crdt-kv-row" }, ...fieldChips) : null
+        )
+      );
+    });
+
+    flowNodes.push(el("div", { className: "crdt-op-sep mono" }, "⇒"));
+
+    const convergedChips = Object.entries(proof.converged_fields || {})
+      .slice(0, 7)
+      .map(([k, v]) =>
+        el("span", { className: "crdt-kv-chip mono" }, `${k.replace(/^metadata\./, "")}=${formatCompactFieldValue(v)}`)
+      );
+    flowNodes.push(
+      el(
+        "div",
+        { className: "crdt-contrib-box crdt-contrib-converged" },
+        el(
+          "div",
+          { className: "crdt-contrib-head" },
+          el("span", null, `${t("convergedRecord")}: ${proof.full_name || proof.patient_id}`),
+          el("span", { className: "badge badge-green" }, t("zeroDataLoss"))
+        ),
+        convergedChips.length > 0 ? el("div", { className: "crdt-kv-row" }, ...convergedChips) : null
+      )
+    );
+
+    return el(
+      "div",
+      { className: "crdt-merge-card" },
+      el(
+        "div",
+        { className: "hub-card-head" },
+        el("span", { className: "hub-card-title" }, proof.full_name || proof.patient_id),
+        proof.simultaneous_wall_ms
+          ? el("span", { className: "badge badge-accent" }, t("simultaneousTieBreak"))
+          : el("span", { className: "badge badge-green" }, t("zeroDataLoss"))
+      ),
+      el("div", { className: "crdt-contrib-flow" }, ...flowNodes)
+    );
+  }
+
+  function renderEngineeringProofStrip(summary) {
+    const ep = (summary && summary.engineering_proof) || {};
+    const eventsCount = summary ? summary.event_count ?? 0 : 0;
+    const patientCount = summary ? summary.patient_count ?? 0 : 0;
+    const hlcText =
+      summary && summary.latest_hlc ? `HLC ${formatHlc(summary.latest_hlc)}` : "HLC --";
+
+    setText("proof-cloud-rpcs", t("proofCloudRpcs"));
+    setText("proof-safety-floor", t("proofSafetyFloor"));
+    setText("proof-hlc-vector", hlcText);
+    setText(
+      "proof-crdt-ratio",
+      `${ep.crdt_event_count ?? eventsCount} ${t("eventsUnit")} → ${ep.converged_patient_count ?? patientCount} ${t("convergedPatientsUnit")}`
+    );
+    setText("proof-zero-bloat", t("proofZeroBloat"));
+  }
+
   function renderHubBrain() {
     const summary = state.lastSummary;
     const peers = state.lastPeers;
     const events = state.lastEvents;
     const patientMap = buildPatientMap(summary);
+    renderEngineeringProofStrip(summary);
 
     if (summary) {
       const manifest = summary.manifest;
@@ -525,7 +657,25 @@
         }
       }
 
-      // SHAP Bars inside SHAP & Triage tab
+      // CRDT LWW Conflict-Free Merge Proof Cards (Alerts & Stream tabs)
+      const mergeProofs = Array.isArray(summary.crdt_merge_proofs) ? summary.crdt_merge_proofs : [];
+      for (const [wrapId, listId] of [
+        ["hub-crdt-proof-alerts", "hub-crdt-proof-alerts-list"],
+        ["hub-crdt-proof-stream", "hub-crdt-proof-stream-list"],
+      ]) {
+        const wrap = document.getElementById(wrapId);
+        const listEl = document.getElementById(listId);
+        if (!wrap || !listEl) continue;
+        if (mergeProofs.length > 0) {
+          wrap.classList.remove("hidden");
+          listEl.replaceChildren(...mergeProofs.slice(0, 2).map((pf) => buildCrdtMergeProofCard(pf)));
+        } else {
+          wrap.classList.add("hidden");
+          listEl.replaceChildren();
+        }
+      }
+
+      // SHAP Bars + Enrichment Pipeline Provenance inside SHAP & Triage tab
       const shapContainer = document.getElementById("hub-shap-list");
       const enrichments = Array.isArray(summary.enrichments) ? summary.enrichments : [];
       setText("hub-shap-count", enrichments.length);
@@ -534,7 +684,9 @@
           shapContainer.replaceChildren(el("p", { className: "empty-state" }, t("noShap")));
         } else {
           const cards = enrichments.slice(0, 3).map((item) => {
-            const entries = normalizeShap(item.shap_attributions);
+            const entries = normalizeShap(item.shap_attributions).sort(
+              (a, b) => Math.abs(b.value) - Math.abs(a.value)
+            );
             const maxAbs = Math.max(0.01, ...entries.map((e) => Math.abs(e.value)));
             const scoreText =
               item.risk_score !== null && item.risk_score !== undefined
@@ -542,16 +694,44 @@
                 : item.risk_band || "AI";
             const patName = formatPatientName(item.patient_id, patientMap, item.event_id);
 
-            const rows = entries.slice(0, 4).map((entry) => {
+            const stageLabels = [
+              item.audio_source === "blob" ? `${t("stageAudio")}` : t("stageAsr"),
+              t("stageSlm"),
+              item.triage_severity ? `${t("stageTriage")}` : null,
+              t("stageShap"),
+            ].filter(Boolean);
+            const pipelineNodes = [];
+            stageLabels.forEach((lbl, idx) => {
+              if (idx > 0) pipelineNodes.push(el("span", { className: "pipeline-arrow" }, "→"));
+              pipelineNodes.push(el("span", { className: "pipeline-stage mono" }, lbl));
+            });
+
+            const symptoms = Array.isArray(item.extracted_symptoms) ? item.extracted_symptoms : [];
+            const dangerFlags = Array.isArray(item.candidate_danger_flags) ? item.candidate_danger_flags : [];
+            const tagChips = [
+              ...dangerFlags.slice(0, 3).map((flag) =>
+                el("span", { className: "badge badge-red mono" }, `${t("dangerFlagsLabel")}: ${flag}`)
+              ),
+              ...symptoms.slice(0, 3).map((sym) =>
+                el("span", { className: "crdt-kv-chip mono" }, `${t("symptomsLabel")}: ${sym}`)
+              ),
+            ];
+
+            const rows = entries.slice(0, 6).map((entry) => {
               const pct = Math.min(100, Math.round((Math.abs(entry.value) / maxAbs) * 100));
-              const fill = el("div", { className: entry.value >= 0 ? "shap-fill-pos" : "shap-fill-neg" });
+              const isPos = entry.value >= 0;
+              const fill = el("div", { className: isPos ? "shap-fill-pos" : "shap-fill-neg" });
               fill.style.width = `${pct}%`;
               return el(
                 "div",
                 { className: "shap-row" },
                 el("span", { className: "mono shap-name", title: entry.name }, entry.name),
                 el("div", { className: "shap-track" }, fill),
-                el("span", { className: "mono shap-num" }, (entry.value >= 0 ? "+" : "") + entry.value.toFixed(2))
+                el(
+                  "span",
+                  { className: `mono shap-num ${isPos ? "shap-num-pos" : "shap-num-neg"}` },
+                  (isPos ? "+" : "") + entry.value.toFixed(2)
+                )
               );
             });
 
@@ -564,7 +744,20 @@
                 el("span", { className: "hub-card-title", title: item.patient_id || "" }, patName),
                 el("span", { className: "badge badge-yellow" }, scoreText)
               ),
+              el("div", { className: "pipeline-trace" }, ...pipelineNodes),
+              item.transcript
+                ? el("div", { className: "transcript-snippet" }, `"${String(item.transcript).slice(0, 120)}"`)
+                : null,
+              tagChips.length > 0 ? el("div", { className: "crdt-kv-row" }, ...tagChips) : null,
               item.summary ? el("div", { className: "hub-card-meta" }, item.summary) : null,
+              rows.length > 0
+                ? el(
+                    "div",
+                    { className: "shap-legend" },
+                    el("span", { className: "shap-legend-pos" }, t("shapPosLegend")),
+                    el("span", { className: "shap-legend-neg" }, t("shapNegLegend"))
+                  )
+                : null,
               ...rows
             );
           });

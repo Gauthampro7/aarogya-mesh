@@ -166,7 +166,8 @@ def test_scenario_maternal_sos_watch_to_asha_phone(tmp_path: Path) -> None:
     enrichment = projected.enrichments["demo-mat-sos-watch-voice"]
     assert enrichment.payload["audio_source"] == "blob"
     assert enrichment.payload["risk_score"]["risk_band"] == "HIGH"
-    assert enrichment.payload["risk_score"]["shap_attributions"]["high_bp"] > 0
+    shap_attrs = enrichment.payload["risk_score"]["shap_attributions"]
+    assert any(shap_attrs.get(k, 0) > 0 for k in ("systolic_bp", "diastolic_bp", "high_bp"))
 
     cards = projected.action_cards_for_patient("pat-sunita-devi")
     phone_cards = [

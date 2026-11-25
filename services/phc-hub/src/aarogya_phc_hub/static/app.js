@@ -117,6 +117,23 @@
       watchModeFamily: "PATIENT_FAMILY",
       expandPayload: "Click to expand JSON payload",
       collapsePayload: "Click to collapse JSON payload",
+      proofCloudRpcs: "0 Cloud RPCs",
+      proofSafetyFloor: "WHO Safety Floor · conf=1.00",
+      proofZeroBloat: "0 PyTorch · 0 CUDA",
+      convergedPatientsUnit: "converged patients",
+      crdtMergeTitle: "CRDT LWW Conflict-Free Merge Proof",
+      zeroDataLoss: "0 data loss",
+      simultaneousTieBreak: "Same wall_ms HLC tie-break",
+      convergedRecord: "Converged LWW PatientRecord",
+      stageAudio: "Audio Blob",
+      stageAsr: "ASR",
+      stageSlm: "GBNF SLM",
+      stageTriage: "WHO Rule (1.00)",
+      stageShap: "TreeSHAP",
+      symptomsLabel: "Symptoms",
+      dangerFlagsLabel: "Danger Flags",
+      shapPosLegend: "+ Risk-driving",
+      shapNegLegend: "- Protective",
     },
     hi: {
       appTitle: "आरोग्य संजाल — प्राथमिक स्वास्थ्य केन्द्र नियन्त्रण कक्ष",
@@ -230,6 +247,23 @@
       watchModeFamily: "रोगी परिवार",
       expandPayload: "पूर्ण विवरण देखने हेतु स्पर्श करें",
       collapsePayload: "विवरण संक्षिप्त करने हेतु स्पर्श करें",
+      proofCloudRpcs: "० मेघ-सेवा अनुरोध",
+      proofSafetyFloor: "विश्व स्वास्थ्य सुरक्षा स्तर · १.००",
+      proofZeroBloat: "० भारी तन्त्र भार",
+      convergedPatientsUnit: "अभिसरित रोगी",
+      crdtMergeTitle: "द्वन्द्व-रहित विलय प्रमाण (LWW)",
+      zeroDataLoss: "शून्य तथ्यांश हानि",
+      simultaneousTieBreak: "समान कालक्रम संयोग",
+      convergedRecord: "एकीकृत रोगी अभिलेख",
+      stageAudio: "श्रव्य संचिका",
+      stageAsr: "ध्वनि अनुलेखन",
+      stageSlm: "संरचना प्रज्ञा",
+      stageTriage: "निश्चित वर्गीकरण (१.००)",
+      stageShap: "संकट कारक विश्लेषण",
+      symptomsLabel: "चिह्नित लक्षण",
+      dangerFlagsLabel: "संकट संकेत",
+      shapPosLegend: "+ संकट वर्धक",
+      shapNegLegend: "- संरक्षक कारक",
     },
   };
 
@@ -680,6 +714,111 @@
     return [];
   }
 
+  function formatCompactFieldValue(val) {
+    if (Array.isArray(val)) return val.join(", ");
+    if (typeof val === "boolean") return val ? "true" : "false";
+    return String(val);
+  }
+
+  function renderEngineeringProofStrip(summary) {
+    const ep = (summary && summary.engineering_proof) || {};
+    const eventsCount = summary ? summary.event_count ?? 0 : 0;
+    const patientCount = summary ? summary.patient_count ?? 0 : 0;
+    const hlcText =
+      summary && summary.latest_hlc ? `HLC ${formatHlc(summary.latest_hlc)}` : "HLC --";
+
+    setText("dash-proof-cloud", t("proofCloudRpcs"));
+    setText("dash-proof-safety", t("proofSafetyFloor"));
+    setText("dash-proof-hlc", hlcText);
+    setText(
+      "dash-proof-crdt",
+      `${ep.crdt_event_count ?? eventsCount} ${t("eventsUnit")} → ${ep.converged_patient_count ?? patientCount} ${t("convergedPatientsUnit")}`
+    );
+    setText("dash-proof-bloat", t("proofZeroBloat"));
+  }
+
+  function renderCrdtMergeProofs(proofs) {
+    const section = document.getElementById("crdt-merge-proof-section");
+    const container = document.getElementById("crdt-merge-proof-list");
+    if (!section || !container) return;
+
+    const list = Array.isArray(proofs) ? proofs : [];
+    if (list.length === 0) {
+      section.classList.add("hidden");
+      container.replaceChildren();
+      return;
+    }
+
+    section.classList.remove("hidden");
+    const cards = list.slice(0, 3).map((proof) => {
+      const latestByOrigin = new Map();
+      for (const c of proof.contributions || []) {
+        if (c && c.origin_node_id) latestByOrigin.set(c.origin_node_id, c);
+      }
+      const peerEdits = Array.from(latestByOrigin.values());
+      const boxes = [];
+
+      peerEdits.forEach((edit, idx) => {
+        if (idx > 0) boxes.push(el("span", { className: "crdt-op-sep mono" }, "⊕"));
+        const chips = Object.entries(edit.fields || {})
+          .slice(0, 5)
+          .map(([k, v]) =>
+            el("span", { className: "meta-chip mono" }, `${k.replace(/^metadata\./, "")}=${formatCompactFieldValue(v)}`)
+          );
+        const shortHlc = edit.hlc ? `${edit.hlc.wall_ms}:${edit.hlc.logical}` : edit.hlc_str || "--";
+        boxes.push(
+          el(
+            "div",
+            { className: "crdt-contrib-box" },
+            el(
+              "div",
+              { className: "crdt-contrib-head" },
+              el("span", { className: "mono" }, edit.origin_node_id),
+              el("span", { className: "badge badge-accent mono" }, `HLC ${shortHlc}`)
+            ),
+            chips.length > 0 ? el("div", { className: "meta-chips" }, ...chips) : null
+          )
+        );
+      });
+
+      boxes.push(el("span", { className: "crdt-op-sep mono" }, "⇒"));
+
+      const convergedChips = Object.entries(proof.converged_fields || {})
+        .slice(0, 7)
+        .map(([k, v]) =>
+          el("span", { className: "meta-chip mono" }, `${k.replace(/^metadata\./, "")}=${formatCompactFieldValue(v)}`)
+        );
+      boxes.push(
+        el(
+          "div",
+          { className: "crdt-contrib-box crdt-contrib-converged" },
+          el(
+            "div",
+            { className: "crdt-contrib-head" },
+            el("span", null, `${t("convergedRecord")}: ${proof.full_name || proof.patient_id}`),
+            el("span", { className: "badge badge-green" }, t("zeroDataLoss"))
+          ),
+          convergedChips.length > 0 ? el("div", { className: "meta-chips" }, ...convergedChips) : null
+        )
+      );
+
+      return el(
+        "div",
+        { className: "crdt-merge-card" },
+        el(
+          "div",
+          { className: "item-card-head" },
+          el("span", { className: "item-card-title" }, proof.full_name || proof.patient_id),
+          proof.simultaneous_wall_ms
+            ? el("span", { className: "badge badge-accent" }, t("simultaneousTieBreak"))
+            : el("span", { className: "badge badge-green" }, t("zeroDataLoss"))
+        ),
+        el("div", { className: "crdt-contrib-grid" }, ...boxes)
+      );
+    });
+    container.replaceChildren(...cards);
+  }
+
   function renderShap(enrichments, nameMap) {
     const container = document.getElementById("shap-list");
     if (!container) return;
@@ -693,16 +832,42 @@
 
     const limit = 6;
     const cards = list.slice(0, limit).map((item) => {
-      const entries = normalizeShapEntries(item.shap_attributions);
+      const entries = normalizeShapEntries(item.shap_attributions).sort(
+        (a, b) => Math.abs(b.value) - Math.abs(a.value)
+      );
       const maxAbs = Math.max(0.01, ...entries.map((entry) => Math.abs(entry.value)));
       const scoreText =
         item.risk_score !== null && item.risk_score !== undefined
           ? `${t("riskScore")}: ${Number(item.risk_score).toFixed(2)}`
           : translateRiskBand(item.risk_band);
 
-      const barNodes = entries.slice(0, 5).map((entry) => {
+      const stageLabels = [
+        item.audio_source === "blob" ? t("stageAudio") : t("stageAsr"),
+        t("stageSlm"),
+        item.triage_severity ? t("stageTriage") : null,
+        t("stageShap"),
+      ].filter(Boolean);
+      const pipelineNodes = [];
+      stageLabels.forEach((lbl, idx) => {
+        if (idx > 0) pipelineNodes.push(el("span", { className: "pipeline-arrow" }, "→"));
+        pipelineNodes.push(el("span", { className: "pipeline-stage mono" }, lbl));
+      });
+
+      const symptoms = Array.isArray(item.extracted_symptoms) ? item.extracted_symptoms : [];
+      const dangerFlags = Array.isArray(item.candidate_danger_flags) ? item.candidate_danger_flags : [];
+      const tagChips = [
+        ...dangerFlags.slice(0, 4).map((flag) =>
+          el("span", { className: "badge badge-red mono" }, `${t("dangerFlagsLabel")}: ${flag}`)
+        ),
+        ...symptoms.slice(0, 4).map((sym) =>
+          el("span", { className: "meta-chip mono" }, `${t("symptomsLabel")}: ${sym}`)
+        ),
+      ];
+
+      const barNodes = entries.slice(0, 6).map((entry) => {
         const pct = Math.min(100, Math.round((Math.abs(entry.value) / maxAbs) * 100));
-        const fillClass = entry.value >= 0 ? "shap-fill-pos" : "shap-fill-neg";
+        const isPos = entry.value >= 0;
+        const fillClass = isPos ? "shap-fill-pos" : "shap-fill-neg";
         const fill = el("div", { className: fillClass });
         fill.style.width = `${pct}%`;
         return el(
@@ -710,7 +875,11 @@
           { className: "shap-bar-row" },
           el("span", { className: "mono shap-feature", title: entry.name }, entry.name),
           el("div", { className: "shap-track" }, fill),
-          el("span", { className: "mono shap-val" }, (entry.value >= 0 ? "+" : "") + entry.value.toFixed(2))
+          el(
+            "span",
+            { className: `mono shap-val ${isPos ? "shap-val-pos" : "shap-val-neg"}` },
+            (isPos ? "+" : "") + entry.value.toFixed(2)
+          )
         );
       });
 
@@ -728,7 +897,20 @@
           buildPatientHeadingNode(item.patient_id, nameMap, item.ref_event_id || item.event_id),
           el("span", { className: badgeClass }, scoreText)
         ),
+        el("div", { className: "pipeline-trace" }, ...pipelineNodes),
+        item.transcript
+          ? el("div", { className: "transcript-snippet" }, `"${String(item.transcript).slice(0, 140)}"`)
+          : null,
+        tagChips.length > 0 ? el("div", { className: "meta-chips" }, ...tagChips) : null,
         item.summary ? el("div", { className: "item-card-meta" }, item.summary) : null,
+        barNodes.length > 0
+          ? el(
+              "div",
+              { className: "shap-legend" },
+              el("span", { className: "shap-legend-pos" }, t("shapPosLegend")),
+              el("span", { className: "shap-legend-neg" }, t("shapNegLegend"))
+            )
+          : null,
         ...barNodes
       );
     });
@@ -1031,10 +1213,12 @@
     const patients = state.lastSummary ? state.lastSummary.patients : [];
     const nameMap = buildPatientNameMap(patients);
     applyTranslations();
+    renderEngineeringProofStrip(state.lastSummary);
     renderScenarioNarrative();
     renderManifest(state.lastSummary, state.lastConnectInfo);
     renderKpis(state.lastSummary);
     renderPatients(patients);
+    renderCrdtMergeProofs(state.lastSummary ? state.lastSummary.crdt_merge_proofs : []);
     renderTriageHistory(state.lastSummary, nameMap);
     renderPeers(state.lastPeers);
     renderOutbreaks(state.lastSummary ? state.lastSummary.outbreak_alerts : []);

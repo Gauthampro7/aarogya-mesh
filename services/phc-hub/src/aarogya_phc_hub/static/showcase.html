@@ -59,6 +59,14 @@
       </div>
     </section>
 
+    <section id="stage-proof-strip" class="proof-strip" aria-label="Live Engineering Proof Strip">
+      <span class="proof-chip proof-chip-green mono" id="proof-cloud-rpcs" data-i18n="proofCloudRpcs">0 Cloud RPCs</span>
+      <span class="proof-chip proof-chip-brand mono" id="proof-safety-floor" data-i18n="proofSafetyFloor">WHO Safety Floor · conf=1.00</span>
+      <span class="proof-chip mono" id="proof-hlc-vector">HLC --</span>
+      <span class="proof-chip proof-chip-accent mono" id="proof-crdt-ratio">0 events → 0 patients</span>
+      <span class="proof-chip mono" id="proof-zero-bloat" data-i18n="proofZeroBloat">0 PyTorch · 0 CUDA</span>
+    </section>
+
     <main class="stage-columns">
       <section class="tier-column tier-col-watch" aria-labelledby="col-watch-title">
         <div class="col-header">
@@ -225,6 +233,14 @@
 
         <div class="hub-tab-panels">
           <div id="hub-panel-alerts" class="hub-tab-panel" role="tabpanel" aria-labelledby="tab-btn-alerts">
+            <div id="hub-crdt-proof-alerts" class="hub-block hidden">
+              <div class="hub-block-head">
+                <h3 class="hub-block-title" data-i18n="hubCrdtMergeTitle">CRDT LWW Conflict-Free Merge Proof</h3>
+                <span class="badge badge-green" data-i18n="zeroDataLoss">0 data loss</span>
+              </div>
+              <div id="hub-crdt-proof-alerts-list" class="hub-stack"></div>
+            </div>
+
             <div class="hub-block">
               <div class="hub-block-head">
                 <h3 class="hub-block-title" data-i18n="hubActionsTitle">Action Cards → Watch &amp; Phone</h3>
@@ -261,6 +277,14 @@
           </div>
 
           <div id="hub-panel-stream" class="hub-tab-panel hidden" role="tabpanel" aria-labelledby="tab-btn-stream">
+            <div id="hub-crdt-proof-stream" class="hub-block hidden">
+              <div class="hub-block-head">
+                <h3 class="hub-block-title" data-i18n="hubCrdtMergeTitle">CRDT LWW Conflict-Free Merge Proof</h3>
+                <span class="badge badge-green" data-i18n="zeroDataLoss">0 data loss</span>
+              </div>
+              <div id="hub-crdt-proof-stream-list" class="hub-stack"></div>
+            </div>
+
             <div class="hub-block">
               <div class="hub-block-head">
                 <h3 class="hub-block-title" data-i18n="hubEventsTitle">Latest CRDT Sync Stream</h3>

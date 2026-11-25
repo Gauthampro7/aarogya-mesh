@@ -86,6 +86,8 @@ def test_dashboard_static_assets_and_zero_cdn() -> None:
     assert "/static/app.js" in html
     assert 'href="/showcase"' in html
     assert 'id="scenario-narrative-card"' in html
+    assert 'id="engineering-proof-strip"' in html
+    assert 'id="crdt-merge-proof-section"' in html
     for scenario_id in (
         "maternal_sos",
         "pediatric_voice_offload",
@@ -137,6 +139,9 @@ def test_showcase_stage_and_static_assets_zero_cdn() -> None:
     assert 'src="/phone/"' in html
     assert 'href="/"' in html
     assert 'id="btn-stage-theme"' in html
+    assert 'id="stage-proof-strip"' in html
+    assert 'id="hub-crdt-proof-alerts"' in html
+    assert 'id="hub-crdt-proof-stream"' in html
     for tab_id in ("alerts", "shap", "stream"):
         assert f'data-hub-tab="{tab_id}"' in html
     for scenario_id in (
@@ -166,6 +171,8 @@ def test_showcase_stage_and_static_assets_zero_cdn() -> None:
     js_text = js_resp.text
     assert "aarogya.theme" in js_text
     assert "aarogya.lang" in js_text
+    assert "crdt_merge_proofs" in js_text
+    assert "engineering_proof" in js_text
     assert "contentWindow.location.reload()" in js_text
     assert "http://" not in js_text.lower()
     assert "https://" not in js_text.lower()
@@ -439,3 +446,119 @@ def test_shuddh_tatsama_hindi_purity() -> None:
     # Zero Perso-Arabic / Urdu / Hinglish loanwords
     for word in _FORBIDDEN_LOANWORDS:
         assert word not in combined, f"Forbidden loanword found: {word}"
+
+
+def test_dashboard_summary_exposes_crdt_merge_proofs_and_engineering_proof() -> None:
+    client, store = _build_test_client()
+    t0 = 1_700_000_000_000
+    t1 = t0 + 60_000
+
+    store.append(
+        CrdtEvent(
+            event_id="evt-kavita-base",
+            hlc=HlcTimestamp(wall_ms=t0, logical=0, node_id="phone-asha-01"),
+            origin_node_id="phone-asha-01",
+            patient_id="pat-kavita",
+            event_type=EventType.PATIENT_REGISTERED,
+            payload={
+                "patient_id": "pat-kavita",
+                "full_name": "Kavita Devi",
+                "village_id": "rampur-01",
+                "is_pregnant": True,
+                "gestational_weeks": 28,
+                "metadata": {"anc_visit": 2},
+            },
+        )
+    )
+    store.append(
+        CrdtEvent(
+            event_id="evt-kavita-phone",
+            hlc=HlcTimestamp(wall_ms=t1, logical=0, node_id="phone-asha-01"),
+            origin_node_id="phone-asha-01",
+            patient_id="pat-kavita",
+            event_type=EventType.PATIENT_REGISTERED,
+            payload={
+                "patient_id": "pat-kavita",
+                "is_pregnant": True,
+                "gestational_weeks": 30,
+                "metadata": {"anc_visit": 3, "ifa_tablets_dispensed": 30},
+            },
+        )
+    )
+    store.append(
+        CrdtEvent(
+            event_id="evt-kavita-watch",
+            hlc=HlcTimestamp(wall_ms=t1, logical=0, node_id="watch-kavita-01"),
+            origin_node_id="watch-kavita-01",
+            patient_id="pat-kavita",
+            event_type=EventType.PATIENT_REGISTERED,
+            payload={
+                "patient_id": "pat-kavita",
+                "metadata": {"sos_triggered": True, "sos_danger_signs": ["vaginal_bleeding"]},
+            },
+        )
+    )
+    store.append(
+        CrdtEvent(
+            event_id="evt-kavita-enr",
+            hlc=HlcTimestamp(wall_ms=t1 + 5000, logical=0, node_id="phc-hub-test"),
+            origin_node_id="phc-hub-test",
+            patient_id="pat-kavita",
+            event_type=EventType.ENRICHMENT_COMPLETED,
+            enrichment_state=EnrichmentState.COMPLETED,
+            ref_event_id="evt-kavita-watch",
+            payload={
+                "audio_source": "blob",
+                "transcription": {"transcript": "severe headache and blurred vision", "backend": "stub"},
+                "structured_note": {
+                    "extracted_symptoms": ["headache", "blurred_vision"],
+                    "candidate_danger_flags": ["severe_headache", "blurred_vision"],
+                    "backend": "stub",
+                },
+                "triage_assessment": {
+                    "severity": "RED_EMERGENCY",
+                    "confidence": 1.0,
+                    "execution_target": "LOCAL_DETERMINISTIC",
+                    "rationale": "Severe maternal danger signs.",
+                },
+                "risk_score": {
+                    "risk_score": 0.91,
+                    "risk_band": "HIGH",
+                    "shap_attributions": {"high_bp": 0.35, "spo2_normal": -0.08},
+                },
+            },
+        )
+    )
+
+    resp = client.get("/api/v1/dashboard/summary")
+    assert resp.status_code == 200
+    data = resp.json()
+
+    ep = data["engineering_proof"]
+    assert ep["cloud_rpcs"] == 0
+    assert ep["safety_floor_confidence"] == 1.0
+    assert ep["deterministic_triage_count"] == 1
+    assert ep["multi_origin_merges"] == 1
+    assert ep["zero_heavy_ml_bloat"] is True
+
+    proofs = data["crdt_merge_proofs"]
+    assert len(proofs) == 1
+    proof = proofs[0]
+    assert proof["patient_id"] == "pat-kavita"
+    assert proof["full_name"] == "Kavita Devi"
+    assert proof["simultaneous_wall_ms"] is True
+    assert proof["zero_data_loss"] is True
+    assert set(proof["origin_nodes"]) == {"phone-asha-01", "watch-kavita-01"}
+    assert proof["converged_fields"]["gestational_weeks"] == 30
+    assert proof["converged_fields"]["metadata.anc_visit"] == 3
+    assert proof["converged_fields"]["metadata.sos_triggered"] is True
+
+    enr = data["enrichments"][0]
+    assert enr["audio_source"] == "blob"
+    assert enr["transcript"] == "severe headache and blurred vision"
+    assert enr["extracted_symptoms"] == ["headache", "blurred_vision"]
+    assert enr["candidate_danger_flags"] == ["severe_headache", "blurred_vision"]
+    assert enr["triage_severity"] == "RED_EMERGENCY"
+    assert enr["triage_confidence"] == 1.0
+    assert enr["shap_attributions"]["high_bp"] > 0
+    assert enr["shap_attributions"]["spo2_normal"] < 0

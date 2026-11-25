@@ -1019,3 +1019,161 @@ body {
   background: var(--surface-subtle);
   border: 1px dashed var(--border-strong);
 }
+
+/* Live Engineering Proof Strip */
+.proof-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 9px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.proof-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 6px;
+  font-size: 0.71rem;
+  font-weight: 700;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.proof-chip-green {
+  background: var(--green-bg);
+  border-color: rgba(34, 197, 94, 0.34);
+  color: var(--green);
+}
+
+.proof-chip-brand {
+  background: var(--brand-bg);
+  border-color: rgba(20, 184, 166, 0.36);
+  color: var(--brand);
+}
+
+.proof-chip-accent {
+  background: var(--accent-bg);
+  border-color: rgba(56, 189, 248, 0.36);
+  color: var(--accent);
+}
+
+/* CRDT LWW Conflict-Free Merge Proof Card */
+.crdt-merge-card {
+  background: var(--surface-elevated);
+  border: 1px solid var(--brand);
+  border-left: 4px solid var(--brand);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.crdt-contrib-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.crdt-contrib-box {
+  flex: 1 1 200px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.crdt-contrib-converged {
+  border-color: var(--green-solid);
+  background: var(--green-bg);
+}
+
+.crdt-op-sep {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--brand);
+  padding: 0 2px;
+}
+
+.crdt-contrib-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+/* Enrichment Pipeline Provenance inside SHAP Cards */
+.pipeline-trace {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 2px 0;
+}
+
+.pipeline-stage {
+  font-size: 0.67rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--accent);
+}
+
+.pipeline-arrow {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.transcript-snippet {
+  font-size: 0.75rem;
+  font-style: italic;
+  color: var(--text);
+  background: var(--surface);
+  border-left: 3px solid var(--accent);
+  padding: 4px 8px;
+  border-radius: 5px;
+}
+
+.shap-legend {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.shap-legend-pos {
+  color: var(--red);
+  font-weight: 700;
+}
+
+.shap-legend-neg {
+  color: var(--green);
+  font-weight: 700;
+}
+
+.shap-val-pos {
+  color: var(--red);
+}
+
+.shap-val-neg {
+  color: var(--green);
+}

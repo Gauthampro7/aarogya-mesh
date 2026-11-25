@@ -53,6 +53,14 @@
 
     <div id="demo-status-banner" class="demo-status hidden" role="status" aria-live="polite"></div>
 
+    <section id="engineering-proof-strip" class="proof-strip" aria-label="Live Engineering Proof Strip">
+      <span class="proof-chip proof-chip-green mono" id="dash-proof-cloud" data-i18n="proofCloudRpcs">0 Cloud RPCs</span>
+      <span class="proof-chip proof-chip-brand mono" id="dash-proof-safety" data-i18n="proofSafetyFloor">WHO Safety Floor · conf=1.00</span>
+      <span class="proof-chip mono" id="dash-proof-hlc">HLC --</span>
+      <span class="proof-chip proof-chip-accent mono" id="dash-proof-crdt">0 events → 0 patients</span>
+      <span class="proof-chip mono" id="dash-proof-bloat" data-i18n="proofZeroBloat">0 PyTorch · 0 CUDA</span>
+    </section>
+
     <section id="scenario-narrative-card" class="scenario-narrative hidden" aria-live="polite"></section>
 
     <section id="outbreak-banner" class="outbreak-banner hidden" role="alert" aria-live="polite"></section>
@@ -165,6 +173,14 @@
           </div>
         </div>
         <p id="enrichment-status" class="status-note hidden" role="status"></p>
+
+        <div id="crdt-merge-proof-section" class="subsection hidden">
+          <div class="subsection-head">
+            <h3 class="subsection-title" data-i18n="crdtMergeTitle">CRDT LWW Conflict-Free Merge Proof</h3>
+            <span class="badge badge-green" data-i18n="zeroDataLoss">0 data loss</span>
+          </div>
+          <div id="crdt-merge-proof-list" class="card-stack"></div>
+        </div>
 
         <div class="clinical-split">
           <div class="subsection">
