@@ -586,4 +586,22 @@ describe("resolveDefaultHubUrl (T3-05)", () => {
     expect(resolveDefaultHubUrl({ protocol: "file:", origin: "null" })).toBe(DEFAULT_HUB_URL);
     expect(resolveDefaultHubUrl(null)).toBe(DEFAULT_HUB_URL);
   });
+
+  it("uses DEFAULT_HUB_URL inside native Android APK WebView unless savedHubUrl is set", () => {
+    const apkLoc = {
+      protocol: "http:",
+      origin: "http://127.0.0.1:49842",
+      hostname: "127.0.0.1",
+    };
+    const g = globalThis as Record<string, unknown>;
+    g.AarogyaNativeBridge = {};
+    try {
+      expect(resolveDefaultHubUrl(apkLoc)).toBe(DEFAULT_HUB_URL);
+      expect(resolveDefaultHubUrl(apkLoc, "http://192.168.1.14:8000/")).toBe(
+        "http://192.168.1.14:8000",
+      );
+    } finally {
+      delete g.AarogyaNativeBridge;
+    }
+  });
 });

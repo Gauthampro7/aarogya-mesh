@@ -31,6 +31,12 @@ function bootstrap(): void {
 
   mountWatchUi(root, controller);
 
+  if (typeof window !== "undefined") {
+    window.addEventListener("aarogya:hub-url-changed", () => {
+      controller.refreshHubUrlFromStorage();
+    });
+  }
+
   if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
     navigator.serviceWorker.register("./sw.js").catch(() => {
       // Fail-soft if SW registration is blocked (e.g., file:// or private browsing).

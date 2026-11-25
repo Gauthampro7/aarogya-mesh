@@ -111,6 +111,7 @@ export class WatchUiController {
   private isSyncing = false;
   private lastSyncResult: WatchSyncResult | null = null;
   private seededVaccinations: VaccinationDueItem[];
+  private readonly location: BrowserLocationLike | null;
 
   constructor(options: WatchUiControllerOptions) {
     this.kernel = options.kernel;
@@ -126,6 +127,7 @@ export class WatchUiController {
         : typeof window !== "undefined"
           ? window.location
           : null;
+    this.location = loc;
     if (savedHubUrl && savedHubUrl.trim().length > 0) {
       this.syncClient.setHubUrl(resolveDefaultHubUrl(loc, savedHubUrl));
     }
@@ -384,6 +386,19 @@ export class WatchUiController {
     } catch {
       // Fail-soft if storage quota exceeded.
     }
+    this.emit();
+    return normalized;
+  }
+
+  public refreshHubUrlFromStorage(): string {
+    let savedHubUrl: string | null = null;
+    try {
+      savedHubUrl = this.storage.getItem(this.hubUrlStorageKey);
+    } catch {
+      savedHubUrl = null;
+    }
+    const resolved = resolveDefaultHubUrl(this.location, savedHubUrl);
+    const normalized = this.syncClient.setHubUrl(resolved);
     this.emit();
     return normalized;
   }

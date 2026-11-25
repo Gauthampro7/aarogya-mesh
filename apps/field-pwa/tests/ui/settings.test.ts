@@ -36,6 +36,15 @@ describe("hubOriginFrom", () => {
     expect(hubOriginFrom(null)).toBeNull();
     expect(hubOriginFrom(undefined)).toBeNull();
   });
+  it("is null inside the native Android APK WebView", () => {
+    const g = globalThis as Record<string, unknown>;
+    g.AarogyaNativeBridge = {};
+    try {
+      expect(hubOriginFrom(loc("http://127.0.0.1:49842/phone/"))).toBeNull();
+    } finally {
+      delete g.AarogyaNativeBridge;
+    }
+  });
 });
 
 describe("resolveHubUrl", () => {

@@ -362,6 +362,7 @@ export function mountWatchUi(root: HTMLElement, controller: WatchUiController): 
     const urlLabel = el("label", "field-label", t("sync.hubLabel"));
     const urlInput = el("input", "watch-input");
     urlInput.type = "url";
+    urlInput.setAttribute("data-hub-url", "1");
     urlInput.placeholder = t("sync.hubHint");
     urlInput.value = controller.getHubUrl();
     urlInput.addEventListener("change", () => controller.setHubUrl(urlInput.value));

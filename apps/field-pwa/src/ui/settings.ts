@@ -31,6 +31,7 @@ export const HUB_MOUNT = "/phone";
 
 /** Origin of the hub when this page is served from its /phone/ mount, else null. */
 export function hubOriginFrom(loc: LocLike | null | undefined): string | null {
+  if (typeof globalThis !== "undefined" && "AarogyaNativeBridge" in globalThis) return null;
   if (!loc || (loc.protocol !== "http:" && loc.protocol !== "https:")) return null;
   const p = loc.pathname;
   if (p !== HUB_MOUNT && !p.startsWith(`${HUB_MOUNT}/`)) return null;

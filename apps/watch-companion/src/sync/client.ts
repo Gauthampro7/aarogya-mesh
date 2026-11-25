@@ -65,12 +65,16 @@ export function resolveDefaultHubUrl(
     loc.origin.trim().length > 0 &&
     loc.origin !== "null";
 
-  const autoOrigin = hasHttpOrigin
-    ? loc.origin.trim().replace(/\/+$/, "")
-    : DEFAULT_HUB_URL;
-  const locHostname = hasHttpOrigin
-    ? (loc.hostname?.trim() || extractHostname(autoOrigin))
-    : "";
+  const isAndroidApk =
+    typeof globalThis !== "undefined" && "AarogyaNativeBridge" in globalThis;
+  const autoOrigin =
+    hasHttpOrigin && !isAndroidApk
+      ? loc.origin.trim().replace(/\/+$/, "")
+      : DEFAULT_HUB_URL;
+  const locHostname =
+    hasHttpOrigin && !isAndroidApk
+      ? (loc.hostname?.trim() || extractHostname(autoOrigin))
+      : "";
 
   const trimmedSaved = savedHubUrl?.trim().replace(/\/+$/, "") ?? "";
   if (trimmedSaved.length > 0) {

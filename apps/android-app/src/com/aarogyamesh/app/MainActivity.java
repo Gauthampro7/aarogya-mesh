@@ -629,6 +629,7 @@ public class MainActivity extends Activity {
                 + "localStorage.setItem('aarogya.watch.hubUrl','" + escaped + "');"
                 + "var el=document.querySelector('input[name=\"hub\"],input[data-hub-url]');"
                 + "if(el){el.value='" + escaped + "';el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));}"
+                + "window.dispatchEvent(new Event('aarogya:hub-url-changed'));"
                 + "}catch(e){}})();";
         evalOnLoadedWebViews(js);
         Toast.makeText(
@@ -644,6 +645,7 @@ public class MainActivity extends Activity {
                 + "localStorage.removeItem('aarogya.watch.hubUrl');"
                 + "var el=document.querySelector('input[name=\"hub\"],input[data-hub-url]');"
                 + "if(el){el.value='';el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));}"
+                + "window.dispatchEvent(new Event('aarogya:hub-url-changed'));"
                 + "}catch(e){}})();";
         evalOnLoadedWebViews(js);
         Toast.makeText(
