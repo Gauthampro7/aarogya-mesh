@@ -4,10 +4,11 @@ import { field, h } from "../dom";
 import type { Ctx } from "../ctx";
 import { heldClipsFromDetail, runSync } from "../app_state";
 import { clearHubUrl, getAutoHubOrigin, getHubUrl, getLastSync, isValidHubUrl, setHubUrl } from "../settings";
-import { ackPayload, sortCards } from "../sync_logic";
+import { ackPayload, bindLiveCount, cardPatientLabel, sortCards } from "../sync_logic";
 
 export async function syncPanel(ctx: Ctx): Promise<HTMLElement> {
-  const [pending, cards] = await Promise.all([ctx.engine.pendingCount(), ctx.store.listActionCards()]);
+  const [pending, cards, patients] = await Promise.all([ctx.engine.pendingCount(), ctx.store.listActionCards(), ctx.store.listPatients()]);
+  const byId = new Map(patients.map((p) => [p.patient_id, p]));
   const last = getLastSync();
   const held = last ? heldClipsFromDetail(last.detail) : 0;
   const lastText = !last ? "" : last.ok ? t("sync.ok") : held ? t("sync.clipsWaiting", { n: held }) : t("sync.fail", { s: last.detail });
@@ -41,11 +42,13 @@ export async function syncPanel(ctx: Ctx): Promise<HTMLElement> {
     ctx.rerender();
   } }, t("sync.now"));
 
-  const card = (c: ActionCard) =>
-    h(
+  const card = (c: ActionCard) => {
+    const lbl = cardPatientLabel(c.patient_id, byId);
+    return h(
       "li",
       { class: `card prio-${c.priority}` },
       h("strong", {}, `${t(`prio.${c.priority}` as const)} · ${c.title}`),
+      lbl ? h("p", { class: "patient-chip" }, lbl.village ? t("sync.cardPatient", { name: lbl.name, v: lbl.village }) : t("sync.cardPatientId", { id: lbl.name })) : null,
       h("p", {}, c.summary),
       h("ol", {}, c.action_steps.map((s) => h("li", {}, s))),
       c.status === "OPEN"
@@ -57,18 +60,35 @@ export async function syncPanel(ctx: Ctx): Promise<HTMLElement> {
           } }, t("cards.ack"))
         : h("span", { class: "muted" }, t("cards.acked")),
     );
+  };
 
-  return h(
+  let seen = false;
+  const born = Date.now();
+  const pendingEl = h("span", { class: "pending-count" }, String(pending));
+  const root = h(
     "section",
     {},
     h("h1", {}, t("sync.title")),
-    field(t("sync.hubUrl"), url, t("sync.hubHint")),
-    auto ? h("p", { class: "muted" }, t("sync.hubAuto", { u: auto })) : null,
+    field(t("sync.hubUrl"), url, auto ? t("sync.hubAuto", { u: auto }) : t("sync.hubHint")),
     btn,
     msg,
-    h("p", {}, `${t("home.pendingSync")}: ${pending}`),
+    h("p", {}, `${t("home.pendingSync")}: `, pendingEl),
     h("p", { class: "muted" }, last ? `${t("sync.last")}: ${new Date(last.at).toLocaleString()} — ${lastText}` : t("sync.never")),
     h("h2", {}, t("cards.title")),
     cards.length ? h("ul", { class: "list" }, sortCards(cards).map(card)) : h("p", { class: "muted" }, t("cards.none")),
   );
+  // Live count in place (no remount, so `msg` survives); self-unsubscribes once this screen is gone.
+  bindLiveCount(
+    [
+      (fn) => ctx.engine.events.on("status", (s) => fn(s.pendingCount)),
+      (fn) => ctx.engine.events.on("enrichment", () => void ctx.engine.pendingCount().then(fn)),
+    ],
+    // Not yet mounted: keep listening up to 5s (rerender gap); once mounted then removed, or never mounted, drop.
+    () => {
+      if (root.isConnected) { seen = true; return true; }
+      return !seen && Date.now() - born < 5000;
+    },
+    (n) => { pendingEl.textContent = String(n); },
+  );
+  return root;
 }

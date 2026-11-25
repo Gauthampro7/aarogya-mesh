@@ -57,13 +57,24 @@ async function boot() {
   render = go;
 
   // Live refresh of read-only dashboards only (never wipe a form the CHW is filling in).
-  const live = () => {
-    const typing = document.activeElement instanceof HTMLInputElement || document.activeElement instanceof HTMLTextAreaElement;
-    if ((current === "home" || current === "sync") && !typing) debounced(() => void go(), 250);
+  // Own timer, so a refresh never cancels a pending syncSoon.
+  let liveTimer: ReturnType<typeof setTimeout> | undefined;
+  const typing = () => document.activeElement instanceof HTMLInputElement || document.activeElement instanceof HTMLTextAreaElement;
+  const refresh = () => {
+    clearTimeout(liveTimer);
+    liveTimer = setTimeout(() => void go(), 250);
   };
-  engine.events.on("status", live);
-  engine.events.on("cards", live);
-  engine.events.on("enrichment", live);
+  const liveHome = () => {
+    if (current === "home" && !typing()) refresh();
+  };
+  // Sync panel: only on card changes, never mid-sync (avoids flicker on every status tick).
+  const liveSync = () => {
+    if (current === "sync" && !typing() && engine.status !== "syncing") refresh();
+  };
+  engine.events.on("status", liveHome);
+  engine.events.on("cards", liveHome);
+  engine.events.on("cards", liveSync);
+  engine.events.on("enrichment", liveHome);
 
   await go(true);
   startSyncLoop(engine);
