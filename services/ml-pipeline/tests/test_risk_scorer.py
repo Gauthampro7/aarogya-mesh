@@ -264,3 +264,94 @@ def test_clinical_safety_floor_non_override() -> None:
     assert "backend" in dump
     assert "triage_severity" not in dump
     assert "referral_required" not in dump
+
+
+def test_embedded_portable_gbdt_artifact_and_exact_treeshap_efficiency() -> None:
+    """Embedded GBDT JSON (<30 KiB) runs exact Lundberg TreeSHAP with +/- attributions."""
+    from aarogya_ml_pipeline.gbdt_treeshap import DEFAULT_ARTIFACT_PATH, PortableGbdtModel
+
+    assert DEFAULT_ARTIFACT_PATH.is_file()
+    assert DEFAULT_ARTIFACT_PATH.stat().st_size < 30 * 1024
+
+    model = PortableGbdtModel.from_json_file(DEFAULT_ARTIFACT_PATH)
+    assert model.num_trees >= 20
+    assert model.feature_names == RISK_FEATURE_NAMES
+    assert model.metrics["auroc"] >= 0.80
+
+    scorer = LightGbmRiskScorer(model_path=Path("/tmp/nonexistent_lgbm_model.txt"))
+    assert scorer.is_fallback is True
+    assert scorer.portable_model is not None
+
+    healthy = {
+        "age_months": 36,
+        "fever_days": 0,
+        "temperature_c": 36.8,
+        "respiratory_rate_bpm": 24,
+        "spo2_pct": 99,
+        "systolic_bp": 95,
+        "diastolic_bp": 60,
+        "hemoglobin_g_dl": 12.8,
+        "muac_cm": 15.0,
+        "is_pregnant": False,
+        "has_danger_sign": False,
+        "symptom_count": 0,
+    }
+    critical_maternal = {
+        "age_months": 288,
+        "fever_days": 3,
+        "temperature_c": 39.0,
+        "respiratory_rate_bpm": 26,
+        "spo2_pct": 89,
+        "systolic_bp": 168,
+        "diastolic_bp": 112,
+        "hemoglobin_g_dl": 6.4,
+        "is_pregnant": True,
+        "gestational_weeks": 32,
+        "has_danger_sign": True,
+        "symptom_count": 4,
+    }
+    young_infant_psbi = {
+        "age_months": 1,
+        "fever_days": 1,
+        "temperature_c": 38.2,
+        "respiratory_rate_bpm": 66,
+        "spo2_pct": 90,
+        "is_pregnant": False,
+        "has_danger_sign": False,
+        "symptom_count": 2,
+    }
+
+    for sample in (healthy, critical_maternal, young_infant_psbi):
+        row = scorer._build_feature_row(sample, use_neutral_defaults=True)
+        prob, margin, base_val, shap = model.explain(row)
+        # Lundberg TreeSHAP Local Accuracy: base_value + sum(phi) == raw_margin
+        assert abs((base_val + sum(shap.values())) - margin) < 1e-3
+        assert set(shap.keys()) == set(RISK_FEATURE_NAMES)
+        assert 0.0 <= prob <= 1.0
+
+    healthy_res = scorer.score_risk(healthy)
+    critical_res = scorer.score_risk(critical_maternal)
+    psbi_res = scorer.score_risk(young_infant_psbi)
+
+    assert healthy_res.backend == "stub-lightgbm-fallback"
+    assert healthy_res.risk_band == "LOW"
+    assert any(v < 0.0 for v in healthy_res.shap_attributions.values())
+
+    assert critical_res.risk_band == "HIGH"
+    assert any(v > 0.0 for v in critical_res.shap_attributions.values())
+    assert critical_res.risk_score > healthy_res.risk_score
+
+    assert psbi_res.risk_score > healthy_res.risk_score
+    assert psbi_res.risk_band in ("MODERATE", "HIGH")
+
+    # Partial healthy child with omitted Hb/MUAC/BP must score LOW (never fake anemia/SAM)
+    partial_healthy = scorer.score_risk({
+        "age_months": 30,
+        "temperature_c": 36.8,
+        "spo2_pct": 99,
+        "respiratory_rate_bpm": 26,
+    })
+    assert partial_healthy.risk_band == "LOW"
+    assert partial_healthy.risk_score < 0.35
+    assert partial_healthy.shap_attributions["hemoglobin_g_dl"] <= 0.05
+    assert partial_healthy.shap_attributions["spo2_pct"] <= 0.05

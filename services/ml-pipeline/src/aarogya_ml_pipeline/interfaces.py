@@ -192,6 +192,17 @@ class StubRiskScorer:
         "has_danger_sign": 0.45,
         "age_under_2m": 0.20,
         "high_bp": 0.25,
+        "temp_excess": 0.09,
+        "hypothermia_deficit": 0.25,
+        "hypoxia_deficit": 0.05,
+        "tachypnea_excess": 0.015,
+        "anemia_deficit": 0.06,
+        "malnutrition_deficit": 0.14,
+        "young_infant_thermal_risk": 0.30,
+        "gestational_preeclampsia_risk": 0.32,
+        "cardiorespiratory_distress": 0.28,
+        "severe_anemia_flag": 0.30,
+        "sam_malnutrition_flag": 0.30,
     }
 
     def score_risk(self, features: dict[str, float | int | bool]) -> RiskScoreResult:

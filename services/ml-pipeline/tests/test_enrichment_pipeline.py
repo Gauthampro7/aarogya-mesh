@@ -503,3 +503,66 @@ def test_english_action_card_formatting_remains_unchanged() -> None:
     assert card.title == "RED EMERGENCY: Immediate Referral"
     assert any(step == "Observed symptoms: fever, convulsions" for step in card.action_steps)
     assert any(step == "ML risk band: LOW (0.12)" for step in card.action_steps)
+
+
+def test_default_pipeline_maternal_sos_hindi_and_v2_psbi_force_red_emergency() -> None:
+    """End-to-end default pipeline (no GGUF/LightGBM) detects maternal SOS & PSBI -> RED_EMERGENCY."""
+    pipeline = EnrichmentPipeline()
+
+    # 1. Maternal SOS in Hindi without patient_context
+    maternal_evt = _make_voice_event(
+        event_id="evt-sos-hi-v2",
+        patient_id="mat-sos-01",
+        payload={
+            "language": "hi",
+            "transcript_hint": "गर्भवती महिला को तीव्र शिरोवेदना, अस्पष्ट दृष्टि और उच्च रक्तचाप है।",
+        },
+    )
+    maternal_emitted = pipeline.process_voice_note(
+        maternal_evt,
+        hub_node_id="hub-01",
+        hlc=HlcTimestamp(wall_ms=1_700_002_000_000, logical=0, node_id="hub-01"),
+        patient_context=None,
+    )
+    mat_triage = maternal_emitted[0].payload["triage_assessment"]
+    assert mat_triage["severity"] == TriageSeverity.RED_EMERGENCY
+    assert mat_triage["referral_required"] is True
+    assert "MAT_RED_01" in mat_triage["matched_rules"]
+
+    # 2. Young-infant (<2m PSBI) umbilical pus in Hindi
+    psbi_evt = _make_voice_event(
+        event_id="evt-psbi-hi-v2",
+        patient_id="infant-psbi-01",
+        payload={
+            "language": "hi",
+            "transcript_hint": "नवजात शिशु को नाभि से पूय और ज्वर है।",
+        },
+    )
+    psbi_emitted = pipeline.process_voice_note(
+        psbi_evt,
+        hub_node_id="hub-01",
+        hlc=HlcTimestamp(wall_ms=1_700_002_100_000, logical=0, node_id="hub-01"),
+        patient_context={"age_months": 1},
+    )
+    psbi_triage = psbi_emitted[0].payload["triage_assessment"]
+    assert psbi_triage["severity"] == TriageSeverity.RED_EMERGENCY
+    assert "IMNCI_PSBI_01" in psbi_triage["matched_rules"]
+
+    # 3. Maternal puerperal sepsis without patient_context
+    sepsis_evt = _make_voice_event(
+        event_id="evt-sepsis-en-v2",
+        patient_id="mat-sepsis-01",
+        payload={
+            "language": "en",
+            "transcript_hint": "Postnatal mother has foul lochia and puerperal sepsis.",
+        },
+    )
+    sepsis_emitted = pipeline.process_voice_note(
+        sepsis_evt,
+        hub_node_id="hub-01",
+        hlc=HlcTimestamp(wall_ms=1_700_002_200_000, logical=0, node_id="hub-01"),
+        patient_context=None,
+    )
+    sepsis_triage = sepsis_emitted[0].payload["triage_assessment"]
+    assert sepsis_triage["severity"] == TriageSeverity.RED_EMERGENCY
+    assert "MAT_RED_11" in sepsis_triage["matched_rules"]

@@ -9,9 +9,49 @@ from __future__ import annotations
 
 import math
 import statistics
+from collections import defaultdict
+
+from pydantic import BaseModel, ConfigDict, Field
 
 from aarogya_contracts import TriageSeverity
 from aarogya_ml_pipeline.interfaces import OutbreakDetector, OutbreakSignal
+
+_SEVERITY_RANK: dict[TriageSeverity, int] = {
+    TriageSeverity.GREEN_HOME: 0,
+    TriageSeverity.YELLOW_PHC: 1,
+    TriageSeverity.RED_EMERGENCY: 2,
+}
+
+
+class VillageSurveillanceSummary(BaseModel):
+    """Per-village multi-syndrome EWMA surveillance aggregation."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    village_id: str = Field(..., min_length=1, max_length=128)
+    syndromes_monitored: int = Field(..., ge=0)
+    active_alerts: int = Field(..., ge=0)
+    highest_severity: TriageSeverity = TriageSeverity.GREEN_HOME
+    alert_syndromes: list[str] = Field(default_factory=list)
+    multi_syndrome_cluster: bool = False
+    total_latest_cases: int = Field(default=0, ge=0)
+    signals: list[OutbreakSignal] = Field(default_factory=list)
+
+
+class MultiSyndromeSurveillanceReport(BaseModel):
+    """Cross-village, multi-syndrome syndromic surveillance summary for Tier-2 PHC Hub."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    total_series_evaluated: int = Field(..., ge=0)
+    total_villages_monitored: int = Field(..., ge=0)
+    total_alerts: int = Field(..., ge=0)
+    red_alert_count: int = Field(..., ge=0)
+    yellow_alert_count: int = Field(..., ge=0)
+    multi_syndrome_villages: list[str] = Field(default_factory=list)
+    syndrome_alert_counts: dict[str, int] = Field(default_factory=dict)
+    villages: list[VillageSurveillanceSummary] = Field(default_factory=list)
+    signals: list[OutbreakSignal] = Field(default_factory=list)
 
 
 class EwmaOutbreakDetector:
@@ -124,11 +164,11 @@ class EwmaOutbreakDetector:
         # Trigger alert only when EWMA exceeds threshold and current count meets case floor
         alert_triggered = bool(z >= effective_threshold and latest_count >= self.min_case_floor)
 
-        # Severity triage: RED_EMERGENCY for severe surge (z_t >= 2 * UCL), else YELLOW_PHC
+        # Severity triage: RED_EMERGENCY for severe surge (z_t >= 2 * effective_threshold), else YELLOW_PHC
         if alert_triggered:
             severity = (
                 TriageSeverity.RED_EMERGENCY
-                if z >= 2.0 * ucl
+                if z >= 2.0 * effective_threshold
                 else TriageSeverity.YELLOW_PHC
             )
             rationale = (
@@ -176,3 +216,74 @@ def evaluate_village_syndromes(
         signal = active_detector.detect_outbreak(village_id, syndrome, counts)
         results.append(signal)
     return results
+
+
+def summarize_multi_syndrome_surveillance(
+    counts_by_key: dict[tuple[str, str], list[int]],
+    detector: OutbreakDetector | None = None,
+) -> MultiSyndromeSurveillanceReport:
+    """Aggregate EWMA outbreak signals into village-level and cross-syndrome summaries.
+
+    Identifies co-occurring multi-syndrome village clusters (e.g. concurrent
+    acute diarrhea + dengue-like fever surges in the same hamlet) and ranks
+    villages deterministically by severity and active alert count.
+    """
+    signals = evaluate_village_syndromes(counts_by_key, detector=detector)
+
+    signals_by_village: dict[str, list[OutbreakSignal]] = defaultdict(list)
+    latest_by_village: dict[str, int] = defaultdict(int)
+    syndrome_alerts: dict[str, int] = defaultdict(int)
+    red_count = 0
+    yellow_count = 0
+
+    for (village_id, _syndrome), counts in sorted(counts_by_key.items()):
+        if counts:
+            latest_by_village[village_id] += counts[-1]
+
+    for signal in signals:
+        signals_by_village[signal.village_id].append(signal)
+        if signal.alert_triggered:
+            syndrome_alerts[signal.syndrome] += 1
+            if signal.severity == TriageSeverity.RED_EMERGENCY:
+                red_count += 1
+            else:
+                yellow_count += 1
+
+    village_summaries: list[VillageSurveillanceSummary] = []
+    for village_id, village_signals in sorted(signals_by_village.items()):
+        triggered = [s for s in village_signals if s.alert_triggered]
+        highest = TriageSeverity.GREEN_HOME
+        for sig in triggered:
+            if _SEVERITY_RANK[sig.severity] > _SEVERITY_RANK[highest]:
+                highest = sig.severity
+
+        alert_syndromes = sorted(sig.syndrome for sig in triggered)
+        village_summaries.append(
+            VillageSurveillanceSummary(
+                village_id=village_id,
+                syndromes_monitored=len(village_signals),
+                active_alerts=len(triggered),
+                highest_severity=highest,
+                alert_syndromes=alert_syndromes,
+                multi_syndrome_cluster=len(triggered) >= 2,
+                total_latest_cases=latest_by_village.get(village_id, 0),
+                signals=village_signals,
+            )
+        )
+
+    village_summaries.sort(
+        key=lambda v: (-_SEVERITY_RANK[v.highest_severity], -v.active_alerts, v.village_id)
+    )
+    multi_villages = sorted(v.village_id for v in village_summaries if v.multi_syndrome_cluster)
+
+    return MultiSyndromeSurveillanceReport(
+        total_series_evaluated=len(signals),
+        total_villages_monitored=len(village_summaries),
+        total_alerts=red_count + yellow_count,
+        red_alert_count=red_count,
+        yellow_alert_count=yellow_count,
+        multi_syndrome_villages=multi_villages,
+        syndrome_alert_counts=dict(sorted(syndrome_alerts.items())),
+        villages=village_summaries,
+        signals=signals,
+    )

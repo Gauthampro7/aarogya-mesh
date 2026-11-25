@@ -82,6 +82,17 @@ _MATERNAL_ONLY_RED_FLAGS: frozenset[str] = frozenset({
     "pph",
     "antepartum_bleeding",
     "postpartum_bleeding",
+    "puerperal_sepsis_signs",
+    "previous_lscs_scar_tenderness",
+    "hyperemesis_gravidarum_severe",
+    "postpartum_hemorrhage_heavy",
+    "antepartum_hemorrhage_painful_or_painless",
+    "obstructed_or_prolonged_labor",
+    "gestational_diabetes_gdm",
+    "rh_negative_mother",
+    "twin_or_multiple_gestation",
+    "previous_lscs_history",
+    "maternal_short_stature_or_malpresentation",
 })
 
 

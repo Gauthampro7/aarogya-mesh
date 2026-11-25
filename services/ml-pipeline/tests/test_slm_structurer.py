@@ -15,8 +15,12 @@ from aarogya_ml_pipeline.interfaces import (
 )
 from aarogya_ml_pipeline.slm_structurer import (
     CANONICAL_DANGER_FLAGS,
+    DANGER_FLAG_SYNONYMS,
+    SYMPTOM_SYNONYMS,
     LlamaCppSlmStructurer,
+    extract_clinical_signals_from_text,
     map_to_canonical_danger_flag,
+    map_to_canonical_symptom,
     parse_and_validate_slm_json,
     sanitize_hindi_text,
 )
@@ -289,3 +293,59 @@ def test_sanitize_hindi_text_strips_nukta_and_replaces_tez_and_hinglish() -> Non
     assert "\u093c" not in unicodedata.normalize("NFD", stray)
     assert "श्वास कष्ट" in stray
     assert "संदेह" in stray
+
+
+def test_expanded_rural_clinical_vocabulary_size_and_v2_alignment() -> None:
+    """Expanded lexicon covers 60+ EN/HI danger-sign & symptom phrasings aligned with v2.0.0 rules."""
+    assert len(DANGER_FLAG_SYNONYMS) >= 90
+    assert len(SYMPTOM_SYNONYMS) >= 45
+    assert len(CANONICAL_DANGER_FLAGS) >= 35
+
+    # Young-infant PSBI & pediatric v2.0.0 canonical mappings
+    assert map_to_canonical_danger_flag("नाभि से पूय") == "umbilicus_red_or_draining_pus"
+    assert map_to_canonical_danger_flag("weak cry") == "poor_feeding_or_weak_cry"
+    assert map_to_canonical_danger_flag("yellow palms soles") == "jaundice_palms_or_soles"
+    assert map_to_canonical_danger_flag("mastoiditis") == "mastoiditis_tender_swelling_behind_ear"
+    assert map_to_canonical_danger_flag("dengue hemorrhagic signs") == "dengue_warning_signs"
+    assert map_to_canonical_danger_flag("failed appetite test") == "failed_appetite_test_sam"
+
+    # Maternal v2.0.0 canonical mappings
+    assert map_to_canonical_danger_flag("puerperal sepsis") == "puerperal_sepsis_signs"
+    assert map_to_canonical_danger_flag("lscs scar tenderness") == "previous_lscs_scar_tenderness"
+    assert map_to_canonical_danger_flag("प्रसवोत्तर रक्तस्राव") == "postpartum_hemorrhage_heavy"
+    assert map_to_canonical_danger_flag("अस्पष्ट दृष्टि") == "severe_headache_or_blurred_vision"
+    assert map_to_canonical_symptom("उच्च रक्तचाप") == "high_blood_pressure"
+    assert map_to_canonical_symptom("गर्भकालीन मधुमेह") == "gestational_diabetes_gdm"
+
+
+def test_fallback_negation_safety_and_maternal_sos_extraction() -> None:
+    """Offline fallback detects EN/HI maternal SOS and NEVER hallucinates negated flags."""
+    structurer = LlamaCppSlmStructurer(model_path=None)
+
+    # Judge Trap A #1: maternal_sos in English + pure Shuddh Tatsama Hindi
+    sos_en = structurer.structure_note(
+        "Pregnant mother has severe headache, blurred vision, BP 162/108",
+        language="en",
+    )
+    assert sos_en.backend == "stub-slm-fallback"
+    assert "severe_headache_or_blurred_vision" in sos_en.candidate_danger_flags
+    assert "general_checkup" not in sos_en.extracted_symptoms
+
+    sos_hi = structurer.structure_note(
+        "गर्भवती महिला को तीव्र शिरोवेदना, अस्पष्ट दृष्टि और उच्च रक्तचाप है।",
+        language="hi",
+    )
+    assert "severe_headache_or_blurred_vision" in sos_hi.candidate_danger_flags
+    assert "high_blood_pressure" in sos_hi.extracted_symptoms
+    assert "\u093c" not in unicodedata.normalize("NFD", sos_hi.recommended_follow_up)
+
+    # Judge Trap A #2: Negation safety in English and Hindi SOV
+    neg_en = structurer.structure_note("Child denies fits; no convulsions, no bleeding", language="en")
+    assert neg_en.candidate_danger_flags == []
+
+    neg_hi_sym, neg_hi_flags = extract_clinical_signals_from_text(
+        "शिशु को दौरा नहीं है, रक्तस्राव अनुपस्थित, आक्षेप रहित।"
+    )
+    assert neg_hi_flags == []
+    assert "convulsions" not in neg_hi_sym
+    assert "severe_bleeding" not in neg_hi_sym

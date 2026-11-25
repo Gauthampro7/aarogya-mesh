@@ -8,7 +8,9 @@ from aarogya_contracts import TriageSeverity
 from aarogya_ml_pipeline.interfaces import OutbreakDetector, OutbreakSignal
 from aarogya_ml_pipeline.outbreak_detector import (
     EwmaOutbreakDetector,
+    MultiSyndromeSurveillanceReport,
     evaluate_village_syndromes,
+    summarize_multi_syndrome_surveillance,
 )
 
 
@@ -156,3 +158,48 @@ def test_evaluate_village_syndromes_batch_scanning() -> None:
     assert results[2].village_id == "village-b" and results[2].syndrome == "acute_diarrhea"
     assert results[2].alert_triggered is True
     assert results[2].severity == TriageSeverity.RED_EMERGENCY
+
+
+def test_zero_baseline_moderate_surge_reaches_yellow_phc() -> None:
+    """Zero-baseline villages can trigger YELLOW_PHC before escalating to RED_EMERGENCY."""
+    detector = EwmaOutbreakDetector(alpha=0.3, sigma_multiplier=2.5, min_baseline_days=4, min_case_floor=3)
+    moderate = detector.detect_outbreak("village-zero", "acute_diarrhea", [0, 0, 0, 0, 10])
+    assert moderate.alert_triggered is True
+    assert moderate.severity == TriageSeverity.YELLOW_PHC
+
+    extreme = detector.detect_outbreak("village-zero", "acute_diarrhea", [0, 0, 0, 0, 22])
+    assert extreme.alert_triggered is True
+    assert extreme.severity == TriageSeverity.RED_EMERGENCY
+
+
+def test_summarize_multi_syndrome_surveillance_identifies_clusters_and_ranks() -> None:
+    """Multi-syndrome summary flags co-occurring village outbreaks and ranks by severity."""
+    counts_by_key = {
+        ("village-rampur", "acute_diarrhea"): [1, 1, 1, 1, 22],  # RED
+        ("village-rampur", "dengue_like_fever"): [2, 2, 2, 2, 7],  # YELLOW
+        ("village-shampur", "respiratory_infection"): [2, 2, 2, 2, 7],  # YELLOW
+        ("village-calm", "acute_diarrhea"): [2, 2, 2, 2, 2],  # GREEN (no alert)
+    }
+    report = summarize_multi_syndrome_surveillance(counts_by_key)
+    assert isinstance(report, MultiSyndromeSurveillanceReport)
+    assert report.total_series_evaluated == 4
+    assert report.total_villages_monitored == 3
+    assert report.total_alerts == 3
+    assert report.red_alert_count == 1
+    assert report.yellow_alert_count == 2
+    assert report.multi_syndrome_villages == ["village-rampur"]
+    assert report.syndrome_alert_counts == {
+        "acute_diarrhea": 1,
+        "dengue_like_fever": 1,
+        "respiratory_infection": 1,
+    }
+    # Ranked RED -> YELLOW -> GREEN
+    assert [v.village_id for v in report.villages] == [
+        "village-rampur",
+        "village-shampur",
+        "village-calm",
+    ]
+    assert report.villages[0].multi_syndrome_cluster is True
+    assert report.villages[0].highest_severity == TriageSeverity.RED_EMERGENCY
+    assert report.villages[0].total_latest_cases == 29
+    assert report.villages[2].highest_severity == TriageSeverity.GREEN_HOME
