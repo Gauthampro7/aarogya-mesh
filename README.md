@@ -37,7 +37,7 @@ flowchart LR
     T2 -.-> CORE
 ```
 
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for the full mechanism-first specification.
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for the full mechanism-first specification, and [docs/JUDGE_QA_AND_PITCH_BIBLE.md](./docs/JUDGE_QA_AND_PITCH_BIBLE.md) for the **Adversarial Judge Q&A, 5 Technical Moats & 3-Minute Stage Pitch Playbook**.
 
 ---
 
@@ -46,20 +46,22 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for the full mechanism-first specificat
 | Track | Module Path | Owner | Status |
 | --- | --- | --- | --- |
 | **Track 1: Core Bedrock** | `packages/contracts`, `packages/clinical-engine`, `packages/crdt-sync`, `services/phc-hub` | Core / `@Gauthampro7` | Complete & Verified |
-| **Track 2: Field PWA** | `apps/field-pwa` | `@Akarshx-x` | Complete & Merged (`#2`–`#7`, `#15`–`#17`) |
-| **Track 3: Watch Companion** | `apps/watch-companion` | `@aril-travass` | Complete & Merged (`#18`–`#21`) |
-| **Track 4: Local ML Pipeline** | `services/ml-pipeline` | `@Krishnanand-10` | In Review — Draft PR `#22` |
+| **Track 2: Field PWA** | `apps/field-pwa` | `@Akarshx-x` | Complete & Merged (`#2`–`#7`, `#15`–`#17`, `#26`, `#30`–`#33`, `#40`, `#41`) |
+| **Track 3: Watch Companion** | `apps/watch-companion` | `@aril-travass` | Complete & Merged (`#18`–`#21`, `#34`, `#42`) |
+| **Track 4: Local ML Pipeline** | `services/ml-pipeline` | `@Krishnanand-10` & Core (`@Gauthampro7`) | Complete & Merged (`#22`, `T4-07`) |
+| **Track 5: Native Android APK** | `apps/android-app` | Core / `@Gauthampro7` | Complete & Verified (`T5-01`, signed APK `v0.1.0`) |
 
 See [TEAM_BOARD.md](./TEAM_BOARD.md) for exact interface contracts, entrypoints, and Definition of Done for each track.
 
 ### Atomic Starter Prompts (`prompts/`)
 
-Every remaining feature slice has a self-contained, copy-pasteable prompt for teammates and their AI coding agents — see [`prompts/README.md`](./prompts/README.md) for the dependency DAG and index:
+Every feature slice has a self-contained, copy-pasteable prompt for teammates and their AI coding agents — see [`prompts/README.md`](./prompts/README.md) for the dependency DAG and index:
 
 - **Track 1 (`services/phc-hub`)**: [`prompts/track-1-phc-hub/`](./prompts/track-1-phc-hub/)
 - **Track 2 (`apps/field-pwa`)**: [`prompts/track-2-field-pwa/`](./prompts/track-2-field-pwa/)
 - **Track 3 (`apps/watch-companion`)**: [`prompts/track-3-watch-companion/`](./prompts/track-3-watch-companion/)
 - **Track 4 (`services/ml-pipeline`)**: [`prompts/track-4-ml-pipeline/`](./prompts/track-4-ml-pipeline/)
+- **Track 5 (`apps/android-app`)**: [`prompts/track-5-android-app/`](./prompts/track-5-android-app/)
 
 ---
 
@@ -92,7 +94,7 @@ Once the Hub is running, inspect:
 
 ## 3-Minute Winning Hackathon Demo Script (`/showcase` on `:8000`)
 
-Present the entire **3-Tier Offline Mesh** (Watch + Phone + Hub Brain) live on a single port (`:8000`):
+Present the entire **3-Tier Offline Mesh** (Watch + Phone + Hub Brain) live on a single port (`:8000`). For the full beat-by-beat stage choreography, Galaxy S23 checklist, 5 Technical Moats, and 28 adversarial judge Q&As, see [docs/JUDGE_QA_AND_PITCH_BIBLE.md](./docs/JUDGE_QA_AND_PITCH_BIBLE.md):
 
 1. **Boot the Unified Stage** (auto-builds `apps/field-pwa` and `apps/watch-companion` bundles if needed):
    ```bash
