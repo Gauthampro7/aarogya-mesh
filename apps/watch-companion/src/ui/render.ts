@@ -22,7 +22,13 @@ export function mountWatchUi(root: HTMLElement, controller: WatchUiController): 
   const recorder = new WatchVoiceRecorder();
   let recordingSeconds = 0;
   let recordingTimer: ReturnType<typeof setInterval> | null = null;
+  let activeRecBtn: HTMLButtonElement | null = null;
   let micError = false;
+
+  const formatRecLabel = (recording: boolean): string =>
+    recording
+      ? `${t("sos.recordStop")} · ${t("sos.recording", { sec: recordingSeconds })}`
+      : t("sos.recordStart");
 
   const clearRecordingTimer = () => {
     if (recordingTimer !== null) {
@@ -44,6 +50,7 @@ export function mountWatchUi(root: HTMLElement, controller: WatchUiController): 
     modeBtn.type = "button";
     modeBtn.id = "mode-toggle";
     modeBtn.setAttribute("data-mode", mode);
+    modeBtn.setAttribute("aria-label", t("mode.switchAria"));
     modeBtn.addEventListener("click", () => controller.toggleMode());
 
     const langBtn = el("button", "pill lang-pill", t("lang.toggle"));
@@ -133,16 +140,47 @@ export function mountWatchUi(root: HTMLElement, controller: WatchUiController): 
     pidInput.value = controller.getPatientIdInput();
     pidInput.addEventListener("input", () => controller.setPatientIdInput(pidInput.value));
 
+    const signs = controller.getDangerSignsForCategory();
+    const armedFlag = controller.getPendingConfirmFlag();
+
+    if (armedFlag) {
+      const armedSign = signs.find((s) => s.flag === armedFlag);
+      const confirmBar = el("div", "confirm-bar");
+      const labelText = armedSign
+        ? lang === "hi"
+          ? armedSign.labelHi
+          : armedSign.labelEn
+        : armedFlag;
+      confirmBar.append(
+        el("div", "confirm-title", t("danger.confirmPrompt")),
+        el("div", "confirm-sub", labelText),
+      );
+      const actions = el("div", "confirm-actions");
+      const confirmBtn = el("button", "action-btn btn-red", t("danger.confirmBtn"));
+      confirmBtn.type = "button";
+      confirmBtn.setAttribute("data-role", "danger-confirm-btn");
+      confirmBtn.addEventListener("click", () => controller.confirmArmedDangerSign());
+
+      const cancelBtn = el("button", "action-btn btn-secondary", t("danger.cancelBtn"));
+      cancelBtn.type = "button";
+      cancelBtn.setAttribute("data-role", "danger-cancel-btn");
+      cancelBtn.addEventListener("click", () => controller.cancelArmedDangerSign());
+
+      actions.append(confirmBtn, cancelBtn);
+      confirmBar.append(actions);
+      wrap.append(confirmBar);
+    }
+
     const list = el("div", "sign-list");
-    for (const sign of controller.getDangerSignsForCategory()) {
+    for (const sign of signs) {
       const btn = el(
         "button",
-        "sign-btn",
+        `sign-btn${armedFlag === sign.flag ? " armed" : ""}`,
         lang === "hi" ? sign.labelHi : sign.labelEn,
       );
       btn.type = "button";
       btn.setAttribute("data-flag", sign.flag);
-      btn.addEventListener("click", () => controller.triggerDangerScreen([sign.flag]));
+      btn.addEventListener("click", () => controller.armDangerSign(sign.flag));
       list.append(btn);
     }
 
@@ -243,11 +281,11 @@ export function mountWatchUi(root: HTMLElement, controller: WatchUiController): 
       const recBtn = el(
         "button",
         `action-btn ${recording ? "btn-red" : "btn-amber"}`,
-        recording
-          ? `${t("sos.recordStop")} · ${t("sos.recording", { sec: recordingSeconds })}`
-          : t("sos.recordStart"),
+        formatRecLabel(recording),
       );
       recBtn.type = "button";
+      recBtn.setAttribute("data-role", "sos-rec-btn");
+      activeRecBtn = recBtn;
       recBtn.addEventListener("click", async () => {
         if (recorder.isRecording()) {
           clearRecordingTimer();
@@ -264,7 +302,9 @@ export function mountWatchUi(root: HTMLElement, controller: WatchUiController): 
             recordingSeconds = 0;
             recordingTimer = setInterval(() => {
               recordingSeconds += 1;
-              render();
+              if (activeRecBtn) {
+                activeRecBtn.textContent = formatRecLabel(true);
+              }
             }, 1000);
             render();
           } catch {
@@ -283,17 +323,24 @@ export function mountWatchUi(root: HTMLElement, controller: WatchUiController): 
     textInput.type = "text";
     textInput.placeholder = t("sos.textPlaceholder");
     textInput.value = controller.getSosTextDraft();
-    textInput.addEventListener("input", () => controller.setSosTextDraft(textInput.value));
+
+    const textWarn = el("div", "status-warn", t("sos.textRequired"));
+    textWarn.hidden = !controller.getSosTextError();
+
+    textInput.addEventListener("input", () => {
+      controller.setSosTextDraft(textInput.value);
+      if (textInput.value.trim().length > 0) {
+        textWarn.hidden = true;
+      }
+    });
 
     const sendTextBtn = el("button", "action-btn btn-amber", t("sos.sendText"));
     sendTextBtn.type = "button";
     sendTextBtn.addEventListener("click", async () => {
-      await controller.submitSos({
-        transcriptHint: textInput.value.trim() || undefined,
-      });
+      await controller.submitTextSos(textInput.value);
     });
 
-    wrap.append(textInput, sendTextBtn);
+    wrap.append(textInput, textWarn, sendTextBtn);
 
     if (controller.getLastSosEvent()) {
       wrap.append(el("div", "status-ok", t("sos.queued")));
@@ -358,12 +405,16 @@ export function mountWatchUi(root: HTMLElement, controller: WatchUiController): 
     el("div", "watch-footer", t("sync.footer", { count: controller.getOutboxCount() }));
 
   const render = () => {
+    activeRecBtn = null;
+    const tab = controller.getTab();
+    if (tab !== "sos" && !recorder.isRecording()) {
+      clearRecordingTimer();
+    }
     root.replaceChildren();
     const bezel = el("div", "watch-bezel");
     bezel.setAttribute("role", "application");
     bezel.setAttribute("aria-label", "Tier-0 Watch Companion 360x360");
 
-    const tab = controller.getTab();
     let content: HTMLElement;
     switch (tab) {
       case "danger":

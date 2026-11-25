@@ -26,6 +26,8 @@ import { getLang, setLang, toggleLang, type Lang } from "../i18n/index";
 import {
   DEFAULT_HUB_URL,
   WatchSyncClient,
+  resolveDefaultHubUrl,
+  type BrowserLocationLike,
   type VoiceSosInput,
   type WatchSyncResult,
 } from "../sync/index";
@@ -48,6 +50,7 @@ export interface WatchUiControllerOptions {
   storage?: StorageLike;
   hubUrlStorageKey?: string;
   initialVaccinations?: readonly VaccinationDueItem[];
+  location?: BrowserLocationLike | null;
 }
 
 export const DEFAULT_HUB_URL_STORAGE_KEY = "aarogya.watch.hubUrl";
@@ -99,10 +102,12 @@ export class WatchUiController {
 
   private activeTab: WatchTab;
   private dangerCategory: WatchDangerCategory = "PEDIATRIC";
+  private pendingConfirmFlag: WatchDangerSignFlag | null = null;
   private patientIdInput = "";
   private lastTriage: TriageBannerState | null = null;
   private sosQueuedEvent: CrdtEvent | null = null;
   private sosTextDraft = "";
+  private sosTextError = false;
   private isSyncing = false;
   private lastSyncResult: WatchSyncResult | null = null;
   private seededVaccinations: VaccinationDueItem[];
@@ -115,8 +120,14 @@ export class WatchUiController {
     this.seededVaccinations = [...(options.initialVaccinations ?? [])];
 
     const savedHubUrl = this.storage.getItem(this.hubUrlStorageKey);
+    const loc =
+      options.location !== undefined
+        ? options.location
+        : typeof window !== "undefined"
+          ? window.location
+          : null;
     if (savedHubUrl && savedHubUrl.trim().length > 0) {
-      this.syncClient.setHubUrl(savedHubUrl);
+      this.syncClient.setHubUrl(resolveDefaultHubUrl(loc, savedHubUrl));
     }
 
     this.activeTab = this.defaultTabForMode(this.kernel.getWatchMode());
@@ -145,6 +156,7 @@ export class WatchUiController {
 
   public setMode(mode: WatchMode): WatchMode {
     const updated = this.kernel.setWatchMode(mode);
+    this.pendingConfirmFlag = null;
     this.activeTab = this.defaultTabForMode(updated);
     this.emit();
     return updated;
@@ -152,6 +164,7 @@ export class WatchUiController {
 
   public toggleMode(): WatchMode {
     const updated = this.kernel.toggleWatchMode();
+    this.pendingConfirmFlag = null;
     this.activeTab = this.defaultTabForMode(updated);
     this.emit();
     return updated;
@@ -163,6 +176,7 @@ export class WatchUiController {
 
   public setTab(tab: WatchTab): WatchTab {
     const mode = this.getMode();
+    this.pendingConfirmFlag = null;
     if (mode === "CHW_COMPANION" && (tab === "reminders" || tab === "sos")) {
       this.activeTab = "danger";
     } else if (mode === "PATIENT_FAMILY" && (tab === "danger" || tab === "cards")) {
@@ -196,7 +210,29 @@ export class WatchUiController {
 
   public setDangerCategory(category: WatchDangerCategory): void {
     this.dangerCategory = category;
+    this.pendingConfirmFlag = null;
     this.emit();
+  }
+
+  public getPendingConfirmFlag(): WatchDangerSignFlag | null {
+    return this.pendingConfirmFlag;
+  }
+
+  public armDangerSign(flag: WatchDangerSignFlag): void {
+    this.pendingConfirmFlag = flag;
+    this.emit();
+  }
+
+  public cancelArmedDangerSign(): void {
+    if (this.pendingConfirmFlag === null) return;
+    this.pendingConfirmFlag = null;
+    this.emit();
+  }
+
+  public confirmArmedDangerSign(patientIdOverride?: string): TriageBannerState | null {
+    const flag = this.pendingConfirmFlag;
+    if (!flag) return null;
+    return this.triggerDangerScreen([flag], patientIdOverride);
   }
 
   public getDangerSignsForCategory(
@@ -219,6 +255,7 @@ export class WatchUiController {
 
   public resetTriage(): void {
     this.lastTriage = null;
+    this.pendingConfirmFlag = null;
     this.emit();
   }
 
@@ -231,6 +268,7 @@ export class WatchUiController {
     flags: readonly WatchDangerSignFlag[],
     patientIdOverride?: string,
   ): TriageBannerState {
+    this.pendingConfirmFlag = null;
     const patientId =
       (patientIdOverride ?? this.patientIdInput).trim() || DEFAULT_WALKIN_PATIENT_ID;
     const result = this.kernel.screenDangerSigns(
@@ -293,12 +331,30 @@ export class WatchUiController {
     return this.sosTextDraft;
   }
 
+  public getSosTextError(): boolean {
+    return this.sosTextError;
+  }
+
   public setSosTextDraft(value: string): void {
     this.sosTextDraft = value;
+    if (this.sosTextError && value.trim().length > 0) {
+      this.sosTextError = false;
+    }
   }
 
   public getLastSosEvent(): CrdtEvent | null {
     return this.sosQueuedEvent;
+  }
+
+  public async submitTextSos(textOverride?: string): Promise<CrdtEvent | null> {
+    const trimmed = (textOverride ?? this.sosTextDraft).trim();
+    if (trimmed.length === 0) {
+      this.sosTextError = true;
+      this.emit();
+      return null;
+    }
+    this.sosTextError = false;
+    return this.submitSos({ transcriptHint: trimmed });
   }
 
   public async submitSos(input: VoiceSosInput = {}): Promise<CrdtEvent> {
@@ -312,6 +368,7 @@ export class WatchUiController {
     });
     this.sosQueuedEvent = event;
     this.sosTextDraft = "";
+    this.sosTextError = false;
     this.emit();
     return event;
   }
