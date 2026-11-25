@@ -11,10 +11,12 @@ from aarogya_clinical_engine import (
     PatientCategory,
     TriageInput,
     TriageMode,
+    compute_maternal_td_schedule,
     compute_vaccination_schedule,
     evaluate_checklist,
     evaluate_triage,
     evaluate_watch_rapid_triage,
+    get_checklist_definition,
     list_checklist_types,
     load_imnci_rules,
     load_maternal_anc_rules,
@@ -38,8 +40,11 @@ def test_rule_tables_load_and_have_expected_structure() -> None:
     maternal = load_maternal_anc_rules()
     uip = load_uip_vaccine_rules()
 
-    assert len(imnci["general_danger_signs"]) >= 8
-    assert len(maternal["red_flag_symptoms"]) >= 8
+    assert len(imnci["general_danger_signs"]) == 10
+    assert len(imnci["young_infant_danger_signs"]) == 6
+    assert len(imnci["syndrome_symptom_rules"]) == 10
+    assert len(maternal["red_flag_symptoms"]) == 16
+    assert len(maternal["yellow_flag_symptoms"]) == 10
     assert set(maternal["checklists"].keys()) == {
         "anc_trimester_1",
         "anc_trimester_2",
@@ -47,6 +52,8 @@ def test_rule_tables_load_and_have_expected_structure() -> None:
         "pnc_mother",
         "pnc_newborn",
     }
+    for checklist_cfg in maternal["checklists"].values():
+        assert 8 <= len(checklist_cfg["items"]) <= 12
     codes = {v["code"] for v in uip["vaccines"]}
     assert {
         "BCG",
@@ -64,10 +71,20 @@ def test_rule_tables_load_and_have_expected_structure() -> None:
         "MR-1",
         "JE-1",
         "PCV-Booster",
+        "fIPV-3",
+        "Vitamin-A-1",
         "DPT-Booster-1",
         "OPV-Booster",
         "MR-2",
+        "JE-2",
+        "Vitamin-A-2",
+        "Vitamin-A-3",
+        "DPT-Booster-2",
+        "Td-10y",
+        "Td-16y",
     }.issubset(codes)
+    maternal_vax_codes = {v["code"] for v in uip["maternal_vaccines"]}
+    assert maternal_vax_codes == {"Td-1", "Td-2", "Td-Booster"}
 
 
 @pytest.mark.parametrize(
@@ -110,7 +127,8 @@ def test_danger_sign_aliases_normalize_and_force_red_emergency() -> None:
 @pytest.mark.parametrize(
     ("age_months", "rr_bpm", "expected_severity"),
     [
-        (1, 60, TriageSeverity.YELLOW_PHC),
+        # WHO IMNCI Young Infant (<2m): RR >= 60 bpm is PSBI RED_EMERGENCY
+        (1, 60, TriageSeverity.RED_EMERGENCY),
         (1, 55, TriageSeverity.GREEN_HOME),
         (6, 50, TriageSeverity.YELLOW_PHC),
         (6, 45, TriageSeverity.GREEN_HOME),
@@ -343,8 +361,8 @@ def test_anc_and_pnc_checklists_evaluation_and_action_cards() -> None:
         patient_id="pat-anc-1",
         due_by=date(2026, 12, 1),
     )
-    assert partial.total_items == 8
-    assert partial.completion_score == 0.25
+    assert partial.total_items == 10
+    assert partial.completion_score == 0.2
     assert partial.is_complete is False
     assert partial.has_critical_gaps is True
     assert "anc_t1_hb_blood_group" in partial.missing_critical_checks
@@ -352,16 +370,9 @@ def test_anc_and_pnc_checklists_evaluation_and_action_cards() -> None:
     assert any(c.priority == ActionCardPriority.LOW for c in partial.action_cards)
 
     # Complete PNC Newborn checklist -> 1.0 score, no gaps, no action cards
-    pnc_nb_all = [
-        "pnc_nb_temperature_warmth",
-        "pnc_nb_breastfeeding",
-        "pnc_nb_respiratory_rate",
-        "pnc_nb_cord_stump",
-        "pnc_nb_weight_lbw",
-        "pnc_nb_jaundice_activity",
-        "pnc_nb_birth_vaccines",
-    ]
+    pnc_nb_all = [item["id"] for item in get_checklist_definition(ChecklistType.PNC_NEWBORN)["items"]]
     done = evaluate_checklist(ChecklistType.PNC_NEWBORN, pnc_nb_all, patient_id="pat-nb-1")
+    assert done.total_items == 10
     assert done.completion_score == 1.0
     assert done.is_complete is True
     assert done.has_critical_gaps is False
@@ -422,3 +433,130 @@ def test_uip_vaccination_schedule_birth_due_soon_overdue_and_aliases() -> None:
     # Guardrail: as_of_date before dob raises ValueError
     with pytest.raises(ValueError, match="cannot precede dob"):
         compute_vaccination_schedule(dob=dob, as_of_date=date(2026, 8, 31))
+
+
+@pytest.mark.parametrize(
+    "psbi_flag",
+    [rule["flag"] for rule in load_imnci_rules()["young_infant_danger_signs"]],
+)
+def test_young_infant_psbi_danger_signs_force_red_emergency(psbi_flag: str) -> None:
+    """WHO IMNCI Young Infant (<2m) PSBI danger signs must force RED_EMERGENCY."""
+    assessment = evaluate_triage(
+        TriageInput(
+            patient_id="pat-newborn-psbi",
+            age_months=1,
+            symptoms=[psbi_flag],
+            temperature_c=36.9,
+            respiratory_rate_bpm=44,
+            spo2_pct=98,
+        )
+    )
+    assert assessment.severity == TriageSeverity.RED_EMERGENCY
+    assert assessment.referral_required is True
+    assert assessment.confidence == 1.0
+
+
+def test_expanded_pediatric_syndromes_and_anemia_gradations() -> None:
+    mastoiditis = evaluate_triage(age_months=24, symptoms=["mastoiditis"])
+    assert mastoiditis.severity == TriageSeverity.RED_EMERGENCY
+    assert "IMNCI_EAR_RED_01" in mastoiditis.matched_rules
+
+    acute_ear = evaluate_triage(age_months=24, symptoms=["ear_pain"])
+    assert acute_ear.severity == TriageSeverity.YELLOW_PHC
+    assert "IMNCI_EAR_YELLOW_01" in acute_ear.matched_rules
+
+    complicated_measles = evaluate_triage(age_months=18, symptoms=["corneal_clouding"])
+    assert complicated_measles.severity == TriageSeverity.RED_EMERGENCY
+    assert "IMNCI_MEASLES_RED_01" in complicated_measles.matched_rules
+
+    simple_measles = evaluate_triage(age_months=18, symptoms=["measles_rash"])
+    assert simple_measles.severity == TriageSeverity.YELLOW_PHC
+    assert "IMNCI_MEASLES_YELLOW_01" in simple_measles.matched_rules
+
+    dengue_red = evaluate_triage(age_months=36, symptoms=["dengue_hemorrhagic"])
+    assert dengue_red.severity == TriageSeverity.RED_EMERGENCY
+    assert "IMNCI_DENGUE_RED_01" in dengue_red.matched_rules
+
+    malaria_red = evaluate_triage(age_months=36, symptoms=["severe_malaria"])
+    assert malaria_red.severity == TriageSeverity.RED_EMERGENCY
+    assert "IMNCI_MALARIA_RED_01" in malaria_red.matched_rules
+
+    sam_appetite = evaluate_triage(age_months=20, symptoms=["failed_appetite_test"])
+    assert sam_appetite.severity == TriageSeverity.RED_EMERGENCY
+    assert "IMNCI_MALNUTRITION_APPETITE_RED_01" in sam_appetite.matched_rules
+
+    severe_hb = evaluate_triage(age_months=24, hemoglobin_g_dl=6.2)
+    assert severe_hb.severity == TriageSeverity.RED_EMERGENCY
+    assert "IMNCI_ANEMIA_SEVERE_HB_RED" in severe_hb.matched_rules
+
+    moderate_hb = evaluate_triage(age_months=24, hemoglobin_g_dl=9.4)
+    assert moderate_hb.severity == TriageSeverity.YELLOW_PHC
+    assert "IMNCI_ANEMIA_MODERATE_HB_YELLOW" in moderate_hb.matched_rules
+
+
+def test_maternal_shock_puerperal_sepsis_and_hrp_yellow_flags() -> None:
+    shock = evaluate_triage(is_pregnant=True, gestational_weeks=32, systolic_bp=84, diastolic_bp=54)
+    assert shock.severity == TriageSeverity.RED_EMERGENCY
+    assert "MAT_BP_SHOCK_RED" in shock.matched_rules
+
+    puerperal_fever = evaluate_triage(is_postpartum=True, temperature_c=38.2)
+    assert puerperal_fever.severity == TriageSeverity.RED_EMERGENCY
+    assert "MAT_PUERPERAL_SEPSIS_FEVER_RED" in puerperal_fever.matched_rules
+
+    scar_pain = evaluate_triage(is_pregnant=True, gestational_weeks=37, symptoms=["scar_tenderness"])
+    assert scar_pain.severity == TriageSeverity.RED_EMERGENCY
+    assert "MAT_RED_12" in scar_pain.matched_rules
+
+    for rule in load_maternal_anc_rules()["yellow_flag_symptoms"]:
+        res = evaluate_triage(
+            is_pregnant=True,
+            gestational_weeks=24,
+            symptoms=[rule["flag"]],
+            systolic_bp=114,
+            diastolic_bp=74,
+            hemoglobin_g_dl=11.5,
+        )
+        assert res.severity == TriageSeverity.YELLOW_PHC
+        assert rule["id"] in res.matched_rules
+
+
+def test_uip_expanded_boosters_vitamin_a_and_maternal_td_schedule() -> None:
+    dob = date(2021, 1, 1)
+    # At 5 years + 10 days: DPT-Booster-2 is OVERDUE, Vitamin-A-1/2/3 schedule_group verified, Td-10y UPCOMING
+    items = {v.vaccine_code: v for v in compute_vaccination_schedule(dob, as_of_date=date(2026, 1, 10))}
+    assert len(items) == 30
+    assert items["fIPV-3"].due_date == date(2021, 9, 28)
+    assert items["Vitamin-A-1"].schedule_group == "UIP_INDIA_VITAMIN_A"
+    assert items["DPT-Booster-2"].status == VaccinationStatus.OVERDUE
+    assert items["Td-10y"].schedule_group == "UIP_INDIA_ADOLESCENT"
+    assert items["Td-10y"].status == VaccinationStatus.UPCOMING
+    assert items["Td-16y"].status == VaccinationStatus.UPCOMING
+
+    # Maternal ANC Td schedule (standard 2-dose)
+    lmp = date(2026, 6, 1)
+    td1_given = date(2026, 8, 20)
+    maternal_std = {
+        v.vaccine_code: v
+        for v in compute_maternal_td_schedule(
+            lmp_date=lmp,
+            administered_vaccines={"td1": td1_given},
+            as_of_date=date(2026, 9, 10),
+        )
+    }
+    assert set(maternal_std.keys()) == {"Td-1", "Td-2"}
+    assert maternal_std["Td-1"].status == VaccinationStatus.COMPLETED
+    assert maternal_std["Td-2"].due_date == date(2026, 9, 17)  # 28 days after Td-1
+    assert maternal_std["Td-2"].status == VaccinationStatus.DUE_SOON
+    assert maternal_std["Td-2"].schedule_group == "UIP_INDIA_MATERNAL"
+
+    # Maternal ANC Td-Booster (prior 2 Td doses within 3 years)
+    maternal_booster = compute_maternal_td_schedule(
+        lmp_date=lmp,
+        as_of_date=date(2026, 8, 24),
+        prior_two_td_within_3_years=True,
+    )
+    assert [v.vaccine_code for v in maternal_booster] == ["Td-Booster"]
+    assert maternal_booster[0].status == VaccinationStatus.DUE_SOON
+
+    with pytest.raises(ValueError, match="cannot precede lmp_date"):
+        compute_maternal_td_schedule(lmp_date=lmp, as_of_date=date(2026, 5, 1))

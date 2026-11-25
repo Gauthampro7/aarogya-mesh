@@ -24,6 +24,7 @@ from aarogya_clinical_engine.triage import (
     triage_to_action_card,
 )
 from aarogya_clinical_engine.vaccinations import (
+    compute_maternal_td_schedule,
     compute_vaccination_schedule,
     vaccination_items_to_action_cards,
 )
@@ -35,6 +36,7 @@ __all__ = [
     "PatientCategory",
     "TriageInput",
     "TriageMode",
+    "compute_maternal_td_schedule",
     "compute_vaccination_schedule",
     "evaluate_checklist",
     "evaluate_triage",

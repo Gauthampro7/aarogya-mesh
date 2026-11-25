@@ -96,6 +96,7 @@ def compute_vaccination_schedule(
             else int(entry.get("due_soon_lead_days", default_window))
         )
         max_catchup_days = int(entry.get("max_catchup_age_days", 1825))
+        schedule_group = str(entry.get("schedule_group", "UIP_INDIA"))
 
         due_date = dob + timedelta(days=due_age_days)
 
@@ -114,7 +115,7 @@ def compute_vaccination_schedule(
                     administered_date=effective_admin_date,
                     days_delta=0,
                     reminder_text=f"{name} ({milestone}) completed on {effective_admin_date.isoformat()}.",
-                    schedule_group="UIP_INDIA",
+                    schedule_group=schedule_group,
                 )
             )
             continue
@@ -158,11 +159,115 @@ def compute_vaccination_schedule(
                 administered_date=None,
                 days_delta=days_delta,
                 reminder_text=reminder,
-                schedule_group="UIP_INDIA",
+                schedule_group=schedule_group,
             )
         )
 
     return schedule
+
+
+def compute_maternal_td_schedule(
+    lmp_date: date,
+    administered_vaccines: Mapping[str, date] | Iterable[str] | None = None,
+    as_of_date: date | None = None,
+    *,
+    prior_two_td_within_3_years: bool = False,
+    due_soon_window_days: int | None = None,
+) -> list[VaccinationDueItem]:
+    """Compute India UIP Maternal Antenatal Tetanus-Diphtheria (Td) schedule from LMP date.
+
+    If ``prior_two_td_within_3_years`` is True, evaluates single ``Td-Booster``;
+    otherwise evaluates ``Td-1`` and ``Td-2`` (scheduled >= 4 weeks after ``Td-1``).
+    """
+    reference_date = as_of_date if as_of_date is not None else date.today()
+    if reference_date < lmp_date:
+        raise ValueError(
+            f"as_of_date ({reference_date.isoformat()}) cannot precede lmp_date ({lmp_date.isoformat()})"
+        )
+
+    table = load_uip_vaccine_rules()
+    maternal_entries: list[dict[str, Any]] = table.get("maternal_vaccines", [])
+    default_window = int(table["defaults"]["due_soon_window_days"])
+    alias_index = _build_alias_index(maternal_entries)
+    administered_map = _normalize_administered(administered_vaccines, alias_index)
+
+    target_codes = {"Td-Booster"} if prior_two_td_within_3_years else {"Td-1", "Td-2"}
+    td1_admin_date = administered_map.get("Td-1")
+
+    items: list[VaccinationDueItem] = []
+    for entry in maternal_entries:
+        code = str(entry["code"])
+        if code not in target_codes:
+            continue
+
+        name = str(entry["name"])
+        milestone = str(entry["milestone"])
+        due_weeks = int(entry.get("due_gestational_weeks", 12))
+        lead_days = (
+            due_soon_window_days
+            if due_soon_window_days is not None
+            else int(entry.get("due_soon_lead_days", default_window))
+        )
+        schedule_group = str(entry.get("schedule_group", "UIP_INDIA_MATERNAL"))
+
+        if code == "Td-2" and td1_admin_date is not None:
+            due_date = td1_admin_date + timedelta(days=28)
+        else:
+            due_date = lmp_date + timedelta(days=due_weeks * 7)
+
+        if code in administered_map:
+            recorded_date = administered_map[code]
+            effective_admin_date = (
+                recorded_date if recorded_date is not None else min(due_date, reference_date)
+            )
+            items.append(
+                VaccinationDueItem(
+                    vaccine_code=code,
+                    vaccine_name=name,
+                    dose_label=milestone,
+                    due_date=due_date,
+                    status=VaccinationStatus.COMPLETED,
+                    administered_date=effective_admin_date,
+                    days_delta=0,
+                    reminder_text=f"{name} completed on {effective_admin_date.isoformat()}.",
+                    schedule_group=schedule_group,
+                )
+            )
+            continue
+
+        days_delta = (due_date - reference_date).days
+        if days_delta < 0:
+            status = VaccinationStatus.OVERDUE
+            reminder = (
+                f"{name} is overdue by {abs(days_delta)} day(s) (due {due_date.isoformat()}). "
+                "Administer at next ANC/VHND session."
+            )
+        elif days_delta <= lead_days:
+            status = VaccinationStatus.DUE_SOON
+            reminder = (
+                f"{name} is due today ({due_date.isoformat()})."
+                if days_delta == 0
+                else f"{name} is due in {days_delta} day(s) on {due_date.isoformat()}."
+            )
+        else:
+            status = VaccinationStatus.UPCOMING
+            reminder = f"{name} is upcoming on {due_date.isoformat()} (in {days_delta} days)."
+
+        items.append(
+            VaccinationDueItem(
+                vaccine_code=code,
+                vaccine_name=name,
+                dose_label=milestone,
+                due_date=due_date,
+                status=status,
+                administered_date=None,
+                days_delta=days_delta,
+                reminder_text=reminder,
+                schedule_group=schedule_group,
+            )
+        )
+
+    return items
 
 
 def vaccination_items_to_action_cards(

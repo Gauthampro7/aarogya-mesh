@@ -1,8 +1,9 @@
 {
   "protocol_id": "NHM_ASHA_MATERNAL_ANC_PNC_2024",
-  "version": "1.0.0",
-  "description": "Deterministic NHM ASHA Antenatal (ANC) & Postnatal (HBNC/PNC) red-flag triage and checklist rules.",
+  "version": "2.0.0",
+  "description": "Deterministic NHM ASHA / PMSMA Antenatal (ANC), High-Risk Pregnancy (HRP), and Postnatal (HBNC/PNC) red-flag triage and checklist rules.",
   "vital_thresholds": {
+    "bp_shock_systolic_below_mmhg": 90,
     "bp_red_systolic_mmhg": 140,
     "bp_red_diastolic_mmhg": 90,
     "bp_severe_preeclampsia_systolic_mmhg": 160,
@@ -10,6 +11,7 @@
     "bp_yellow_systolic_mmhg": 130,
     "bp_yellow_diastolic_mmhg": 85,
     "temp_red_fever_c": 38.5,
+    "temp_postpartum_sepsis_c": 38.0,
     "temp_yellow_fever_c": 37.5,
     "hb_severe_anemia_below_g_dl": 7.0,
     "hb_moderate_anemia_below_g_dl": 10.0,
@@ -124,6 +126,72 @@
         "Seat mother upright and arrange immediate 108 emergency transfer to FRU"
       ],
       "rationale": "Acute dyspnea or chest pain may indicate pulmonary edema, embolism, or peripartum cardiomyopathy."
+    },
+    {
+      "id": "MAT_RED_11",
+      "flag": "puerperal_sepsis_signs",
+      "label": "Puerperal sepsis signs (Foul-smelling lochia, uterine tenderness, chills, or postpartum fever)",
+      "severity": "RED_EMERGENCY",
+      "immediate_actions": [
+        "Immediate referral to FRU/District Hospital for parenteral broad-spectrum antibiotics (call 108)",
+        "Monitor maternal pulse, BP, and temperature; encourage oral hydration if conscious"
+      ],
+      "rationale": "NHM HBNC/Dakshata Protocol: puerperal sepsis progresses rapidly to septic shock without IV antibiotics."
+    },
+    {
+      "id": "MAT_RED_12",
+      "flag": "previous_lscs_scar_tenderness",
+      "label": "Previous C-section (LSCS) scar tenderness or acute suprapubic pain",
+      "severity": "RED_EMERGENCY",
+      "immediate_actions": [
+        "Immediate emergency transfer to FRU/District Hospital with emergency obstetric OT and blood bank (call 108)",
+        "Keep mother nil by mouth (NPO) and lying on left lateral side during transfer"
+      ],
+      "rationale": "Scar tenderness in a previous LSCS pregnancy signals impending uterine rupture."
+    },
+    {
+      "id": "MAT_RED_13",
+      "flag": "hyperemesis_gravidarum_severe",
+      "label": "Severe Hyperemesis Gravidarum (Intractable vomiting with dehydration or inability to retain fluids)",
+      "severity": "RED_EMERGENCY",
+      "immediate_actions": [
+        "Urgent referral to FRU/PHC for IV fluid resuscitation, thiamine, and electrolyte correction",
+        "Offer small sips of ORS if tolerated during transport"
+      ],
+      "rationale": "Intractable hyperemesis gravidarum causes severe dehydration, ketosis, and Wernicke encephalopathy risk."
+    },
+    {
+      "id": "MAT_RED_14",
+      "flag": "postpartum_hemorrhage_heavy",
+      "label": "Postpartum Hemorrhage (Soaking >1 pad/hour, large clots, or postpartum dizziness/syncope)",
+      "severity": "RED_EMERGENCY",
+      "immediate_actions": [
+        "Call 108 immediately for emergency transfer to FRU with blood transfusion capability",
+        "Keep mother flat with legs elevated, keep warm, and initiate gentle uterine fundal massage if trained"
+      ],
+      "rationale": "Postpartum hemorrhage (PPH) is the single leading cause of maternal death in rural India."
+    },
+    {
+      "id": "MAT_RED_15",
+      "flag": "antepartum_hemorrhage_painful_or_painless",
+      "label": "Antepartum Hemorrhage (Second/third trimester vaginal bleeding — painful or painless)",
+      "severity": "RED_EMERGENCY",
+      "immediate_actions": [
+        "Immediate 108 transfer to FRU with surgical and blood bank facility",
+        "Strictly NO vaginal examination; keep mother resting on left lateral side"
+      ],
+      "rationale": "Antepartum hemorrhage suggests placenta previa or abruptio placentae requiring immediate hospital care."
+    },
+    {
+      "id": "MAT_RED_16",
+      "flag": "obstructed_or_prolonged_labor",
+      "label": "Prolonged or obstructed labor (>12 hours active contractions without progress)",
+      "severity": "RED_EMERGENCY",
+      "immediate_actions": [
+        "Immediate emergency transfer to FRU/CHC for obstetric evaluation and C-section readiness (call 108)",
+        "Avoid unprescribed uterotonics or fundal pressure in the community"
+      ],
+      "rationale": "Obstructed labor risks uterine rupture, fetal asphyxia, and obstetric fistula."
     }
   ],
   "yellow_flag_symptoms": [
@@ -181,6 +249,61 @@
         "Ensure therapeutic IFA supplementation and iron-rich diet counseling"
       ],
       "rationale": "Clinical pallor requires laboratory confirmation and targeted anemia management."
+    },
+    {
+      "id": "MAT_YELLOW_06",
+      "flag": "gestational_diabetes_gdm",
+      "label": "Gestational Diabetes Mellitus (75g OGTT 2-hour glucose >=140 mg/dL or diagnosed GDM)",
+      "severity": "YELLOW_PHC",
+      "immediate_actions": [
+        "Tag MCP card as High-Risk Pregnancy (HRP) and refer to PMSMA Medical Officer for medical nutrition therapy / insulin plan",
+        "Schedule fortnightly blood glucose monitoring and plan FRU institutional delivery"
+      ],
+      "rationale": "NHM GDM Guidelines: uncontrolled gestational hyperglycemia increases risk of macrosomia, pre-eclampsia, and neonatal hypoglycemia."
+    },
+    {
+      "id": "MAT_YELLOW_07",
+      "flag": "rh_negative_mother",
+      "label": "Rh-negative maternal blood group (Sensitization / Anti-D prophylaxis required)",
+      "severity": "YELLOW_PHC",
+      "immediate_actions": [
+        "Tag MCP card as HRP and refer to PHC/FRU for husband blood group and Indirect Coombs Test (ICT)",
+        "Plan Anti-D immunoglobulin prophylaxis at 28 weeks and within 72 hours after delivery"
+      ],
+      "rationale": "NHM PMSMA HRP Protocol: Rh-negative mothers require timely Anti-D prophylaxis to prevent hemolytic disease of the newborn."
+    },
+    {
+      "id": "MAT_YELLOW_08",
+      "flag": "twin_or_multiple_gestation",
+      "label": "Twin or multiple pregnancy",
+      "severity": "YELLOW_PHC",
+      "immediate_actions": [
+        "Tag MCP card as HRP and schedule monthly PMSMA obstetrician checkups",
+        "Mandate institutional delivery at FRU/District Hospital with SNCU support"
+      ],
+      "rationale": "Multiple gestation carries elevated risk of preterm birth, anemia, pre-eclampsia, and PPH."
+    },
+    {
+      "id": "MAT_YELLOW_09",
+      "flag": "previous_lscs_history",
+      "label": "Previous Caesarean section (LSCS) history without acute scar pain",
+      "severity": "YELLOW_PHC",
+      "immediate_actions": [
+        "Tag MCP card as HRP and enroll in PMSMA specialist clinic",
+        "Pre-arrange institutional delivery at FRU equipped with surgical OT and blood bank; counsel on scar-pain emergency signs"
+      ],
+      "rationale": "NHM HRP guidelines mandate FRU delivery planning for all previous LSCS pregnancies."
+    },
+    {
+      "id": "MAT_YELLOW_10",
+      "flag": "maternal_short_stature_or_malpresentation",
+      "label": "Maternal height <145 cm or abnormal fetal lie (breech/transverse after 32 weeks)",
+      "severity": "YELLOW_PHC",
+      "immediate_actions": [
+        "Tag MCP card as HRP and refer to PMSMA Medical Officer for cephalopelvic / presentation assessment",
+        "Plan institutional delivery at FRU with C-section readiness"
+      ],
+      "rationale": "Short stature (<145 cm) and malpresentation elevate risk of obstructed labor."
     }
   ],
   "checklists": {
@@ -243,6 +366,20 @@
           "critical": false,
           "recommended_action": "Counsel mother and family on emergency warning signs and 108 transport.",
           "escalation_severity": "GREEN_HOME"
+        },
+        {
+          "id": "anc_t1_weight_height_bmi",
+          "label": "Baseline weight, maternal height (<145 cm check), and obstetric history logged",
+          "critical": true,
+          "recommended_action": "Record baseline weight, height, and prior LSCS/obstetric history to flag High-Risk Pregnancy early.",
+          "escalation_severity": "YELLOW_PHC"
+        },
+        {
+          "id": "anc_t1_thyroid_gdm_baseline",
+          "label": "First-trimester blood glucose (OGTT) and TSH screening assessed",
+          "critical": false,
+          "recommended_action": "Refer to PHC for early GDM/hypothyroidism screening per NHM PMSMA protocol.",
+          "escalation_severity": "YELLOW_PHC"
         }
       ]
     },
@@ -298,6 +435,27 @@
           "critical": false,
           "recommended_action": "Counsel mother to monitor daily fetal movements after 20 weeks and report any reduction immediately.",
           "escalation_severity": "GREEN_HOME"
+        },
+        {
+          "id": "anc_t2_usg_anomaly_scan",
+          "label": "Second-trimester ultrasound (18-20w anomaly, twins, and placental site) completed",
+          "critical": true,
+          "recommended_action": "Arrange second-trimester USG at CHC/FRU/PMSMA clinic to detect twins, anomalies, or placenta previa.",
+          "escalation_severity": "YELLOW_PHC"
+        },
+        {
+          "id": "anc_t2_pmsma_hrp_review",
+          "label": "PMSMA 9th-of-month doctor checkup and High-Risk Pregnancy (HRP) screening done",
+          "critical": true,
+          "recommended_action": "Ensure mother attends PMSMA clinic on the 9th of the month for Medical Officer HRP evaluation.",
+          "escalation_severity": "YELLOW_PHC"
+        },
+        {
+          "id": "anc_t2_rh_anti_d_plan",
+          "label": "Rh-negative ICT / Anti-D prophylaxis status verified",
+          "critical": false,
+          "recommended_action": "If mother is Rh-negative, schedule Indirect Coombs Test and plan Anti-D dose at 28 weeks.",
+          "escalation_severity": "YELLOW_PHC"
         }
       ]
     },
@@ -353,6 +511,27 @@
           "critical": false,
           "recommended_action": "Counsel family on initiating breastfeeding within 1 hour of birth and delaying first bath.",
           "escalation_severity": "GREEN_HOME"
+        },
+        {
+          "id": "anc_t3_gdm_repeat_ogtt",
+          "label": "Repeat 75g OGTT / glycemic control reviewed at 28-32 weeks",
+          "critical": true,
+          "recommended_action": "Complete repeat GDM screening or glycemic review at PHC/PMSMA clinic.",
+          "escalation_severity": "YELLOW_PHC"
+        },
+        {
+          "id": "anc_t3_usg_growth_liquor",
+          "label": "Third-trimester fetal growth, amniotic fluid, and placental position reviewed",
+          "critical": false,
+          "recommended_action": "Review third-trimester growth scan or refer HRP cases for FRU ultrasound.",
+          "escalation_severity": "YELLOW_PHC"
+        },
+        {
+          "id": "anc_t3_jsy_pmmvy_readiness",
+          "label": "JSY/PMMVY institutional delivery benefits and clean delivery bag verified",
+          "critical": false,
+          "recommended_action": "Verify MCP card, Aadhaar/bank linkage for JSY/PMMVY, and family readiness for hospital stay.",
+          "escalation_severity": "GREEN_HOME"
         }
       ]
     },
@@ -400,6 +579,34 @@
           "label": "Postpartum nutrition and spacing counseling provided",
           "critical": false,
           "recommended_action": "Counsel on extra nutritious meals, rest, and postpartum spacing options.",
+          "escalation_severity": "GREEN_HOME"
+        },
+        {
+          "id": "pnc_m_anemia_hb_recheck",
+          "label": "Postpartum pallor / hemoglobin recovery assessed",
+          "critical": true,
+          "recommended_action": "Screen for pallor and breathlessness; arrange Hb re-check at PHC especially after PPH or antenatal anemia.",
+          "escalation_severity": "YELLOW_PHC"
+        },
+        {
+          "id": "pnc_m_danger_signs_recall",
+          "label": "Mother and family counseled on postpartum sepsis, PPH, and eclampsia red flags",
+          "critical": true,
+          "recommended_action": "Review emergency signs requiring immediate 108 call: heavy bleeding, fever, fits, severe headache, foul discharge.",
+          "escalation_severity": "YELLOW_PHC"
+        },
+        {
+          "id": "pnc_m_urine_bowel_check",
+          "label": "Normal urination and bowel function verified (no dysuria or leakage)",
+          "critical": false,
+          "recommended_action": "Ask about burning urination or urine leakage; refer to PHC if UTI or fistula signs present.",
+          "escalation_severity": "GREEN_HOME"
+        },
+        {
+          "id": "pnc_m_emotional_support",
+          "label": "Postpartum emotional wellbeing and family support checked",
+          "critical": false,
+          "recommended_action": "Screen for persistent sadness, anxiety, or inability to care for self/baby; link to PHC counselor if needed.",
           "escalation_severity": "GREEN_HOME"
         }
       ]
@@ -456,6 +663,27 @@
           "critical": false,
           "recommended_action": "Verify birth vaccines on MCP card and schedule missed BCG/OPV-0 promptly.",
           "escalation_severity": "YELLOW_PHC"
+        },
+        {
+          "id": "pnc_nb_eye_skin_infection",
+          "label": "Eyes checked for purulent discharge and skin for >=10 pustules",
+          "critical": true,
+          "recommended_action": "Inspect eyes and skin folds; escalate urgently if >=10 skin pustules or red swollen draining eyes.",
+          "escalation_severity": "YELLOW_PHC"
+        },
+        {
+          "id": "pnc_nb_urine_stool_output",
+          "label": "Adequate urine (>=6 wet nappies/day after day 4) and stool output verified",
+          "critical": true,
+          "recommended_action": "Confirm hydration and feeding adequacy via daily wet cloth count; support breastfeeding if <6/day.",
+          "escalation_severity": "YELLOW_PHC"
+        },
+        {
+          "id": "pnc_nb_hbnc_visit_log",
+          "label": "HBNC home-visit schedule (Days 1, 3, 7, 14, 21, 28, 42) updated on MCP card",
+          "critical": false,
+          "recommended_action": "Log visit findings on MCP card and confirm date of next HBNC home visit with family.",
+          "escalation_severity": "GREEN_HOME"
         }
       ]
     }

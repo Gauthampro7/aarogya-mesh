@@ -65,6 +65,58 @@ _FLAG_ALIASES: dict[str, str] = {
     "severe_pallor": "severe_anemia_signs",
     "facial_swelling": "swelling_face_and_hands",
     "chest_pain": "breathing_difficulty_or_chest_pain",
+    # Young infant (<2m PSBI) aliases
+    "umbilical_pus": "umbilicus_red_or_draining_pus",
+    "umbilical_redness": "umbilicus_red_or_draining_pus",
+    "omphalitis": "umbilicus_red_or_draining_pus",
+    "skin_pustules": "skin_pustules_many_or_severe",
+    "neonatal_pustules": "skin_pustules_many_or_severe",
+    "poor_feeding": "poor_feeding_or_weak_cry",
+    "weak_cry": "poor_feeding_or_weak_cry",
+    "stopped_feeding": "poor_feeding_or_weak_cry",
+    "yellow_palms_soles": "jaundice_palms_or_soles",
+    "neonatal_jaundice_severe": "jaundice_palms_or_soles",
+    "grunting": "grunting_or_apnea",
+    "apnea": "grunting_or_apnea",
+    "no_spontaneous_movement": "movement_only_when_stimulated",
+    # Expanded pediatric syndrome aliases
+    "mastoiditis": "mastoiditis_tender_swelling_behind_ear",
+    "swelling_behind_ear": "mastoiditis_tender_swelling_behind_ear",
+    "ear_pain": "acute_ear_pain_or_discharge",
+    "ear_discharge": "acute_ear_pain_or_discharge",
+    "chronic_ear_infection": "chronic_ear_discharge",
+    "measles_complications": "measles_eye_or_mouth_complications",
+    "corneal_clouding": "measles_eye_or_mouth_complications",
+    "measles": "measles_uncomplicated_rash",
+    "measles_rash": "measles_uncomplicated_rash",
+    "dengue_hemorrhagic": "dengue_warning_signs",
+    "petechial_rash": "dengue_warning_signs",
+    "severe_malaria": "severe_malaria_signs",
+    "dark_urine": "severe_malaria_signs",
+    "failed_appetite_test": "failed_appetite_test_sam",
+    "severe_anemia_pediatric": "severe_palmar_pallor",
+    "severe_wasting": "visible_severe_wasting",
+    # Expanded maternal / PMSMA HRP & postpartum aliases
+    "puerperal_sepsis": "puerperal_sepsis_signs",
+    "foul_lochia": "puerperal_sepsis_signs",
+    "scar_tenderness": "previous_lscs_scar_tenderness",
+    "lscs_scar_pain": "previous_lscs_scar_tenderness",
+    "hyperemesis_gravidarum": "hyperemesis_gravidarum_severe",
+    "postpartum_hemorrhage": "postpartum_hemorrhage_heavy",
+    "heavy_postpartum_bleeding": "postpartum_hemorrhage_heavy",
+    "antepartum_hemorrhage": "antepartum_hemorrhage_painful_or_painless",
+    "obstructed_labor": "obstructed_or_prolonged_labor",
+    "prolonged_labor": "obstructed_or_prolonged_labor",
+    "gdm": "gestational_diabetes_gdm",
+    "gestational_diabetes": "gestational_diabetes_gdm",
+    "rh_negative": "rh_negative_mother",
+    "rh_sensitization": "rh_negative_mother",
+    "twins": "twin_or_multiple_gestation",
+    "multiple_pregnancy": "twin_or_multiple_gestation",
+    "previous_lscs": "previous_lscs_history",
+    "prior_c_section": "previous_lscs_history",
+    "short_stature": "maternal_short_stature_or_malpresentation",
+    "breech_presentation": "maternal_short_stature_or_malpresentation",
 }
 
 
@@ -225,10 +277,20 @@ def _evaluate_maternal(
 ) -> None:
     vt = maternal_rules["vital_thresholds"]
 
-    # Blood Pressure / Pre-eclampsia escalation
+    # Blood Pressure: Hypotensive shock (<90 systolic) & Pre-eclampsia escalation
     sys_bp = data.systolic_bp
     dia_bp = data.diastolic_bp
-    if (
+    if sys_bp is not None and sys_bp < vt.get("bp_shock_systolic_below_mmhg", 90):
+        acc.record(
+            "MAT_BP_SHOCK_RED",
+            TriageSeverity.RED_EMERGENCY,
+            [
+                "Immediate 108 emergency transfer to FRU/District Hospital with blood bank (suspected hemorrhagic or septic shock)",
+                "Keep mother flat on left lateral side with legs elevated and keep warm during transport",
+            ],
+            f"Maternal hypotension (Systolic BP {sys_bp} mmHg < 90 mmHg) indicates obstetric hemorrhagic or septic shock.",
+        )
+    elif (
         (sys_bp is not None and sys_bp >= vt["bp_severe_preeclampsia_systolic_mmhg"])
         or (dia_bp is not None and dia_bp >= vt["bp_severe_preeclampsia_diastolic_mmhg"])
     ):
@@ -270,9 +332,19 @@ def _evaluate_maternal(
             f"Borderline elevated maternal BP ({sys_bp}/{dia_bp} mmHg) requires close PHC monitoring.",
         )
 
-    # Maternal fever
+    # Maternal fever & postpartum puerperal sepsis threshold
     if data.temperature_c is not None:
-        if data.temperature_c >= vt["temp_red_fever_c"]:
+        if data.is_postpartum and data.temperature_c >= vt.get("temp_postpartum_sepsis_c", 38.0):
+            acc.record(
+                "MAT_PUERPERAL_SEPSIS_FEVER_RED",
+                TriageSeverity.RED_EMERGENCY,
+                [
+                    "Immediate referral to FRU/District Hospital for suspected puerperal sepsis (parenteral antibiotics)",
+                    "Assess lochia odor, uterine tenderness, and BP; encourage hydration if conscious",
+                ],
+                f"Postpartum maternal temperature {data.temperature_c:.1f}C >= 38.0C indicates high puerperal sepsis risk.",
+            )
+        elif data.temperature_c >= vt["temp_red_fever_c"]:
             acc.record(
                 "MAT_FEVER_HIGH_RED",
                 TriageSeverity.RED_EMERGENCY,
@@ -349,6 +421,27 @@ def _evaluate_pediatric(
     syndromes = imnci_rules["syndromes"]
     is_young_infant = data.age_months is not None and data.age_months < 2
 
+    # Young Infant (<2 months) PSBI danger signs
+    if is_young_infant or data.age_months is None:
+        for rule in imnci_rules.get("young_infant_danger_signs", []):
+            if rule["flag"] in flags:
+                acc.record(
+                    rule["id"],
+                    TriageSeverity.RED_EMERGENCY,
+                    rule["immediate_actions"],
+                    rule["rationale"],
+                )
+
+    # Expanded WHO IMNCI pediatric syndrome symptom rules (Ear/Mastoiditis, Measles, Dengue, Malaria, SAM/Anemia)
+    for rule in imnci_rules.get("syndrome_symptom_rules", []):
+        if rule["flag"] in flags:
+            acc.record(
+                rule["id"],
+                TriageSeverity(rule["severity"]),
+                rule["immediate_actions"],
+                rule["rationale"],
+            )
+
     # Critical vitals: SpO2 & Temperature
     if data.spo2_pct is not None:
         if data.spo2_pct < vt["spo2_critical_below_pct"]:
@@ -409,13 +502,18 @@ def _evaluate_pediatric(
     fast_breathing = (
         data.respiratory_rate_bpm is not None and data.respiratory_rate_bpm >= rr_threshold
     )
-    if is_young_infant and data.chest_indrawing:
+    if is_young_infant and (fast_breathing or data.chest_indrawing):
         young_red = syndromes["respiratory"]["red_rules"][1]
+        detail = (
+            f"Young infant (<2m) respiratory rate {data.respiratory_rate_bpm}/min >= {rr_threshold}/min"
+            if fast_breathing
+            else "Young infant (<2m) severe chest indrawing"
+        )
         acc.record(
             young_red["id"],
             TriageSeverity.RED_EMERGENCY,
             young_red["immediate_actions"],
-            young_red["rationale"],
+            f"{detail}: {young_red['rationale']}",
         )
     elif fast_breathing or data.chest_indrawing:
         pneumonia_rule = syndromes["respiratory"]["yellow_rules"][0]
@@ -558,6 +656,25 @@ def _evaluate_pediatric(
             mal_cfg["yellow_actions"],
             "Palmar pallor detected: refer to PHC/ANM for anemia assessment and IFA/deworming.",
         )
+
+    if data.hemoglobin_g_dl is not None:
+        if data.hemoglobin_g_dl < vt.get("hb_severe_anemia_below_g_dl", 7.0):
+            acc.record(
+                "IMNCI_ANEMIA_SEVERE_HB_RED",
+                TriageSeverity.RED_EMERGENCY,
+                [
+                    "Urgent referral to FRU/District Hospital for severe pediatric anemia (transfusion evaluation)",
+                    "Keep child calm and prevent hypoxia during transport",
+                ],
+                f"Pediatric hemoglobin {data.hemoglobin_g_dl:.1f} g/dL < 7.0 g/dL defines severe anemia.",
+            )
+        elif data.hemoglobin_g_dl < vt.get("hb_moderate_anemia_below_g_dl", 11.0):
+            acc.record(
+                "IMNCI_ANEMIA_MODERATE_HB_YELLOW",
+                TriageSeverity.YELLOW_PHC,
+                mal_cfg["yellow_actions"],
+                f"Pediatric hemoglobin {data.hemoglobin_g_dl:.1f} g/dL (<11.0 g/dL) indicates mild/moderate anemia requiring IFA syrup and PHC follow-up.",
+            )
 
 
 def _evaluate_general(
