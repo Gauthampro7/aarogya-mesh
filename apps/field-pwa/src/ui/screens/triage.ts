@@ -7,13 +7,14 @@ import type { Ctx } from "../ctx";
 import {
   VITAL_SPECS,
   applyCategory,
+  dangerOptionsForCategory,
+  fastEmergencyOptions,
   flagLabel,
   buildTriageInput,
   dehydrationFlags,
   maternalRedOptions,
   maternalYellowOptions,
   patientAgeMonths,
-  pediatricDangerOptions,
   suggestCategory,
   type FlagOption,
   type NumField,
@@ -91,6 +92,7 @@ export async function triage(ctx: Ctx, params: string[]): Promise<HTMLElement> {
   };
   patientSel.addEventListener("change", () => {
     st.patientId = patientSel.value || null;
+    drawFastOptions();
     const p: PatientRecord | undefined = patients.find((x) => x.patient_id === st.patientId);
     if (p) {
       st.isPregnant = p.is_pregnant;
@@ -143,7 +145,7 @@ export async function triage(ctx: Ctx, params: string[]): Promise<HTMLElement> {
       formBox.append(h("p", { class: "error", role: "alert" }, t("triage.pickCategory")));
     } else if (st.category === "PEDIATRIC") {
       formBox.append(
-        flagGroup(t("triage.dangerSigns"), pediatricDangerOptions(), st.dangerFlags),
+        flagGroup(t("triage.dangerSigns"), dangerOptionsForCategory(st.category), st.dangerFlags),
         h("fieldset", {}, h("legend", {}, t("triage.symptoms")), bool(t("s.cough"), "cough"), bool(t("s.indrawing"), "chestIndrawing"), bool(t("s.diarrhea"), "diarrhea"), bool(t("s.blood"), "bloodInStool"), bool(t("s.edema"), "edema"), bool(t("s.pallor"), "pallor"), bool(t("s.rdt"), "malariaRdt")),
         flagGroup(
           t("triage.dehydration"),
@@ -155,13 +157,13 @@ export async function triage(ctx: Ctx, params: string[]): Promise<HTMLElement> {
     } else if (st.category === "MATERNAL") {
       formBox.append(
         h("fieldset", {}, h("legend", {}, t("triage.maternalStatus")), bool(t("reg.pregnant"), "isPregnant"), bool(t("triage.postpartum"), "isPostpartum")),
-        flagGroup(t("triage.dangerSigns"), pediatricDangerOptions(), st.dangerFlags),
+        flagGroup(t("triage.dangerSigns"), dangerOptionsForCategory(st.category), st.dangerFlags),
         flagGroup(t("triage.maternalDanger"), maternalRedOptions(), st.dangerFlags),
         flagGroup(t("triage.watchSigns"), maternalYellowOptions(), st.symptomFlags),
         h("div", { class: "grid2" }, numField("gestational_weeks"), numField("hemoglobin_g_dl")),
       );
     } else {
-      formBox.append(flagGroup(t("triage.dangerSigns"), pediatricDangerOptions(), st.dangerFlags), h("div", { class: "grid2" }, numField("age_months"), numField("fever_days")));
+      formBox.append(flagGroup(t("triage.dangerSigns"), dangerOptionsForCategory(st.category), st.dangerFlags), h("div", { class: "grid2" }, numField("age_months"), numField("fever_days")));
     }
     if (st.category !== null) formBox.append(
       h("div", { class: "grid2" }, numField("temperature_c"), numField("spo2_pct"), numField("respiratory_rate_bpm"), st.category === "MATERNAL" || st.category === "GENERAL" ? numField("systolic_bp") : null, st.category === "MATERNAL" || st.category === "GENERAL" ? numField("diastolic_bp") : null),
@@ -181,7 +183,9 @@ export async function triage(ctx: Ctx, params: string[]): Promise<HTMLElement> {
     resultBox.append(renderTriageResult(a));
     const saved = h("p", { class: "muted", role: "status" }, t("triage.saving"));
     resultBox.append(saved);
-    (document.getElementById("triage-result") as HTMLElement | null)?.focus();
+    const resEl = document.getElementById("triage-result") as HTMLElement | null;
+    resEl?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+    resEl?.focus();
     ctx.engine
       .enqueue({ event_type: "TRIAGE_COMPLETED", patient_id: a.patient_id, payload: { ...a } })
       .then(() => {
@@ -211,14 +215,52 @@ export async function triage(ctx: Ctx, params: string[]): Promise<HTMLElement> {
     }
   } }, t("triage.run"));
 
-  // One-tap fast path: engine classifies (RED via the canonical danger-sign floor).
-  const fastBtn = h("button", { type: "button", class: "bigbtn danger fast", onclick: () => {
+  // Fast path: worker confirms which danger sign; the engine classifies (RED via the canonical danger-sign floor).
+  let radios: HTMLInputElement[] = [];
+  const radioBox = h("div");
+  const confirmBtn = h("button", { type: "button", class: "confirm", disabled: true }, t("triage.fastConfirm"));
+  const cancelBtn = h("button", { type: "button" }, t("triage.fastCancel"));
+  function drawFastOptions() {
+    clear(radioBox);
+    const flags = fastEmergencyOptions(patients.find((p) => p.patient_id === st.patientId)?.sex);
+    radios = flags.map((f) => h("input", { type: "radio", name: "fastflag", value: f }));
+    radios.forEach((r) => r.addEventListener("change", () => (confirmBtn.disabled = false)));
+    radioBox.append(...radios.map((r, i) => h("label", { class: "check" }, r, h("span", {}, flagLabel(flags[i]!)))));
+    confirmBtn.disabled = true;
+  }
+  drawFastOptions();
+  const fastPanel = h("div", { class: "fastpanel", role: "group", "aria-label": t("triage.fastAsk"), hidden: true },
+    h("p", {}, h("strong", {}, t("triage.fastAsk"))),
+    radioBox,
+    h("div", { class: "row" }, confirmBtn, cancelBtn),
+  );
+  const fastBtn = h("button", { type: "button", class: "bigbtn danger fast", "aria-expanded": "false" }, h("span", { "aria-hidden": "true", class: "ico" }, "⛔"), h("span", {}, t("triage.fast")));
+  const closeFast = () => {
+    fastPanel.hidden = true;
+    fastBtn.setAttribute("aria-expanded", "false");
+    radios.forEach((r) => (r.checked = false));
+    confirmBtn.disabled = true;
+  };
+  fastBtn.addEventListener("click", () => {
+    if (!fastPanel.hidden) return closeFast();
+    fastPanel.hidden = false;
+    fastBtn.setAttribute("aria-expanded", "true");
+    radios[0]!.focus();
+  });
+  cancelBtn.addEventListener("click", () => {
+    closeFast();
+    fastBtn.focus();
+  });
+  confirmBtn.addEventListener("click", () => {
+    const chosen = radios.find((r) => r.checked)?.value;
+    if (!chosen) return;
     try {
-      show(evaluateWatchRapidTriage(["lethargic_or_unconscious"], { patient_id: st.patientId, assessed_at_ms: Date.now() }));
+      show(evaluateWatchRapidTriage([chosen], { patient_id: st.patientId, assessed_at_ms: Date.now() }));
+      closeFast();
     } catch (e) {
       errBox.append(h("p", {}, e instanceof Error ? e.message : String(e)));
     }
-  } }, h("span", { "aria-hidden": "true", class: "ico" }, "⛔"), h("span", {}, t("triage.fast")));
+  });
 
-  return h("section", {}, h("h1", {}, t("triage.title")), fastBtn, field(t("triage.patient"), patientSel), field(t("triage.category"), catSel), noteBox, formBox, errBox, runBtn, resultBox);
+  return h("section", {}, h("h1", {}, t("triage.title")), fastBtn, fastPanel, field(t("triage.patient"), patientSel), field(t("triage.category"), catSel), noteBox, formBox, errBox, runBtn, resultBox);
 }
