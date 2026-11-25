@@ -36,6 +36,21 @@ export function vibrateIfEmergency(severity: TriageSeverity, g: unknown = global
   }
 }
 
+export interface SafetyFloorProof {
+  executionTarget: string;
+  confidence: string;
+  matchedRules: readonly string[];
+}
+
+/** Pure proof metadata surfaced on every triage result card (0 network calls). */
+export function buildSafetyFloorProof(a: TriageAssessment): SafetyFloorProof {
+  return {
+    executionTarget: a.execution_target,
+    confidence: a.confidence.toFixed(2),
+    matchedRules: a.matched_rules,
+  };
+}
+
 /**
  * Huge text + icon + colour banner. Never colour alone. Actions/rationale are shown localized
  * (display only); the stored TriageAssessment keeps the engine's English strings.
@@ -44,6 +59,7 @@ export function renderTriageResult(a: TriageAssessment): HTMLElement {
   const s = SEV[a.severity];
   vibrateIfEmergency(a.severity);
   const why = localizeTriageRationale(a.rationale, a.matched_rules);
+  const proof = buildSafetyFloorProof(a);
   return h(
     "section",
     { class: `result ${s.cls}`, role: "alert", "aria-live": "assertive", tabindex: "-1", id: "triage-result" },
@@ -52,6 +68,25 @@ export function renderTriageResult(a: TriageAssessment): HTMLElement {
       ? h("a", { class: "call108", href: "tel:108" }, "☎ ", t("sev.call108"))
       : null,
     a.referral_required ? h("p", { class: "referral" }, t(a.severity === "RED_EMERGENCY" ? "ref.red" : "ref.yellow")) : null,
+    h(
+      "div",
+      { class: "proof-strip", "data-proof": "safety-floor" },
+      h(
+        "div",
+        { class: "proof-pills" },
+        h("span", { class: "proof-pill" }, t("proof.localDeterministic")),
+        h("span", { class: "proof-pill" }, t("proof.confidence", { val: proof.confidence })),
+        h("span", { class: "proof-pill" }, t("proof.zeroNetwork")),
+      ),
+      proof.matchedRules.length > 0
+        ? h(
+            "div",
+            { class: "proof-rules" },
+            h("span", { class: "proof-label" }, `${t("proof.matchedRules")}:`),
+            ...proof.matchedRules.map((id) => h("code", { class: "rule-badge", lang: "en" }, id)),
+          )
+        : null,
+    ),
     h("h3", {}, t("result.actions")),
     h("ul", {}, a.immediate_actions.map((x) => h("li", {}, localizeTriageAction(x)))),
     h(

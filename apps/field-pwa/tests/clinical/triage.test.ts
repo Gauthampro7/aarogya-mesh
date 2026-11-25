@@ -66,6 +66,8 @@ describe("triage parity with packages/clinical-engine (Python)", () => {
     const seen = new Set(valid.flatMap((v) => v.expected!.matched_rules));
     const declared = [
       ...IMNCI_PEDIATRIC_RULES.general_danger_signs.map((r) => r.id),
+      ...(IMNCI_PEDIATRIC_RULES.young_infant_danger_signs ?? []).map((r) => r.id),
+      ...(IMNCI_PEDIATRIC_RULES.syndrome_symptom_rules ?? []).map((r) => r.id),
       ...IMNCI_PEDIATRIC_RULES.syndromes.respiratory.red_rules.map((r) => r.id),
       ...IMNCI_PEDIATRIC_RULES.syndromes.respiratory.yellow_rules.map((r) => r.id),
       IMNCI_PEDIATRIC_RULES.syndromes.respiratory.green_rule.id,
@@ -73,7 +75,7 @@ describe("triage parity with packages/clinical-engine (Python)", () => {
       ...MATERNAL_ANC_RULES.yellow_flag_symptoms.map((r) => r.id),
     ];
     for (const id of declared) expect(seen, id).toContain(id);
-    expect(seen.size).toBeGreaterThanOrEqual(65);
+    expect(seen.size).toBeGreaterThanOrEqual(85);
   });
 });
 
@@ -87,11 +89,31 @@ describe("safety floor invariants", () => {
     expect(a.matched_rules).toEqual(["IMNCI_GDS_03"]);
   });
 
-  const allFlags = [
+  const redGeneralFlags = new Set(IMNCI_PEDIATRIC_RULES.general_danger_signs.map((r) => r.flag));
+  const redYoungInfantFlags = new Set((IMNCI_PEDIATRIC_RULES.young_infant_danger_signs ?? []).map((r) => r.flag));
+  const redSyndromeFlags = new Set(
+    (IMNCI_PEDIATRIC_RULES.syndrome_symptom_rules ?? []).filter((r) => r.severity === "RED_EMERGENCY").map((r) => r.flag),
+  );
+  const redMaternalFlags = new Set(MATERNAL_ANC_RULES.red_flag_symptoms.map((r) => r.flag));
+
+  const aliasRedCases: { flag: string; input: TriageInput }[] = Object.entries(FLAG_ALIASES).flatMap(
+    ([alias, target]): { flag: string; input: TriageInput }[] => {
+      if (redGeneralFlags.has(target) || redMaternalFlags.has(target)) return [{ flag: alias, input: { is_pregnant: true } }];
+      if (redYoungInfantFlags.has(target)) return [{ flag: alias, input: { age_months: 1 } }];
+      if (redSyndromeFlags.has(target)) return [{ flag: alias, input: { age_months: 24 } }];
+      return [];
+    },
+  );
+
+  const allFlags: { flag: string; input: TriageInput }[] = [
     ...IMNCI_PEDIATRIC_RULES.general_danger_signs.map((r) => ({ flag: r.flag, input: { age_months: 30 } })),
     ...IMNCI_PEDIATRIC_RULES.general_danger_signs.map((r) => ({ flag: r.flag, input: { age_months: 400 } })),
+    ...(IMNCI_PEDIATRIC_RULES.young_infant_danger_signs ?? []).map((r) => ({ flag: r.flag, input: { age_months: 1 } })),
+    ...(IMNCI_PEDIATRIC_RULES.syndrome_symptom_rules ?? [])
+      .filter((r) => r.severity === "RED_EMERGENCY")
+      .map((r) => ({ flag: r.flag, input: { age_months: 24 } })),
     ...MATERNAL_ANC_RULES.red_flag_symptoms.map((r) => ({ flag: r.flag, input: { is_pregnant: true } })),
-    ...Object.keys(FLAG_ALIASES).map((flag) => ({ flag, input: { is_pregnant: true } })),
+    ...aliasRedCases,
   ];
 
   it.each(allFlags.map((f) => [f.flag, f] as const))(

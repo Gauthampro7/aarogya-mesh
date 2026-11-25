@@ -103,6 +103,7 @@ export function computeVaccinationSchedule(
     const milestone = String(entry.milestone);
     const leadDays = opts.dueSoonWindowDays ?? Math.trunc(entry.due_soon_lead_days ?? defaultWindow);
     const maxCatchupDays = Math.trunc(entry.max_catchup_age_days ?? 1825);
+    const scheduleGroup = String(entry.schedule_group ?? "UIP_INDIA");
     const dueDay = dobDay + Math.trunc(entry.due_age_days);
     const dueIso = dayNumberToIso(dueDay);
 
@@ -118,7 +119,7 @@ export function computeVaccinationSchedule(
         administered_date: adminIso,
         days_delta: 0,
         reminder_text: `${name} (${milestone}) completed on ${adminIso}.`,
-        schedule_group: "UIP_INDIA",
+        schedule_group: scheduleGroup,
       });
       continue;
     }
@@ -155,7 +156,7 @@ export function computeVaccinationSchedule(
       administered_date: null,
       days_delta: daysDelta,
       reminder_text: reminder,
-      schedule_group: "UIP_INDIA",
+      schedule_group: scheduleGroup,
     });
   }
   return schedule;

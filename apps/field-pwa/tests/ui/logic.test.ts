@@ -6,7 +6,8 @@ import { buildPatient, type RegisterForm } from "../../src/ui/register_logic";
 import { administeredFromEvents, buildVaccinationPayload, groupByStatus, scheduleFor } from "../../src/ui/vacc_logic";
 import { autoChecklistType, buildChecklistPayload, checklistItems, evaluate } from "../../src/ui/checklist_logic";
 import { buildVoicePayload, voiceNoteValid } from "../../src/ui/voice_logic";
-import { ackPayload, sortCards } from "../../src/ui/sync_logic";
+import { ackPayload, buildCrdtNodeProof, formatHlcVector, sortCards } from "../../src/ui/sync_logic";
+import { buildSafetyFloorProof } from "../../src/ui/screens/triage_result";
 import { getAudio, putAudio } from "../../src/ui/audio_store";
 import { isValidHubUrl } from "../../src/ui/settings";
 import { parseRoute } from "../../src/ui/router";
@@ -111,5 +112,51 @@ describe("voice, audio store, sync helpers", () => {
     expect(isValidHubUrl("nope")).toBe(false);
     expect(parseRoute("")).toEqual({ name: "home", params: [] });
     expect(parseRoute("#/triage/a%20b")).toEqual({ name: "triage", params: ["a b"] });
+  });
+  it("builds deterministic safety-floor and CRDT HLC proof metadata", () => {
+    const proof = buildSafetyFloorProof({
+      assessment_id: "a1",
+      patient_id: "p1",
+      severity: "RED_EMERGENCY",
+      matched_rules: ["IMNCI_GDS_03"],
+      immediate_actions: ["Immediate 108 referral"],
+      referral_required: true,
+      rationale: "Convulsions",
+      confidence: 1.0,
+      protocol_source: "WHO_IMNCI_PEDIATRIC_DETERMINISTIC",
+      execution_target: "LOCAL_DETERMINISTIC",
+      assessed_at_ms: 1700000000000,
+    });
+    expect(proof).toEqual({
+      executionTarget: "LOCAL_DETERMINISTIC",
+      confidence: "1.00",
+      matchedRules: ["IMNCI_GDS_03"],
+    });
+
+    const e1: CrdtEvent = {
+      event_id: "e1",
+      hlc: { wall_ms: 1000, logical: 0, node_id: "phone-1" },
+      origin_node_id: "phone-1",
+      patient_id: "p1",
+      event_type: "PATIENT_REGISTERED",
+      payload: {},
+      enrichment_state: "NOT_NEEDED",
+      ref_event_id: null,
+    };
+    const e2: CrdtEvent = {
+      ...e1,
+      event_id: "e2",
+      hlc: { wall_ms: 2000, logical: 3, node_id: "hub-1" },
+      origin_node_id: "hub-1",
+    };
+    expect(formatHlcVector(e2.hlc)).toBe("2000:3:hub-1");
+    expect(buildCrdtNodeProof("phone-1", [e2, e1], 1, "offline")).toEqual({
+      nodeId: "phone-1",
+      latestHlc: "2000:3:hub-1",
+      eventCount: 2,
+      pendingCount: 1,
+      status: "offline",
+    });
+    expect(buildCrdtNodeProof("phone-1", [], 0, "idle").latestHlc).toBe("0:0:phone-1");
   });
 });

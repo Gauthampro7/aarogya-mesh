@@ -4,11 +4,17 @@ import { field, h } from "../dom";
 import type { Ctx } from "../ctx";
 import { heldClipsFromDetail, runSync } from "../app_state";
 import { clearHubUrl, getAutoHubOrigin, getHubUrl, getLastSync, isValidHubUrl, setHubUrl } from "../settings";
-import { ackPayload, bindLiveCount, cardPatientLabel, sortCards } from "../sync_logic";
+import { ackPayload, bindLiveCount, buildCrdtNodeProof, cardPatientLabel, sortCards } from "../sync_logic";
 
 export async function syncPanel(ctx: Ctx): Promise<HTMLElement> {
-  const [pending, cards, patients] = await Promise.all([ctx.engine.pendingCount(), ctx.store.listActionCards(), ctx.store.listPatients()]);
+  const [pending, cards, patients, allEvents] = await Promise.all([
+    ctx.engine.pendingCount(),
+    ctx.store.listActionCards(),
+    ctx.store.listPatients(),
+    ctx.store.getAllEvents(),
+  ]);
   const byId = new Map(patients.map((p) => [p.patient_id, p]));
+  const proof = buildCrdtNodeProof(ctx.nodeId, allEvents, pending, ctx.engine.status);
   const last = getLastSync();
   const held = last ? heldClipsFromDetail(last.detail) : 0;
   const lastText = !last ? "" : last.ok ? t("sync.ok") : held ? t("sync.clipsWaiting", { n: held }) : t("sync.fail", { s: last.detail });
@@ -65,6 +71,26 @@ export async function syncPanel(ctx: Ctx): Promise<HTMLElement> {
   let seen = false;
   const born = Date.now();
   const pendingEl = h("span", { class: "pending-count" }, String(pending));
+  const hlcEl = h("code", { class: "hlc-code", lang: "en" }, proof.latestHlc);
+  const eventCountEl = h("strong", {}, String(proof.eventCount));
+  const syncStateEl = h("strong", {}, t(`proof.state.${proof.status}` as const));
+  const proofCard = h(
+    "section",
+    { class: "proof-card", "data-proof": "crdt-node", "aria-label": t("proof.crdtTitle") },
+    h("h2", {}, t("proof.crdtTitle")),
+    h(
+      "dl",
+      { class: "proof-grid" },
+      h("dt", {}, t("proof.nodeId")),
+      h("dd", {}, h("code", { lang: "en" }, proof.nodeId)),
+      h("dt", {}, t("proof.latestHlc")),
+      h("dd", {}, hlcEl),
+      h("dt", {}, t("proof.eventCount")),
+      h("dd", {}, eventCountEl),
+      h("dt", {}, t("proof.syncState")),
+      h("dd", {}, syncStateEl),
+    ),
+  );
   const root = h(
     "section",
     {},
@@ -74,10 +100,19 @@ export async function syncPanel(ctx: Ctx): Promise<HTMLElement> {
     msg,
     h("p", {}, `${t("home.pendingSync")}: `, pendingEl),
     h("p", { class: "muted" }, last ? `${t("sync.last")}: ${new Date(last.at).toLocaleString()} — ${lastText}` : t("sync.never")),
+    proofCard,
     h("h2", {}, t("cards.title")),
     cards.length ? h("ul", { class: "list" }, sortCards(cards).map(card)) : h("p", { class: "muted" }, t("cards.none")),
   );
-  // Live count in place (no remount, so `msg` survives); self-unsubscribes once this screen is gone.
+  const refreshProof = () => {
+    void ctx.store.getAllEvents().then((evts) => {
+      const next = buildCrdtNodeProof(ctx.nodeId, evts, Number(pendingEl.textContent || 0), ctx.engine.status);
+      hlcEl.textContent = next.latestHlc;
+      eventCountEl.textContent = String(next.eventCount);
+      syncStateEl.textContent = t(`proof.state.${next.status}` as const);
+    });
+  };
+  // Live count + HLC proof in place (no remount, so `msg` survives); self-unsubscribes once this screen is gone.
   bindLiveCount(
     [
       (fn) => ctx.engine.events.on("status", (s) => fn(s.pendingCount)),
@@ -88,7 +123,10 @@ export async function syncPanel(ctx: Ctx): Promise<HTMLElement> {
       if (root.isConnected) { seen = true; return true; }
       return !seen && Date.now() - born < 5000;
     },
-    (n) => { pendingEl.textContent = String(n); },
+    (n) => {
+      pendingEl.textContent = String(n);
+      refreshProof();
+    },
   );
   return root;
 }

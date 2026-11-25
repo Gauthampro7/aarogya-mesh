@@ -1,4 +1,39 @@
-import type { ActionCard, PatientRecord } from "../../../../packages/contracts/ts/index";
+import type { ActionCard, CrdtEvent, HlcTimestamp, PatientRecord } from "../../../../packages/contracts/ts/index";
+import { compareHlc } from "../core/hlc";
+import type { SyncState } from "../sync/emitter";
+
+export interface CrdtNodeProof {
+  nodeId: string;
+  latestHlc: string;
+  eventCount: number;
+  pendingCount: number;
+  status: SyncState;
+}
+
+/** Format an HLC timestamp canonically as `wall_ms:logical:node_id`. */
+export function formatHlcVector(hlc: HlcTimestamp): string {
+  return `${hlc.wall_ms}:${hlc.logical}:${hlc.node_id}`;
+}
+
+/** Pure summary of local IndexedDB CRDT event log & causal HLC head for the Sync Proof card. */
+export function buildCrdtNodeProof(
+  nodeId: string,
+  events: readonly CrdtEvent[],
+  pendingCount: number,
+  status: SyncState,
+): CrdtNodeProof {
+  let latest: HlcTimestamp | null = null;
+  for (const e of events) {
+    if (latest === null || compareHlc(e.hlc, latest) > 0) latest = e.hlc;
+  }
+  return {
+    nodeId,
+    latestHlc: latest ? formatHlcVector(latest) : `0:0:${nodeId}`,
+    eventCount: events.length,
+    pendingCount,
+    status,
+  };
+}
 
 const PRIO = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 } as const;
 

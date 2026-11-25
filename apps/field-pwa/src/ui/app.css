@@ -74,3 +74,16 @@ details summary { min-height: 48px; display: flex; align-items: center; cursor: 
 .voice-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 8px 0; }
 .patient-chip { display: inline-block; margin: 4px 0; padding: 2px 10px; border: 1px solid var(--line); border-radius: 999px; font-weight: 700; }
 .orig-en { margin-top: 6px; font-size: .85em; opacity: .8; }
+/* === Judge Kernel Proofs === */
+.proof-strip { margin: 12px 0; padding: 10px; border-radius: 10px; background: rgba(0, 0, 0, 0.22); border: 1px solid currentColor; }
+.proof-pills { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.proof-pill { font-size: 0.75rem; font-weight: 800; padding: 3px 8px; border-radius: 999px; border: 1px solid currentColor; }
+.proof-rules { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; font-size: 0.78rem; }
+.proof-label { font-weight: 700; }
+.rule-badge { padding: 2px 7px; border-radius: 6px; background: rgba(0, 0, 0, 0.35); font-family: ui-monospace, monospace; font-size: 0.74rem; }
+.proof-card { background: var(--panel); border: 2px solid var(--teal-d); border-radius: 12px; padding: 12px; margin: 14px 0; }
+.proof-card h2 { margin: 0 0 8px; font-size: 1rem; color: #5eead4; }
+.proof-grid { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0; font-size: 0.85rem; }
+.proof-grid dt { color: var(--muted); font-weight: 700; }
+.proof-grid dd { margin: 0; word-break: break-all; }
+.hlc-code { font-family: ui-monospace, monospace; font-size: 0.8rem; color: #7dd3fc; }

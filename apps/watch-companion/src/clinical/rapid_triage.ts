@@ -43,7 +43,16 @@ export type WatchDangerSignFlag =
   | "severe_abdominal_pain"
   | "leaking_fluid_before_labor"
   | "swelling_face_and_hands"
-  | "breathing_difficulty_or_chest_pain";
+  | "breathing_difficulty_or_chest_pain"
+  | "umbilicus_red_or_draining_pus"
+  | "poor_feeding_or_weak_cry"
+  | "jaundice_palms_or_soles"
+  | "grunting_or_apnea"
+  | "puerperal_sepsis_signs"
+  | "previous_lscs_scar_tenderness"
+  | "postpartum_hemorrhage_heavy"
+  | "antepartum_hemorrhage_painful_or_painless"
+  | "obstructed_or_prolonged_labor";
 
 export interface WatchDangerSignDefinition {
   readonly flag: WatchDangerSignFlag;
@@ -332,6 +341,118 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     rationale:
       "Acute dyspnea or chest pain may indicate pulmonary edema, embolism, or peripartum cardiomyopathy.",
   },
+  {
+    flag: "umbilicus_red_or_draining_pus",
+    ruleId: "IMNCI_PSBI_01",
+    category: "PEDIATRIC",
+    labelEn: "Umbilicus red or draining pus (<2m)",
+    labelHi: "नाभि में लालिमा अथवा पूय स्राव",
+    immediateActions: [
+      "Immediate 108 emergency referral to SNCU/FRU for Possible Serious Bacterial Infection (PSBI)",
+      "Keep cord clean and dry; do NOT apply oils or ash",
+    ],
+    rationale:
+      "WHO IMNCI Young Infant (<2 months): umbilical redness or pus indicates neonatal sepsis risk.",
+  },
+  {
+    flag: "poor_feeding_or_weak_cry",
+    ruleId: "IMNCI_PSBI_03",
+    category: "PEDIATRIC",
+    labelEn: "Poor feeding or weak cry (<2m)",
+    labelHi: "स्तनपान में अक्षमता अथवा क्षीण रुदन",
+    immediateActions: [
+      "Immediate 108 emergency referral to SNCU/FRU",
+      "Keep infant warm skin-to-skin during transfer",
+    ],
+    rationale:
+      "WHO IMNCI Young Infant (<2 months): poor feeding or weak cry is a cardinal sign of neonatal sepsis.",
+  },
+  {
+    flag: "jaundice_palms_or_soles",
+    ruleId: "IMNCI_PSBI_04",
+    category: "PEDIATRIC",
+    labelEn: "Yellow palms or soles (<2m jaundice)",
+    labelHi: "पीली हथेलियाँ अथवा तलवे (कामला)",
+    immediateActions: [
+      "Urgent referral to SNCU/District Hospital for serum bilirubin and phototherapy",
+    ],
+    rationale:
+      "WHO IMNCI Young Infant (<2 months): jaundice reaching palms or soles risks kernicterus.",
+  },
+  {
+    flag: "grunting_or_apnea",
+    ruleId: "IMNCI_PSBI_05",
+    category: "PEDIATRIC",
+    labelEn: "Grunting or breathing pauses (<2m)",
+    labelHi: "नवजात में कराहना अथवा श्वास विराम",
+    immediateActions: [
+      "Immediate 108 emergency transfer to oxygen-equipped SNCU/FRU",
+    ],
+    rationale:
+      "WHO IMNCI Young Infant (<2 months): expiratory grunting or apnea indicates severe neonatal sepsis.",
+  },
+  {
+    flag: "puerperal_sepsis_signs",
+    ruleId: "MAT_RED_11",
+    category: "MATERNAL",
+    labelEn: "Postpartum fever / foul discharge",
+    labelHi: "प्रसवोत्तर ज्वर अथवा दुर्गन्धयुक्त स्राव",
+    immediateActions: [
+      "Immediate 108 emergency referral to FRU/District Hospital for parenteral antibiotics",
+    ],
+    rationale:
+      "NHM HBNC Protocol: puerperal sepsis progresses rapidly to septic shock without IV antibiotics.",
+  },
+  {
+    flag: "previous_lscs_scar_tenderness",
+    ruleId: "MAT_RED_12",
+    category: "MATERNAL",
+    labelEn: "Prior C-section scar pain",
+    labelHi: "पूर्व शल्य प्रसव क्षत पर तीव्र शूल",
+    immediateActions: [
+      "Immediate 108 emergency transfer to FRU/District Hospital with emergency obstetric OT",
+    ],
+    rationale:
+      "Scar tenderness in a previous LSCS pregnancy signals impending uterine rupture.",
+  },
+  {
+    flag: "postpartum_hemorrhage_heavy",
+    ruleId: "MAT_RED_14",
+    category: "MATERNAL",
+    labelEn: "Heavy postpartum bleeding (PPH)",
+    labelHi: "प्रसवोत्तर अत्यधिक रक्तस्राव",
+    immediateActions: [
+      "Call 108 immediately for emergency transfer to FRU with blood transfusion capability",
+      "Keep mother flat with legs elevated and keep warm",
+    ],
+    rationale:
+      "Postpartum hemorrhage (PPH) is the single leading cause of maternal death in rural India.",
+  },
+  {
+    flag: "antepartum_hemorrhage_painful_or_painless",
+    ruleId: "MAT_RED_15",
+    category: "MATERNAL",
+    labelEn: "Late pregnancy bleeding (APH)",
+    labelHi: "प्रसवपूर्व योनि रक्तस्राव",
+    immediateActions: [
+      "Immediate 108 transfer to FRU with surgical and blood bank facility",
+      "Strictly NO vaginal examination; keep mother on left lateral side",
+    ],
+    rationale:
+      "Antepartum hemorrhage suggests placenta previa or abruptio placentae requiring immediate hospital care.",
+  },
+  {
+    flag: "obstructed_or_prolonged_labor",
+    ruleId: "MAT_RED_16",
+    category: "MATERNAL",
+    labelEn: "Prolonged / obstructed labor (>12h)",
+    labelHi: "अवरुद्ध अथवा विलम्बित प्रसव",
+    immediateActions: [
+      "Immediate 108 emergency transfer to FRU/CHC for obstetric evaluation",
+    ],
+    rationale:
+      "Obstructed labor risks uterine rupture, fetal asphyxia, and obstetric fistula.",
+  },
 ] as const;
 
 const DANGER_SIGN_BY_FLAG: ReadonlyMap<WatchDangerSignFlag, WatchDangerSignDefinition> =
@@ -372,6 +493,20 @@ const FLAG_ALIASES: Readonly<Record<string, WatchDangerSignFlag>> = {
   severe_pallor: "severe_anemia_signs",
   facial_swelling: "swelling_face_and_hands",
   chest_pain: "breathing_difficulty_or_chest_pain",
+  umbilical_pus: "umbilicus_red_or_draining_pus",
+  omphalitis: "umbilicus_red_or_draining_pus",
+  poor_feeding: "poor_feeding_or_weak_cry",
+  weak_cry: "poor_feeding_or_weak_cry",
+  yellow_palms_soles: "jaundice_palms_or_soles",
+  grunting: "grunting_or_apnea",
+  apnea: "grunting_or_apnea",
+  puerperal_sepsis: "puerperal_sepsis_signs",
+  foul_lochia: "puerperal_sepsis_signs",
+  scar_tenderness: "previous_lscs_scar_tenderness",
+  postpartum_hemorrhage: "postpartum_hemorrhage_heavy",
+  antepartum_hemorrhage: "antepartum_hemorrhage_painful_or_painless",
+  obstructed_labor: "obstructed_or_prolonged_labor",
+  prolonged_labor: "obstructed_or_prolonged_labor",
 };
 
 export interface WatchDangerScreenInput {

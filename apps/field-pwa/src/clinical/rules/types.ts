@@ -16,6 +16,10 @@ export interface FlagRule {
   rationale: string;
 }
 
+export interface SyndromeSymptomRule extends FlagRule {
+  syndrome: string;
+}
+
 export interface ConditionRule {
   id: string;
   label: string;
@@ -37,6 +41,8 @@ export interface ImnciPediatricRules {
   description: string;
   watch_tier0_danger_flags: string[];
   general_danger_signs: FlagRule[];
+  young_infant_danger_signs?: FlagRule[];
+  syndrome_symptom_rules?: SyndromeSymptomRule[];
   vital_thresholds: {
     spo2_critical_below_pct: number;
     spo2_borderline_below_pct: number;
@@ -44,6 +50,8 @@ export interface ImnciPediatricRules {
     temp_very_high_fever_c: number;
     temp_young_infant_fever_c: number;
     temp_moderate_fever_c: number;
+    hb_severe_anemia_below_g_dl?: number;
+    hb_moderate_anemia_below_g_dl?: number;
     fast_breathing_bpm_by_age_months: {
       min_months: number;
       max_months_exclusive: number;
@@ -88,6 +96,7 @@ export interface MaternalAncRules {
   version: string;
   description: string;
   vital_thresholds: {
+    bp_shock_systolic_below_mmhg?: number;
     bp_red_systolic_mmhg: number;
     bp_red_diastolic_mmhg: number;
     bp_severe_preeclampsia_systolic_mmhg: number;
@@ -95,6 +104,7 @@ export interface MaternalAncRules {
     bp_yellow_systolic_mmhg: number;
     bp_yellow_diastolic_mmhg: number;
     temp_red_fever_c: number;
+    temp_postpartum_sepsis_c?: number;
     temp_yellow_fever_c: number;
     hb_severe_anemia_below_g_dl: number;
     hb_moderate_anemia_below_g_dl: number;
@@ -113,6 +123,20 @@ export interface UipVaccineEntry {
   due_age_days: number;
   due_soon_lead_days?: number;
   max_catchup_age_days?: number;
+  schedule_group?: string;
+  clinical_note?: string;
+  aliases?: string[];
+}
+
+export interface MaternalVaccineEntry {
+  code: string;
+  name: string;
+  milestone: string;
+  due_gestational_weeks: number;
+  due_soon_lead_days?: number;
+  route?: string;
+  schedule_group?: string;
+  clinical_note?: string;
   aliases?: string[];
 }
 
@@ -122,4 +146,5 @@ export interface UipVaccineRules {
   description: string;
   defaults: { due_soon_window_days: number };
   vaccines: UipVaccineEntry[];
+  maternal_vaccines?: MaternalVaccineEntry[];
 }

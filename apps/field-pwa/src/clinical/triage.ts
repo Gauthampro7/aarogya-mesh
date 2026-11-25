@@ -105,7 +105,17 @@ function evaluateMaternal(d: Data, flags: Set<string>, maternal: MaternalAncRule
   const bp = `${pyStr(sys)}/${pyStr(dia)}`;
   const atLeast = (v: number | null, t: number) => v !== null && v >= t;
 
-  if (atLeast(sys, vt.bp_severe_preeclampsia_systolic_mmhg) || atLeast(dia, vt.bp_severe_preeclampsia_diastolic_mmhg)) {
+  if (sys !== null && sys < (vt.bp_shock_systolic_below_mmhg ?? 90)) {
+    acc.record(
+      "MAT_BP_SHOCK_RED",
+      "RED_EMERGENCY",
+      [
+        "Immediate 108 emergency transfer to FRU/District Hospital with blood bank (suspected hemorrhagic or septic shock)",
+        "Keep mother flat on left lateral side with legs elevated and keep warm during transport",
+      ],
+      `Maternal hypotension (Systolic BP ${sys} mmHg < 90 mmHg) indicates obstetric hemorrhagic or septic shock.`,
+    );
+  } else if (atLeast(sys, vt.bp_severe_preeclampsia_systolic_mmhg) || atLeast(dia, vt.bp_severe_preeclampsia_diastolic_mmhg)) {
     acc.record(
       "MAT_BP_SEVERE_PREECLAMPSIA",
       "RED_EMERGENCY",
@@ -140,7 +150,17 @@ function evaluateMaternal(d: Data, flags: Set<string>, maternal: MaternalAncRule
 
   if (d.temperature_c !== null) {
     const t = pyFixed1(d.temperature_c);
-    if (d.temperature_c >= vt.temp_red_fever_c) {
+    if (d.is_postpartum && d.temperature_c >= (vt.temp_postpartum_sepsis_c ?? 38.0)) {
+      acc.record(
+        "MAT_PUERPERAL_SEPSIS_FEVER_RED",
+        "RED_EMERGENCY",
+        [
+          "Immediate referral to FRU/District Hospital for suspected puerperal sepsis (parenteral antibiotics)",
+          "Assess lochia odor, uterine tenderness, and BP; encourage hydration if conscious",
+        ],
+        `Postpartum maternal temperature ${t}C >= 38.0C indicates high puerperal sepsis risk.`,
+      );
+    } else if (d.temperature_c >= vt.temp_red_fever_c) {
       acc.record(
         "MAT_FEVER_HIGH_RED",
         "RED_EMERGENCY",
@@ -207,6 +227,18 @@ function evaluatePediatric(d: Data, flags: Set<string>, imnci: ImnciPediatricRul
   const syn = imnci.syndromes;
   const isYoungInfant = d.age_months !== null && d.age_months < 2;
 
+  // Young Infant (<2 months) PSBI danger signs
+  if (isYoungInfant || d.age_months === null) {
+    for (const rule of imnci.young_infant_danger_signs ?? []) {
+      if (flags.has(rule.flag)) acc.record(rule.id, "RED_EMERGENCY", rule.immediate_actions, rule.rationale);
+    }
+  }
+
+  // Expanded WHO IMNCI pediatric syndrome symptom rules
+  for (const rule of imnci.syndrome_symptom_rules ?? []) {
+    if (flags.has(rule.flag)) acc.record(rule.id, rule.severity, rule.immediate_actions, rule.rationale);
+  }
+
   if (d.spo2_pct !== null) {
     if (d.spo2_pct < vt.spo2_critical_below_pct) {
       const r = syn.respiratory.red_rules[0];
@@ -259,9 +291,12 @@ function evaluatePediatric(d: Data, flags: Set<string>, imnci: ImnciPediatricRul
   // Respiratory syndrome (WHO IMNCI cough / difficult breathing)
   const rrThreshold = fastBreathingThreshold(d.age_months, imnci);
   const fastBreathing = d.respiratory_rate_bpm !== null && d.respiratory_rate_bpm >= rrThreshold;
-  if (isYoungInfant && d.chest_indrawing) {
+  if (isYoungInfant && (fastBreathing || d.chest_indrawing)) {
     const r = syn.respiratory.red_rules[1];
-    acc.record(r.id, "RED_EMERGENCY", r.immediate_actions, r.rationale);
+    const detail = fastBreathing
+      ? `Young infant (<2m) respiratory rate ${pyStr(d.respiratory_rate_bpm)}/min >= ${rrThreshold}/min`
+      : "Young infant (<2m) severe chest indrawing";
+    acc.record(r.id, "RED_EMERGENCY", r.immediate_actions, `${detail}: ${r.rationale}`);
   } else if (fastBreathing || d.chest_indrawing) {
     const r = syn.respiratory.yellow_rules[0];
     const detail = fastBreathing
@@ -384,6 +419,28 @@ function evaluatePediatric(d: Data, flags: Set<string>, imnci: ImnciPediatricRul
       mal.yellow_actions,
       "Palmar pallor detected: refer to PHC/ANM for anemia assessment and IFA/deworming.",
     );
+  }
+
+  if (d.hemoglobin_g_dl !== null) {
+    const hb = pyFixed1(d.hemoglobin_g_dl);
+    if (d.hemoglobin_g_dl < (vt.hb_severe_anemia_below_g_dl ?? 7.0)) {
+      acc.record(
+        "IMNCI_ANEMIA_SEVERE_HB_RED",
+        "RED_EMERGENCY",
+        [
+          "Urgent referral to FRU/District Hospital for severe pediatric anemia (transfusion evaluation)",
+          "Keep child calm and prevent hypoxia during transport",
+        ],
+        `Pediatric hemoglobin ${hb} g/dL < 7.0 g/dL defines severe anemia.`,
+      );
+    } else if (d.hemoglobin_g_dl < (vt.hb_moderate_anemia_below_g_dl ?? 11.0)) {
+      acc.record(
+        "IMNCI_ANEMIA_MODERATE_HB_YELLOW",
+        "YELLOW_PHC",
+        mal.yellow_actions,
+        `Pediatric hemoglobin ${hb} g/dL (<11.0 g/dL) indicates mild/moderate anemia requiring IFA syrup and PHC follow-up.`,
+      );
+    }
   }
 }
 
