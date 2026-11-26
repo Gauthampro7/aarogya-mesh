@@ -88,3 +88,15 @@ If Wi-Fi is completely unavailable or blocked:
 | Phone says Hub offline on same Wi-Fi | Venue Wi-Fi likely has **AP/Client Isolation**. Switch to **Phone Hotspot** (Option 1) or **USB `adb reverse`** (Option 3). |
 | Connection refused / timeout on Fedora | Check Hub is running (`make run-hub`) and allow port `8000` in `firewalld` (`sudo firewall-cmd --add-port=8000/tcp`). |
 | Unsure what IP to enter on Phone | Run `hostname -I` on the laptop and use the first IPv4 address (`http://<IP>:8000`). |
+
+---
+
+## 5. Tech Stack (At a Glance)
+
+| Layer | Technology |
+| --- | --- |
+| **Backend / Hub (`services/phc-hub`)** | Python 3.12 (`uv`), FastAPI, Uvicorn, SQLite (WAL mode), WebSockets |
+| **Phone & Watch UI (`apps/field-pwa`, `apps/watch-companion`)** | Vanilla TypeScript 5.7, `esbuild`, IndexedDB, Service Workers (zero runtime framework bloat) |
+| **Android APK (`apps/android-app`)** | Native Java `WebView` + embedded `127.0.0.1` `ServerSocket` (`aapt2` / `d8` / `apksigner`, Gradle-free) |
+| **Sync & Contracts (`packages/*`)** | Custom HLC + CRDT append-only event log, Pydantic v2 + JSON Schema (`contracts`) |
+| **Clinical & Edge ML (`packages/clinical-engine`, `services/ml-pipeline`)** | Deterministic WHO IMNCI + India UIP rules; optional CPU INT8 `faster-whisper`, `llama-cpp-python`, `lightgbm`, EWMA |
