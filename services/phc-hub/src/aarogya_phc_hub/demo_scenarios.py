@@ -9,12 +9,21 @@ through the real Hub primitives (``reconcile_envelopes``, ``PeerRegistry``,
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import date
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field
 
-from aarogya_clinical_engine import TriageInput, TriageMode, evaluate_triage, triage_to_action_card
+from aarogya_clinical_engine import (
+    ChecklistType,
+    TriageInput,
+    TriageMode,
+    compute_vaccination_schedule,
+    evaluate_checklist,
+    evaluate_triage,
+    triage_to_action_card,
+)
 from aarogya_contracts import (
     ActionCard,
     ActionCardPriority,
@@ -240,13 +249,43 @@ def _run_maternal_sos(
             },
         },
     )
+    sunita_ck = evaluate_checklist(
+        ChecklistType.ANC_TRIMESTER_3,
+        [
+            "anc_t3_bp_urine_albumin",
+            "anc_t3_repeat_hb",
+            "anc_t3_fetal_heart_position",
+            "anc_t3_kick_count",
+            "anc_t3_birth_preparedness",
+            "anc_t3_ifa_calcium_adherence",
+            "anc_t3_jsy_pmmvy_readiness",
+        ],
+        patient_id=patient_id,
+    )
+    ck_event = CrdtEvent(
+        event_id="demo-mat-sos-anc3-checklist",
+        hlc=HlcTimestamp(wall_ms=t0 + 500, logical=0, node_id=phone_manifest.node_id),
+        origin_node_id=phone_manifest.node_id,
+        patient_id=patient_id,
+        event_type=EventType.CHECKLIST_RECORDED,
+        payload={
+            "checklist_type": sunita_ck.checklist_type.value,
+            "protocol": sunita_ck.protocol,
+            "completed_items": sunita_ck.completed_items,
+            "missing_items": sunita_ck.missing_items,
+            "missing_critical_checks": sunita_ck.missing_critical_checks,
+            "completion_score": sunita_ck.completion_score,
+            "is_complete": sunita_ck.is_complete,
+            "has_critical_gaps": sunita_ck.has_critical_gaps,
+        },
+    )
     _sync_peer_events(
         store,
         clock,
         manifest,
         registry,
         peer_manifest=phone_manifest,
-        events=[reg_event],
+        events=[reg_event, ck_event],
         source="sync_http",
         sender_hlc=HlcTimestamp(wall_ms=t0 + 1_000, logical=0, node_id=phone_manifest.node_id),
         envelope_id="demo-env-mat-phone-reg",
@@ -440,6 +479,7 @@ def _run_pediatric_voice_offload(
         payload={
             "patient_id": patient_id,
             "full_name": "Aarav Sharma",
+            "date_of_birth": "2025-09-15",
             "age_months": 14,
             "sex": "M",
             "village_id": "rampur-01",
@@ -451,6 +491,62 @@ def _run_pediatric_voice_offload(
                 "uip_card_id": "UIP-RMP-114",
             },
         },
+    )
+    aarav_dob = date(2025, 9, 15)
+    aarav_administered = {
+        "BCG": date(2025, 9, 16),
+        "OPV-0": date(2025, 9, 16),
+        "HepB-Birth": date(2025, 9, 16),
+        "OPV-1": date(2025, 10, 30),
+        "Pentavalent-1": date(2025, 10, 30),
+        "Rotavirus-1": date(2025, 10, 30),
+        "fIPV-1": date(2025, 10, 30),
+        "PCV-1": date(2025, 10, 30),
+        "OPV-2": date(2025, 11, 28),
+        "Pentavalent-2": date(2025, 11, 28),
+        "Rotavirus-2": date(2025, 11, 28),
+    }
+    aarav_vax_items = [
+        item
+        for item in compute_vaccination_schedule(
+            aarav_dob,
+            administered_vaccines=aarav_administered,
+            as_of_date=date(2026, 11, 26),
+        )
+        if item.vaccine_code in aarav_administered
+    ]
+    vax_events = [
+        CrdtEvent(
+            event_id=f"demo-ped-vax-aarav-{idx}",
+            hlc=HlcTimestamp(wall_ms=t0 + 1_000 + idx, logical=0, node_id=phone_manifest.node_id),
+            origin_node_id=phone_manifest.node_id,
+            patient_id=patient_id,
+            event_type=EventType.VACCINATION_LOGGED,
+            payload=item.model_dump(mode="json"),
+        )
+        for idx, item in enumerate(aarav_vax_items)
+    ]
+    ped_triage = evaluate_triage(
+        TriageInput(
+            patient_id=patient_id,
+            mode=TriageMode.FULL_ASSESSMENT,
+            age_months=14,
+            temperature_c=39.7,
+            fever_days=2,
+            respiratory_rate_bpm=48,
+            spo2_pct=93,
+            symptoms=["cough"],
+            danger_signs=["convulsions"],
+            assessed_at_ms=t0 + 10_000,
+        )
+    ).model_copy(update={"assessment_id": "demo-ped-triage-aarav-assessment"})
+    ped_triage_event = CrdtEvent(
+        event_id="demo-ped-triage-aarav",
+        hlc=HlcTimestamp(wall_ms=t0 + 10_000, logical=0, node_id=phone_manifest.node_id),
+        origin_node_id=phone_manifest.node_id,
+        patient_id=patient_id,
+        event_type=EventType.TRIAGE_COMPLETED,
+        payload=ped_triage.model_dump(mode="json"),
     )
     voice_event = CrdtEvent(
         event_id="demo-ped-voice-aarav",
@@ -476,7 +572,7 @@ def _run_pediatric_voice_offload(
         manifest,
         registry,
         peer_manifest=phone_manifest,
-        events=[reg_event, voice_event],
+        events=[reg_event, *vax_events, ped_triage_event, voice_event],
         source="sync_http",
         sender_hlc=HlcTimestamp(wall_ms=t0 + 20_000, logical=0, node_id=phone_manifest.node_id),
         envelope_id="demo-env-ped-phone-voice",
@@ -819,6 +915,35 @@ def _run_crdt_conflict_merge(
             },
         },
     )
+    kavita_ck = evaluate_checklist(
+        ChecklistType.ANC_TRIMESTER_3,
+        [
+            "anc_t3_bp_urine_albumin",
+            "anc_t3_repeat_hb",
+            "anc_t3_fetal_heart_position",
+            "anc_t3_kick_count",
+            "anc_t3_ifa_calcium_adherence",
+            "anc_t3_early_breastfeeding_plan",
+        ],
+        patient_id=patient_id,
+    )
+    kavita_ck_event = CrdtEvent(
+        event_id="demo-crdt-anc3-checklist-kavita",
+        hlc=HlcTimestamp(wall_ms=t1, logical=1, node_id=phone_manifest.node_id),
+        origin_node_id=phone_manifest.node_id,
+        patient_id=patient_id,
+        event_type=EventType.CHECKLIST_RECORDED,
+        payload={
+            "checklist_type": kavita_ck.checklist_type.value,
+            "protocol": kavita_ck.protocol,
+            "completed_items": kavita_ck.completed_items,
+            "missing_items": kavita_ck.missing_items,
+            "missing_critical_checks": kavita_ck.missing_critical_checks,
+            "completion_score": kavita_ck.completion_score,
+            "is_complete": kavita_ck.is_complete,
+            "has_critical_gaps": kavita_ck.has_critical_gaps,
+        },
+    )
 
     # Concurrent disconnected Watch edit (same wall_ms=t1): metadata.sos_triggered=True + RED_EMERGENCY triage.
     watch_offline_meta = CrdtEvent(
@@ -865,7 +990,7 @@ def _run_crdt_conflict_merge(
         manifest,
         registry,
         peer_manifest=phone_manifest,
-        events=[initial_reg, phone_offline_update],
+        events=[initial_reg, phone_offline_update, kavita_ck_event],
         source="sync_http",
         sender_hlc=HlcTimestamp(wall_ms=t1 + 5_000, logical=0, node_id=phone_manifest.node_id),
         envelope_id="demo-env-crdt-phone",
