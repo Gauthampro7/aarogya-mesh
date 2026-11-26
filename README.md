@@ -94,7 +94,7 @@ Once the Hub is running, inspect:
 
 ## 3-Minute Winning Hackathon Demo Script (`/showcase` on `:8000`)
 
-Present the entire **3-Tier Offline Mesh** (Watch + Phone + Hub Brain) live on a single port (`:8000`). For the full beat-by-beat stage choreography, Galaxy S23 checklist, 5 Technical Moats, and 36 adversarial judge Q&As, see [docs/JUDGE_QA_AND_PITCH_BIBLE.md](./docs/JUDGE_QA_AND_PITCH_BIBLE.md):
+Present the entire **3-Tier Offline Mesh** (Watch + Phone + Hub Brain) live on a single port (`:8000`). For the stage playbook and 5 Technical Moats, see [docs/JUDGE_QA_AND_PITCH_BIBLE.md](./docs/JUDGE_QA_AND_PITCH_BIBLE.md), and for the short **36 Judge Q&As**, see [docs/JUDGE_QA_CHEATSHEET.md](./docs/JUDGE_QA_CHEATSHEET.md):
 
 1. **Boot the Unified Stage** (auto-builds `apps/field-pwa` and `apps/watch-companion` bundles if needed):
    ```bash
