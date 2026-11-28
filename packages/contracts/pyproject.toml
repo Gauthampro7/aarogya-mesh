@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aarogya-contracts"
-version = "0.2.0"
+version = "0.3.0"
 description = "Shared Pydantic v2 models, JSON Schema Draft 2020-12 exports, and TypeScript interfaces for Aarogya Mesh"
 requires-python = ">=3.12,<3.13"
 dependencies = [

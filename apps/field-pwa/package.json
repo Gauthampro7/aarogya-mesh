@@ -1,6 +1,6 @@
 {
   "name": "@aarogya-mesh/field-pwa",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Tier-1 CHW offline-first field PWA for Aarogya Mesh",
   "type": "module",

@@ -14,7 +14,7 @@ members = [
 
 [[package]]
 name = "aarogya-clinical-engine"
-version = "0.2.0"
+version = "0.3.0"
 source = { editable = "packages/clinical-engine" }
 dependencies = [
     { name = "aarogya-contracts" },
@@ -29,7 +29,7 @@ requires-dist = [
 
 [[package]]
 name = "aarogya-contracts"
-version = "0.2.0"
+version = "0.3.0"
 source = { editable = "packages/contracts" }
 dependencies = [
     { name = "pydantic" },
@@ -40,7 +40,7 @@ requires-dist = [{ name = "pydantic", specifier = ">=2.9" }]
 
 [[package]]
 name = "aarogya-crdt-sync"
-version = "0.2.0"
+version = "0.3.0"
 source = { editable = "packages/crdt-sync" }
 dependencies = [
     { name = "aarogya-contracts" },
@@ -55,7 +55,7 @@ requires-dist = [
 
 [[package]]
 name = "aarogya-mesh"
-version = "0.2.0"
+version = "0.3.0"
 source = { virtual = "." }
 dependencies = [
     { name = "aarogya-clinical-engine" },
@@ -98,7 +98,7 @@ dev = [
 
 [[package]]
 name = "aarogya-ml-pipeline"
-version = "0.2.0"
+version = "0.3.0"
 source = { editable = "services/ml-pipeline" }
 dependencies = [
     { name = "aarogya-clinical-engine" },
@@ -130,7 +130,7 @@ provides-extras = ["asr", "slm", "risk"]
 
 [[package]]
 name = "aarogya-phc-hub"
-version = "0.2.0"
+version = "0.3.0"
 source = { editable = "services/phc-hub" }
 dependencies = [
     { name = "aarogya-clinical-engine" },

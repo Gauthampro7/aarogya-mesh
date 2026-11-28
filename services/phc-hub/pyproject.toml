@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aarogya-phc-hub"
-version = "0.2.0"
+version = "0.3.0"
 description = "Tier-2 PHC Hub FastAPI transport, capability router, and CRDT delta-sync server for Aarogya Mesh."
 requires-python = ">=3.12,<3.13"
 dependencies = [

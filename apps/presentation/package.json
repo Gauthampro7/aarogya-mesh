@@ -1,6 +1,6 @@
 {
   "name": "@aarogya-mesh/presentation",
-  "version": "1.0.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Aarogya Mesh offline-first interactive presentation deck",
   "type": "module",

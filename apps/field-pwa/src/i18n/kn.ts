@@ -325,6 +325,14 @@ export const kn: Record<Key, string> = {
   "proof.state.syncing": "ಸಿಂಕ್ ಆಗುತ್ತಿದೆ",
   "proof.state.offline": "ಆಫ್‌ಲೈನ್",
   "proof.state.error": "ದೋಷ",
+  "voice.historyTitle": "ಧ್ವನಿ ಟಿಪ್ಪಣಿ ಇತಿಹಾಸ ಮತ್ತು ವಿಶ್ಲೇಷಣೆ",
+  "voice.historyEmpty": "ಇನ್ನೂ ಯಾವುದೇ ಧ್ವನಿ ಟಿಪ್ಪಣಿಗಳನ್ನು ದಾಖಲಿಸಿಲ್ಲ.",
+  "voice.statusPending": "ಕೇಂದ್ರದ ವಿಶ್ಲೇಷಣೆ ಬಾಕಿ ಇದೆ",
+  "voice.statusCompleted": "ಕೇಂದ್ರದಿಂದ ವಿಶ್ಲೇಷಿಸಲಾಗಿದೆ",
+  "voice.transcript": "ಲಿಪ್ಯಂತರ",
+  "voice.symptoms": "ಗುರುತಿಸಿದ ಲಕ್ಷಣಗಳು",
+  "voice.riskScore": "ಅಪಾಯದ ಮಟ್ಟ: {band} ({score})",
+  "voice.playLocal": "ಸ್ಥಳೀಯ ಧ್ವನಿ ಕೇಳಿ",
 };
 
 /** Display-only Kannada for engine triage output (stored English strings stay exact). */
@@ -598,12 +606,4 @@ export const KN_TRIAGE_RATIONALE: Readonly<Record<string, string>> = {
   "IMNCI_ANEMIA_MODERATE_HB_YELLOW": "ಮಗುವಿನ ಹಿಮೋಗ್ಲೋಬಿನ್ <11.0 g/dL: ಸೌಮ್ಯ/ಮಧ್ಯಮ ರಕ್ತಹೀನತೆಗೆ ಕಬ್ಬಿಣಾಂಶ ಸಿರಪ್ ಮತ್ತು PHC ಮರುಭೇಟಿ ಅಗತ್ಯ.",
   "MAT_BP_SHOCK_RED": "ತಾಯಿಯ ಸಿಸ್ಟೊಲಿಕ್ ರಕ್ತದೊತ್ತಡ <90 mmHg: ಪ್ರಸೂತಿ ರಕ್ತಸ್ರಾವ ಅಥವಾ ಸೆಪ್ಟಿಕ್ ಶಾಕ್ ಸೂಚನೆ.",
   "MAT_PUERPERAL_SEPSIS_FEVER_RED": "ಬಾಣಂತಿ ತಾಯಿಯ ಉಷ್ಣಾಂಶ >=38.0°C: ಬಾಣಂತಿ ಸೆಪ್ಸಿಸ್‌ನ ಹೆಚ್ಚಿನ ಅಪಾಯ.",
-  "voice.historyTitle": "ಧ್ವನಿ ಟಿಪ್ಪಣಿ ಇತಿಹಾಸ ಮತ್ತು ವಿಶ್ಲೇಷಣೆ",
-  "voice.historyEmpty": "ಇನ್ನೂ ಯಾವುದೇ ಧ್ವನಿ ಟಿಪ್ಪಣಿಗಳನ್ನು ದಾಖಲಿಸಿಲ್ಲ.",
-  "voice.statusPending": "ಕೇಂದ್ರದ ವಿಶ್ಲೇಷಣೆ ಬಾಕಿ ಇದೆ",
-  "voice.statusCompleted": "ಕೇಂದ್ರದಿಂದ ವಿಶ್ಲೇಷಿಸಲಾಗಿದೆ",
-  "voice.transcript": "ಲಿಪ್ಯಂತರ",
-  "voice.symptoms": "ಗುರುತಿಸಿದ ಲಕ್ಷಣಗಳು",
-  "voice.riskScore": "ಅಪಾಯದ ಮಟ್ಟ: {band} ({score})",
-  "voice.playLocal": "ಸ್ಥಳೀಯ ಧ್ವನಿ ಕೇಳಿ",
 };

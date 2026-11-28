@@ -324,9 +324,14 @@ export const hi: Record<Key, string> = {
   "proof.state.syncing": "समन्वय गतिमान",
   "proof.state.offline": "विमान अवस्था",
   "proof.state.error": "त्रुटि",
-
-// === T2-05 === Display-only Hindi for engine triage output (stored English strings stay exact).
-/** Keyed by the exact English immediate_actions string emitted by the triage engine. */
+  "voice.historyTitle": "स्वर टिप्पणी इतिहास एवं विश्लेषण",
+  "voice.historyEmpty": "अभी तक कोई स्वर टिप्पणी संचित नहीं हुई।",
+  "voice.statusPending": "केन्द्र विश्लेषण लम्बित",
+  "voice.statusCompleted": "केन्द्र द्वारा विश्लेषित",
+  "voice.transcript": "प्रतिलेख",
+  "voice.symptoms": "निष्कर्षित लक्षण",
+  "voice.riskScore": "संकट स्तर: {band} ({score})",
+  "voice.playLocal": "स्थानीय ध्वनि सुनें",
 };
 
 export const HI_TRIAGE_ACTIONS: Readonly<Record<string, string>> = {
@@ -599,12 +604,4 @@ export const HI_TRIAGE_RATIONALE: Readonly<Record<string, string>> = {
   "IMNCI_ANEMIA_MODERATE_HB_YELLOW": "बाल रक्तवर्णक 11.0 ग्रा./डे.ली. से न्यून: सौम्य अथवा मध्यम रक्ताल्पता हेतु लौह घोल तथा प्राथमिक स्वास्थ्य केन्द्र अनुवर्ती भेंट आवश्यक।",
   "MAT_BP_SHOCK_RED": "माता का संकुचन रक्तचाप 90 मि.मी. पारद से न्यून: प्रसूति रक्तस्रावी अथवा पूतिज आघात का सूचक।",
   "MAT_PUERPERAL_SEPSIS_FEVER_RED": "प्रसवोत्तर माता का तापमान 38.0 °C अथवा अधिक: सूतिका पूतिता का उच्च संकट।",
-  "voice.historyTitle": "स्वर टिप्पणी इतिहास एवं विश्लेषण",
-  "voice.historyEmpty": "अभी तक कोई स्वर टिप्पणी संचित नहीं हुई।",
-  "voice.statusPending": "केन्द्र विश्लेषण लम्बित",
-  "voice.statusCompleted": "केन्द्र द्वारा विश्लेषित",
-  "voice.transcript": "प्रतिलेख",
-  "voice.symptoms": "निष्कर्षित लक्षण",
-  "voice.riskScore": "संकट स्तर: {band} ({score})",
-  "voice.playLocal": "स्थानीय ध्वनि सुनें",
 };
