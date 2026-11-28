@@ -15,6 +15,7 @@ make run-hub
 This builds the UI bundles (if needed) and starts the Hub on **`0.0.0.0:8000`** (listening on all local network interfaces).
 
 Open in your laptop browser:
+- **Presentation Deck**: `http://127.0.0.1:8000/deck`
 - **3-Tier Live Demo Stage** (Watch + Phone + Hub): `http://127.0.0.1:8000/showcase`
 - **PHC Command Center Dashboard**: `http://127.0.0.1:8000/`
 - **Phone View (Browser)**: `http://127.0.0.1:8000/phone/`

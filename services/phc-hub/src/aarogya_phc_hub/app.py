@@ -292,6 +292,12 @@ def create_app(
             StaticFiles(directory=str(watch_dir), html=True),
             name="watch-companion",
         )
+    deck_dir = repo_root / "apps" / "presentation" / "dist"
+    hub_app.mount(
+        "/deck",
+        StaticFiles(directory=str(deck_dir), html=True, check_dir=False),
+        name="presentation-deck",
+    )
 
     return hub_app
 
