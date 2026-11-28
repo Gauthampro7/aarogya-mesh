@@ -694,10 +694,10 @@ def _run_village_outbreak(
         ("s3", "Priya Yadav", 15, "F", 3, True, 38.9, ["sunken_eyes", "skin_pinch_slow"]),
         ("s4", "Devansh Shukla", 24, "M", 3, True, 39.7, ["sunken_eyes", "skin_pinch_very_slow"]),
     ]
-    watch_cases: list[tuple[str, str, int, Literal["F", "M"], int]] = [
-        ("w0", "Vihaan Yadav", 26, "M", 2),
-        ("w1", "Nandini Gupta", 19, "F", 3),
-        ("w2", "Pranav Joshi", 32, "M", 3),
+    watch_cases: list[tuple[str, str, int, Literal["F", "M"], int, float, int, int, int | None, str]] = [
+        ("w0", "Vihaan Yadav", 26, "M", 2, 38.1, 1, 34, 98, "fever and mild fatigue"),
+        ("w1", "Nandini Gupta", 19, "F", 3, 39.2, 3, 44, 94, "persistent fever and cough"),
+        ("w2", "Pranav Joshi", 32, "M", 3, 39.9, 4, 50, 91, "high fever with fast breathing"),
     ]
 
     def _build_phone_events(
@@ -756,12 +756,12 @@ def _run_village_outbreak(
     south_events = _build_phone_events(phone_south, south_cases)
 
     watch_events: list[CrdtEvent] = []
-    for idx, (tag, name, age_m, sex, day_offset) in enumerate(watch_cases):
+    for idx, (tag, name, age_m, sex, day_offset, temp_c, f_days, rr_bpm, spo2, sym_desc) in enumerate(watch_cases):
         pid = f"pat-outbreak-{tag}"
         ev_ms = _DEMO_BASE_DAY_MS + day_offset * _MS_PER_DAY + (idx + 10) * 60_000
         blob_key = f"demo-outbreak-watch-vn-{tag}"
         note_text = (
-            f"Rampur child {name} has fever and fatigue "
+            f"Rampur child {name} has {sym_desc} "
             f"(रामपुर के शिशु {name} को तीव्र ज्वर है)."
         )
         blob_store.put(blob_key, note_text.encode("utf-8"), content_type="audio/webm")
@@ -784,6 +784,17 @@ def _run_village_outbreak(
                 },
             )
         )
+        voice_payload: dict[str, object] = {
+            "audio_blob_key": blob_key,
+            "language": "hi",
+            "age_months": age_m,
+            "temperature_c": temp_c,
+            "fever_days": f_days,
+            "respiratory_rate_bpm": rr_bpm,
+            "transcript_hint": note_text,
+        }
+        if spo2 is not None:
+            voice_payload["spo2_pct"] = spo2
         watch_events.append(
             CrdtEvent(
                 event_id=f"demo-outbreak-voice-{tag}",
@@ -792,14 +803,7 @@ def _run_village_outbreak(
                 patient_id=pid,
                 event_type=EventType.VOICE_NOTE_RECORDED,
                 enrichment_state=EnrichmentState.PENDING,
-                payload={
-                    "audio_blob_key": blob_key,
-                    "language": "hi",
-                    "age_months": age_m,
-                    "temperature_c": 38.6,
-                    "fever_days": 2,
-                    "transcript_hint": note_text,
-                },
+                payload=voice_payload,
             )
         )
 
