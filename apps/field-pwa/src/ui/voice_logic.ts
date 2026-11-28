@@ -1,9 +1,74 @@
+import type { CrdtEvent, PatientRecord, TriageSeverity } from "../../../../packages/contracts/ts/index";
+
 export interface VoiceNotePayload {
   transcript_hint: string;
   language: string;
   audio_blob_key: string | null;
   mime_type: string | null;
   duration_ms: number;
+}
+
+export interface VoiceHistoryItem {
+  eventId: string;
+  patientId: string | null;
+  patientName: string | null;
+  recordedAtMs: number;
+  originNodeId: string;
+  transcriptHint: string;
+  blobKey: string | null;
+  durationMs: number;
+  status: "PENDING" | "COMPLETED";
+  transcript: string | null;
+  symptoms: string[];
+  dangerFlags: string[];
+  severity: TriageSeverity | null;
+  riskBand: string | null;
+  riskScore: number | null;
+  followUp: string | null;
+}
+
+export function buildVoiceHistory(
+  events: readonly CrdtEvent[],
+  patients: readonly Pick<PatientRecord, "patient_id" | "full_name">[],
+): VoiceHistoryItem[] {
+  const byPatient = new Map(patients.map((p) => [p.patient_id, p.full_name]));
+  const enrichByRef = new Map<string, CrdtEvent>();
+  for (const e of events) {
+    if (e.event_type === "ENRICHMENT_COMPLETED" && e.ref_event_id) {
+      enrichByRef.set(e.ref_event_id, e);
+    }
+  }
+  const items: VoiceHistoryItem[] = [];
+  for (const e of events) {
+    if (e.event_type !== "VOICE_NOTE_RECORDED") continue;
+    const p = (e.payload ?? {}) as Record<string, unknown>;
+    const enr = enrichByRef.get(e.event_id);
+    const ep = (enr?.payload ?? {}) as Record<string, unknown>;
+    const trans = (ep.transcription ?? {}) as Record<string, unknown>;
+    const note = (ep.structured_note ?? {}) as Record<string, unknown>;
+    const triage = (ep.triage_assessment ?? {}) as Record<string, unknown>;
+    const risk = (ep.risk_score ?? {}) as Record<string, unknown>;
+    const sev = typeof triage.severity === "string" ? (triage.severity as TriageSeverity) : null;
+    items.push({
+      eventId: e.event_id,
+      patientId: e.patient_id,
+      patientName: e.patient_id ? (byPatient.get(e.patient_id) ?? e.patient_id) : null,
+      recordedAtMs: e.hlc.wall_ms,
+      originNodeId: e.origin_node_id,
+      transcriptHint: typeof p.transcript_hint === "string" ? p.transcript_hint : "",
+      blobKey: typeof p.audio_blob_key === "string" && p.audio_blob_key ? p.audio_blob_key : null,
+      durationMs: typeof p.duration_ms === "number" ? p.duration_ms : 0,
+      status: enr ? "COMPLETED" : "PENDING",
+      transcript: typeof trans.transcript === "string" ? trans.transcript : null,
+      symptoms: Array.isArray(note.extracted_symptoms) ? note.extracted_symptoms.map(String) : [],
+      dangerFlags: Array.isArray(note.candidate_danger_flags) ? note.candidate_danger_flags.map(String) : [],
+      severity: sev,
+      riskBand: typeof risk.risk_band === "string" ? risk.risk_band : null,
+      riskScore: typeof risk.risk_score === "number" ? risk.risk_score : null,
+      followUp: typeof note.recommended_follow_up === "string" ? note.recommended_follow_up : null,
+    });
+  }
+  return items.sort((a, b) => b.recordedAtMs - a.recordedAtMs);
 }
 
 export const canRecordAudio = (): boolean =>

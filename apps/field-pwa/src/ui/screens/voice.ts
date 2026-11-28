@@ -1,12 +1,12 @@
 import { getLang, t } from "../../i18n";
 import { field, h } from "../dom";
 import type { Ctx } from "../ctx";
-import { putAudio } from "../audio_store";
-import { buildVoicePayload, formatDurationMmSs, recordingUnavailableReason, voiceNoteValid } from "../voice_logic";
+import { getAudio, putAudio } from "../audio_store";
+import { buildVoiceHistory, buildVoicePayload, formatDurationMmSs, recordingUnavailableReason, voiceNoteValid } from "../voice_logic";
 import { uuid } from "../../core/uuid";
 
 export async function voice(ctx: Ctx): Promise<HTMLElement> {
-  const patients = await ctx.store.listPatients();
+  const [patients, allEvents] = await Promise.all([ctx.store.listPatients(), ctx.store.getAllEvents()]);
   const pSel = h("select", { name: "patient" }, h("option", { value: "" }, t("triage.anon")), patients.map((p) => h("option", { value: p.patient_id }, p.full_name)));
   const hint = h("textarea", { name: "hint", rows: 4, maxlength: 2000 });
   const status = h("p", { role: "status", "aria-live": "polite" });
@@ -110,11 +110,66 @@ export async function voice(ctx: Ctx): Promise<HTMLElement> {
       hint.value = "";
       revokePreview();
       durationMs = 0;
+      await drawHistory();
     } catch (e) {
       status.className = "error";
       status.textContent = `${t("triage.saveFail")} ${String(e)}`;
     }
   }
+
+  const historyBox = h("div", { class: "voice-history" });
+  const SEV_KEY = { RED_EMERGENCY: "sev.red", YELLOW_PHC: "sev.yellow", GREEN_HOME: "sev.green" } as const;
+  const activeUrls: string[] = [];
+
+  async function drawHistory() {
+    const [latestPatients, latestEvents] = await Promise.all([ctx.store.listPatients(), ctx.store.getAllEvents()]);
+    const items = buildVoiceHistory(latestEvents, latestPatients);
+    if (items.length === 0) {
+      historyBox.replaceChildren(h("p", { class: "muted" }, t("voice.historyEmpty")));
+      return;
+    }
+    const loc = getLang() === "hi" ? "hi-IN" : getLang() === "kn" ? "kn-IN" : "en-IN";
+    const listItems = await Promise.all(
+      items.map(async (item) => {
+        let localAudioEl: HTMLElement | null = null;
+        if (item.blobKey) {
+          try {
+            const localBlob = await getAudio(item.blobKey);
+            if (localBlob) {
+              const u = URL.createObjectURL(localBlob);
+              activeUrls.push(u);
+              localAudioEl = h("audio", { controls: true, src: u });
+            }
+          } catch {
+            // Local blob may have been cleared or unavailable.
+          }
+        }
+        const badgeText = item.status === "COMPLETED" ? t("voice.statusCompleted") : t("voice.statusPending");
+        const metaLine = `${item.patientName ?? t("triage.anon")} · ${new Date(item.recordedAtMs).toLocaleString(loc)}${item.durationMs > 0 ? ` · ${formatDurationMmSs(item.durationMs)}` : ""}`;
+        return h(
+          "li",
+          { class: `card ${item.severity ? `sev-${item.severity}` : ""}` },
+          h(
+            "div",
+            {},
+            h("strong", {}, badgeText),
+            item.severity ? [" ", h("span", { class: `sevbadge sev-${item.severity}` }, t(SEV_KEY[item.severity]))] : null,
+          ),
+          h("p", { class: "muted" }, metaLine),
+          item.transcriptHint ? h("p", {}, item.transcriptHint) : null,
+          localAudioEl,
+          item.transcript ? h("p", {}, h("strong", {}, `${t("voice.transcript")}: `), item.transcript) : null,
+          item.symptoms.length ? h("p", {}, h("strong", {}, `${t("voice.symptoms")}: `), item.symptoms.join(", ")) : null,
+          item.riskBand !== null && item.riskScore !== null
+            ? h("p", { class: "muted" }, t("voice.riskScore", { band: item.riskBand, score: item.riskScore.toFixed(2) }))
+            : null,
+          item.followUp ? h("p", {}, item.followUp) : null,
+        );
+      }),
+    );
+    historyBox.replaceChildren(h("ul", { class: "list" }, listItems));
+  }
+  void drawHistory();
 
   // Leaving the screen or the page: stop the mic, timer and preview URL.
   const teardown = () => {
@@ -125,6 +180,7 @@ export async function voice(ctx: Ctx): Promise<HTMLElement> {
     if (rec?.state === "recording") rec.stop();
     stream?.getTracks().forEach((tr) => tr.stop());
     revokePreview();
+    while (activeUrls.length) URL.revokeObjectURL(activeUrls.pop()!);
   };
   window.addEventListener("pagehide", teardown);
   window.addEventListener("hashchange", teardown);
@@ -144,6 +200,10 @@ export async function voice(ctx: Ctx): Promise<HTMLElement> {
     field(t("voice.hint"), hint, t("voice.hintNote")),
     saveBtn,
     status,
+    h("h2", {}, t("voice.historyTitle")),
+    historyBox,
   );
+  // Suppress unused warning when allEvents was preloaded; drawHistory refreshes live.
+  void allEvents;
   return root;
 }

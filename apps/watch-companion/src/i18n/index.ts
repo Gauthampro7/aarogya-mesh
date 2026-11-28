@@ -1,17 +1,53 @@
 import { en, type Key } from "./en";
 import { hi } from "./hi";
+import { kn } from "./kn";
 
-export type Lang = "en" | "hi";
+export type Lang = "en" | "hi" | "kn";
 export type { Key };
 
-export const TABLES: Record<Lang, Record<Key, string>> = { en, hi };
+export const SUPPORTED_LANGS: readonly Lang[] = ["en", "hi", "kn"] as const;
+export const TABLES: Record<Lang, Record<Key, string>> = { en, hi, kn };
 
-const LANG_STORAGE_KEY = "aarogya.watch.lang";
+export const LANG_STORAGE_KEY = "aarogya.lang";
+const LEGACY_LANG_STORAGE_KEY = "aarogya.watch.lang";
+
+interface AarogyaNativeBridgeLike {
+  setLanguage?: (lang: string) => void;
+}
+
+export function isValidLang(value: unknown): value is Lang {
+  return value === "en" || value === "hi" || value === "kn";
+}
+
+function readQueryLang(): Lang | null {
+  try {
+    if (typeof window !== "undefined" && typeof window.location?.search === "string") {
+      const param = new URLSearchParams(window.location.search).get("lang");
+      if (isValidLang(param)) {
+        return param;
+      }
+    }
+  } catch {
+    // Ignore URL parsing errors in non-browser environments.
+  }
+  return null;
+}
 
 function readStoredLang(): Lang {
+  const fromQuery = readQueryLang();
+  if (fromQuery) {
+    return fromQuery;
+  }
   try {
     if (typeof localStorage !== "undefined") {
-      return localStorage.getItem(LANG_STORAGE_KEY) === "hi" ? "hi" : "en";
+      const primary = localStorage.getItem(LANG_STORAGE_KEY);
+      if (isValidLang(primary)) {
+        return primary;
+      }
+      const legacy = localStorage.getItem(LEGACY_LANG_STORAGE_KEY);
+      if (isValidLang(legacy)) {
+        return legacy;
+      }
     }
   } catch {
     // Ignore storage access errors in restricted contexts.
@@ -21,27 +57,51 @@ function readStoredLang(): Lang {
 
 let currentLang: Lang = readStoredLang();
 
+if (typeof document !== "undefined") {
+  document.documentElement.lang = currentLang;
+}
+
 export function getLang(): Lang {
   return currentLang;
 }
 
-export function setLang(lang: Lang): Lang {
-  currentLang = lang;
+export interface SetLangOptions {
+  notifyBridge?: boolean;
+}
+
+export function setLang(lang: Lang, options: SetLangOptions = {}): Lang {
+  const safeLang: Lang = isValidLang(lang) ? lang : "en";
+  currentLang = safeLang;
   try {
     if (typeof localStorage !== "undefined") {
-      localStorage.setItem(LANG_STORAGE_KEY, lang);
+      localStorage.setItem(LANG_STORAGE_KEY, safeLang);
     }
   } catch {
     // Ignore storage access errors in restricted contexts.
   }
   if (typeof document !== "undefined") {
-    document.documentElement.lang = lang;
+    document.documentElement.lang = safeLang;
+  }
+  if (options.notifyBridge !== false && typeof window !== "undefined") {
+    const bridge = (window as unknown as { AarogyaNativeBridge?: AarogyaNativeBridgeLike })
+      .AarogyaNativeBridge;
+    try {
+      bridge?.setLanguage?.(safeLang);
+    } catch {
+      // Fail-soft if native bridge throws.
+    }
   }
   return currentLang;
 }
 
+export function nextLang(lang: Lang): Lang {
+  if (lang === "en") return "hi";
+  if (lang === "hi") return "kn";
+  return "en";
+}
+
 export function toggleLang(): Lang {
-  return setLang(currentLang === "en" ? "hi" : "en");
+  return setLang(nextLang(currentLang));
 }
 
 function interpolate(template: string, vars?: Record<string, string | number>): string {

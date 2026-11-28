@@ -56,6 +56,8 @@ export function mountWatchUi(root: HTMLElement, controller: WatchUiController): 
     const langBtn = el("button", "pill lang-pill", t("lang.toggle"));
     langBtn.type = "button";
     langBtn.id = "lang-toggle";
+    langBtn.setAttribute("data-lang", controller.getLanguage());
+    langBtn.setAttribute("aria-label", t("lang.switchAria"));
     langBtn.addEventListener("click", () => controller.toggleLanguage());
 
     header.append(modeBtn, langBtn);
@@ -64,7 +66,7 @@ export function mountWatchUi(root: HTMLElement, controller: WatchUiController): 
 
   const renderTabs = (): HTMLElement => {
     const bar = el("nav", "watch-tabs");
-    bar.setAttribute("aria-label", "Watch views");
+    bar.setAttribute("aria-label", t("nav.aria"));
     const mode = controller.getMode();
     const activeTab = controller.getTab();
     const outboxCount = controller.getOutboxCount();
@@ -149,7 +151,9 @@ export function mountWatchUi(root: HTMLElement, controller: WatchUiController): 
       const labelText = armedSign
         ? lang === "hi"
           ? armedSign.labelHi
-          : armedSign.labelEn
+          : lang === "kn"
+            ? armedSign.labelKn
+            : armedSign.labelEn
         : armedFlag;
       confirmBar.append(
         el("div", "confirm-title", t("danger.confirmPrompt")),
@@ -176,7 +180,7 @@ export function mountWatchUi(root: HTMLElement, controller: WatchUiController): 
       const btn = el(
         "button",
         `sign-btn${armedFlag === sign.flag ? " armed" : ""}`,
-        lang === "hi" ? sign.labelHi : sign.labelEn,
+        lang === "hi" ? sign.labelHi : lang === "kn" ? sign.labelKn : sign.labelEn,
       );
       btn.type = "button";
       btn.setAttribute("data-flag", sign.flag);
@@ -412,9 +416,13 @@ export function mountWatchUi(root: HTMLElement, controller: WatchUiController): 
       clearRecordingTimer();
     }
     root.replaceChildren();
+    if (typeof document !== "undefined") {
+      document.title = t("app.title");
+      document.documentElement.lang = controller.getLanguage();
+    }
     const bezel = el("div", "watch-bezel");
     bezel.setAttribute("role", "application");
-    bezel.setAttribute("aria-label", "Tier-0 Watch Companion 360x360");
+    bezel.setAttribute("aria-label", t("app.aria"));
 
     let content: HTMLElement;
     switch (tab) {

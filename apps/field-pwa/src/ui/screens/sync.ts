@@ -1,5 +1,5 @@
 import type { ActionCard } from "../../../../../packages/contracts/ts/index";
-import { t } from "../../i18n";
+import { getLang, t } from "../../i18n";
 import { field, h } from "../dom";
 import type { Ctx } from "../ctx";
 import { heldClipsFromDetail, runSync } from "../app_state";
@@ -99,7 +99,7 @@ export async function syncPanel(ctx: Ctx): Promise<HTMLElement> {
     btn,
     msg,
     h("p", {}, `${t("home.pendingSync")}: `, pendingEl),
-    h("p", { class: "muted" }, last ? `${t("sync.last")}: ${new Date(last.at).toLocaleString()} — ${lastText}` : t("sync.never")),
+    h("p", { class: "muted" }, last ? `${t("sync.last")}: ${new Date(last.at).toLocaleString(getLang() === "hi" ? "hi-IN" : getLang() === "kn" ? "kn-IN" : "en-IN")} — ${lastText}` : t("sync.never")),
     proofCard,
     h("h2", {}, t("cards.title")),
     cards.length ? h("ul", { class: "list" }, sortCards(cards).map(card)) : h("p", { class: "muted" }, t("cards.none")),

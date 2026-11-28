@@ -206,7 +206,11 @@ export class WatchSyncClient {
       typeof window !== "undefined" ? window.location : null,
     );
     this.hubUrl = (opts.hubUrl ?? fallbackHubUrl).replace(/\/+$/, "");
-    this.fetchImpl = opts.fetchImpl ?? fetchImpl ?? globalThis.fetch;
+    const rawFetch = opts.fetchImpl ?? fetchImpl ?? globalThis.fetch;
+    this.fetchImpl =
+      rawFetch === globalThis.fetch && typeof globalThis.fetch === "function"
+        ? globalThis.fetch.bind(globalThis)
+        : rawFetch;
     this.batteryPctProvider = opts.batteryPct ?? (() => 100);
     this.ramMb = opts.ramMb ?? 256;
     this.cpuCores = opts.cpuCores ?? 2;
@@ -439,7 +443,8 @@ export class WatchSyncClient {
 
     let res: Response;
     try {
-      res = await this.fetchImpl(url, {
+      const fetchFn = this.fetchImpl;
+      res = await fetchFn(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(envelope),

@@ -3,6 +3,7 @@
 
   const STORAGE_LANG_KEY = "aarogya.lang";
   const STORAGE_THEME_KEY = "aarogya.theme";
+  const SUPPORTED_LANGS = ["en", "hi", "kn"];
 
   const I18N = {
     en: {
@@ -21,6 +22,10 @@
       scenarioVoice: "Offline Voice → AI",
       scenarioOutbreak: "Village Outbreak",
       scenarioCrdt: "CRDT Merge Proof",
+      scMaternalTitle: "Maternal Watch SOS → ASHA Phone",
+      scVoiceTitle: "Offline Voice Note → Hub AI Enrichment",
+      scOutbreakTitle: "Multi-Worker EWMA Village Outbreak",
+      scCrdtTitle: "Offline Conflict-Free CRDT Merge",
       demoReset: "Reset",
       openShowcase: "Open 3-Tier Live Stage →",
       demoLoading: "Running live clinical scenario...",
@@ -33,8 +38,10 @@
       archTitle: "Compute-Proportional 3-Tier Autonomous Mesh",
       tier0Label: "Tier-0 Watch",
       tier0Desc: "Standalone SOS & Reminders for Normal Public & CHW",
+      tier0CapTag: "1-Tap SOS · BLE/LAN",
       tier1Label: "Tier-1 Phone",
       tier1Desc: "WHO IMNCI Deterministic Triage + Offline IndexedDB",
+      tier1CapTag: "Voice Queue · Delta Sync",
       tier2Label: "Tier-2 Hub",
       tier2Desc: "Whisper + SLM + LightGBM SHAP + EWMA Outbreak",
       activePeersShort: "active",
@@ -72,6 +79,20 @@
       hideEventLog: "Hide Log",
       filterEvents: "Filter by event type",
       allEvents: "All Events",
+      evPatientRegistered: "Patient Registered",
+      evTriageCompleted: "Triage Completed",
+      evChecklistRecorded: "Checklist Recorded",
+      evVaccinationLogged: "Vaccination Logged",
+      evVoiceNoteRecorded: "Voice Note Recorded",
+      evEnrichmentCompleted: "Enrichment Completed",
+      evActionCardIssued: "Action Card Issued",
+      evOutbreakAlertRaised: "Outbreak Alert Raised",
+      synFebrile: "Febrile Illness",
+      synDiarrheal: "Acute Diarrheal Disease",
+      synRespiratory: "Acute Respiratory Illness",
+      synMaternal: "Maternal Danger Sign",
+      synMalaria: "Suspected Malaria Cluster",
+      synDengue: "Suspected Dengue Cluster",
       colHlc: "HLC Timestamp",
       colOrigin: "Origin Node",
       colType: "Event Type",
@@ -89,6 +110,7 @@
       riskScore: "Risk Score",
       outbreakBannerPrefix: "ACTIVE EWMA OUTBREAK ALERT",
       pregnantWeeks: "Pregnant",
+      weeksShort: "w",
       referralYes: "PHC Referral",
       eventsUnit: "events",
       peersUnit: "peers",
@@ -151,6 +173,10 @@
       scenarioVoice: "अन्तर्जाल-रहित स्वर → प्रज्ञा",
       scenarioOutbreak: "ग्राम संक्रमण प्रकोप",
       scenarioCrdt: "द्वन्द्व-रहित विलय प्रमाण",
+      scMaternalTitle: "मातृ घटिका आपात संकेत → आशा दूरभाष",
+      scVoiceTitle: "अन्तर्जाल-रहित स्वर → मुख्य केन्द्र प्रज्ञा संवर्धन",
+      scOutbreakTitle: "ग्राम संक्रमण प्रकोप संसूचन",
+      scCrdtTitle: "अन्तर्जाल-रहित द्वन्द्व-रहित विलय प्रमाण",
       demoReset: "पुनःस्थापन",
       openShowcase: "त्रि-स्तरीय जीवन्त मंच →",
       demoLoading: "जीवन्त चिकित्सकीय परिदृश्य प्रारम्भ हो रहा है...",
@@ -163,8 +189,10 @@
       archTitle: "क्षमता-आधारित त्रि-स्तरीय स्वावलम्बी संजाल संरचना",
       tier0Label: "स्तर-० घटिका",
       tier0Desc: "सामान्य जन एवं स्वास्थ्य कार्यकर्ता हेतु स्वावलम्बी आपात संकेत एवं स्मरण",
+      tier0CapTag: "एक-स्पर्श आपात · स्थानीय संजाल",
       tier1Label: "स्तर-१ दूरभाष",
       tier1Desc: "विश्व स्वास्थ्य संगठन नियम वर्गीकरण एवं स्थानीय संग्रहण",
+      tier1CapTag: "स्वर पंक्ति · अंश समन्वय",
       tier2Label: "स्तर-२ मुख्य केन्द्र",
       tier2Desc: "ध्वनि अनुलेखन · संकट कारक विश्लेषण · प्रकोप संसूचन",
       activePeersShort: "सक्रिय",
@@ -202,6 +230,20 @@
       hideEventLog: "अभिलेख छिपाएँ",
       filterEvents: "घटना प्रकार चयन",
       allEvents: "समस्त घटनाएँ",
+      evPatientRegistered: "रोगी पंजीकरण",
+      evTriageCompleted: "वर्गीकरण पूर्ण",
+      evChecklistRecorded: "परीक्षण सूची अभिलेख",
+      evVaccinationLogged: "टीकाकरण अभिलेख",
+      evVoiceNoteRecorded: "स्वर टिप्पणी अभिलेख",
+      evEnrichmentCompleted: "संवर्धन पूर्ण",
+      evActionCardIssued: "कार्य पत्रक जारी",
+      evOutbreakAlertRaised: "प्रकोप चेतावनी जारी",
+      synFebrile: "ज्वर संक्रमण",
+      synDiarrheal: "तीव्र अतिसार रोग",
+      synRespiratory: "तीव्र श्वसन संक्रमण",
+      synMaternal: "मातृ संकट लक्षण",
+      synMalaria: "सन्दिग्ध मलेरिया समूह",
+      synDengue: "सन्दिग्ध डेंगू समूह",
       colHlc: "कालक्रम मुहर",
       colOrigin: "उद्गम केन्द्र",
       colType: "घटना प्रकार",
@@ -219,6 +261,7 @@
       riskScore: "संकट सूचकांक",
       outbreakBannerPrefix: "सक्रिय संक्रमण प्रकोप चेतावनी",
       pregnantWeeks: "गर्भावस्था",
+      weeksShort: "सप्ताह",
       referralYes: "शीघ्र स्वास्थ्य केन्द्र प्रेषण",
       eventsUnit: "घटनाएँ",
       peersUnit: "सहकर्मी",
@@ -265,6 +308,251 @@
       shapPosLegend: "+ संकट वर्धक",
       shapNegLegend: "- संरक्षक कारक",
     },
+    kn: {
+      appTitle: "ಆರೋಗ್ಯ ಮೆಶ್ — ಪ್ರಾಥಮಿಕ ಆರೋಗ್ಯ ಕೇಂದ್ರ (PHC) ನಿಯಂತ್ರಣ ಕೇಂದ್ರ",
+      appSubtitle: "ಇಂಟರ್ನೆಟ್ ರಹಿತ ಸ್ವಾಯತ್ತ ವೈದ್ಯಕೀಯ ಜಾಲ ಕಾರ್ಯಾಚರಣೆ",
+      badgeTier: "ಹಂತ-೨ ಮುಖ್ಯ ಕೇಂದ್ರ",
+      badgeOffline: "ಆಫ್‌ಲೈನ್ ಸುರಕ್ಷಿತ",
+      langToggle: "ಕನ್ನಡ",
+      themeLight: "ಬೆಳಕು",
+      themeDark: "ಕತ್ತಲೆ",
+      autoOn: "ಸ್ವಯಂ ನವೀಕರಣ: ಚಾಲೂ",
+      autoOff: "ಸ್ವಯಂ ನವೀಕರಣ: ಬಂದ್",
+      refresh: "ನವೀಕರಿಸಿ",
+      demoBarLabel: "ನೇರ ಪ್ರದರ್ಶನ ಸನ್ನಿವೇಶಗಳು",
+      scenarioMaternal: "ಗರ್ಭಿಣಿ ವಾಚ್ ತುರ್ತು ಕರೆ",
+      scenarioVoice: "ಆಫ್‌ಲೈನ್ ಧ್ವನಿ → AI",
+      scenarioOutbreak: "ಗ್ರಾಮ ಸಾಂಕ್ರಾಮಿಕ ಪ್ರಕೋಪ",
+      scenarioCrdt: "CRDT ವಿಲೀನ ಪುರಾವೆ",
+      scMaternalTitle: "ಗರ್ಭಿಣಿ ವಾಚ್ ತುರ್ತು ಕರೆ → ಆಶಾ ಫೋನ್",
+      scVoiceTitle: "ಆಫ್‌ಲೈನ್ ಧ್ವನಿ ಟಿಪ್ಪಣಿ → ಕೇಂದ್ರದ AI ವಿಶ್ಲೇಷಣೆ",
+      scOutbreakTitle: "ಗ್ರಾಮ ಮಟ್ಟದ EWMA ಸಾಂಕ್ರಾಮಿಕ ಪ್ರಕೋಪ ಪತ್ತೆ",
+      scCrdtTitle: "ಆಫ್‌ಲೈನ್ ದ್ವಂದ್ವ-ರಹಿತ CRDT ವಿಲೀನ ಪುರಾವೆ",
+      demoReset: "ಮರುಹೊಂದಿಸಿ",
+      openShowcase: "೩-ಹಂತದ ನೇರ ವೇದಿಕೆ ತೆರೆಯಿರಿ →",
+      demoLoading: "ನೇರ ವೈದ್ಯಕೀಯ ಸನ್ನಿವೇಶ ಚಾಲನೆಯಲ್ಲಿದೆ...",
+      demoLoaded: "ನೇರ CRDT ಸಿಂಕ್ ಮೂಲಕ ಸನ್ನಿವೇಶ ಪೂರ್ಣಗೊಂಡಿದೆ:",
+      demoResetting: "ಮುಖ್ಯ ಕೇಂದ್ರವನ್ನು ಮರುಹೊಂದಿಸಲಾಗುತ್ತಿದೆ...",
+      demoResetDone: "ಕೇಂದ್ರದ ಘಟನೆಗಳ ದಾಖಲೆ ಮತ್ತು ಸಾಧನ ಪಟ್ಟಿ ತೆರವುಗೊಳಿಸಲಾಗಿದೆ.",
+      demoUnavailable: "ಪ್ರದರ್ಶನ ಸೇವೆ ಸದ್ಯ ಲಭ್ಯವಿಲ್ಲ.",
+      scenarioStepsLabel: "ವೈದ್ಯಕೀಯ ಪ್ರಕ್ರಿಯೆ",
+      dismiss: "ಮುಚ್ಚಿ",
+      archTitle: "ಸಾಮರ್ಥ್ಯ-ಆಧಾರಿತ ೩-ಹಂತದ ಸ್ವಾಯತ್ತ ಆರೋಗ್ಯ ಜಾಲ",
+      tier0Label: "ಹಂತ-೦ ವಾಚ್",
+      tier0Desc: "ಸಾರ್ವಜನಿಕರು ಮತ್ತು ಆರೋಗ್ಯ ಕಾರ್ಯಕರ್ತರಿಗೆ ಸ್ವತಂತ್ರ ತುರ್ತು ಕರೆ ಹಾಗೂ ಜ್ಞಾಪನೆ",
+      tier0CapTag: "೧-ಸ್ಪರ್ಶ ತುರ್ತು · BLE/LAN",
+      tier1Label: "ಹಂತ-೧ ಫೋನ್",
+      tier1Desc: "WHO IMNCI ಖಚಿತ ವರ್ಗೀಕರಣ ಮತ್ತು ಆಫ್‌ಲೈನ್ ಸಂಗ್ರಹಣೆ",
+      tier1CapTag: "ಧ್ವನಿ ಸಾಲು · ಡೆಲ್ಟಾ ಸಿಂಕ್",
+      tier2Label: "ಹಂತ-೨ ಮುಖ್ಯ ಕೇಂದ್ರ",
+      tier2Desc: "ಧ್ವನಿ ಲಿಪ್ಯಂತರ · SLM · LightGBM SHAP · EWMA ಪ್ರಕೋಪ ಪತ್ತೆ",
+      activePeersShort: "ಸಕ್ರಿಯ",
+      hubOnlineShort: "ಆನ್‌ಲೈನ್",
+      nodeId: "ಕೇಂದ್ರದ ಗುರುತು",
+      ram: "RAM ಮೆಮೊರಿ",
+      cpu: "CPU ಕೋರ್‌ಗಳು",
+      npu: "NPU ಘಟಕ",
+      npuAvailable: "ಲಭ್ಯವಿದೆ",
+      npuAbsent: "ಲಭ್ಯವಿಲ್ಲ",
+      connectUrl: "ಸ್ಥಳೀಯ LAN ಸಂಪರ್ಕ",
+      wsUrl: "ಮೆಶ್ ವೆಬ್‌ಸಾಕೆಟ್",
+      lastUpdated: "ಕೊನೆಯ ನವೀಕರಣ",
+      patients: "ನೋಂದಾಯಿತ ರೋಗಿಗಳು",
+      triageRed: "ಕೆಂಪು — ತುರ್ತು ಚಿಕಿತ್ಸೆ",
+      triageYellow: "ಹಳದಿ — PHC ತಪಾಸಣೆ",
+      triageGreen: "ಹಸಿರು — ಮನೆ ಆರೈಕೆ",
+      pendingEnrichments: "ಬಾಕಿ AI ವಿಶ್ಲೇಷಣೆ",
+      completedEnrichments: "ಪೂರ್ಣಗೊಂಡ ವಿಶ್ಲೇಷಣೆ",
+      totalEvents: "CRDT ಘಟನೆಗಳು",
+      clinicalPanel: "ವೈದ್ಯಕೀಯ ವರ್ಗೀಕರಣ, ಕ್ರಿಯಾ ಕಾರ್ಡ್‌ಗಳು ಮತ್ತು SHAP ಅಪಾಯ ವಿಶ್ಲೇಷಣೆ",
+      triageFeedTitle: "ಸಕ್ರಿಯ ವೈದ್ಯಕೀಯ ವರ್ಗೀಕರಣಗಳು",
+      patientsRosterTitle: "ಸಿಂಕ್ ಆದ ರೋಗಿಗಳ ಪಟ್ಟಿ ಮತ್ತು ಸಾಧನಗಳು",
+      peerTopology: "ಸಕ್ರಿಯ ಜಾಲ ಸಾಧನಗಳು",
+      hubTelemetryTitle: "ಕೇಂದ್ರದ ಹಾರ್ಡ್‌ವೇರ್ ಮತ್ತು LAN ಸಂಪರ್ಕ",
+      runEnrichment: "AI ವಿಶ್ಲೇಷಣೆ ಪ್ರಾರಂಭಿಸಿ",
+      runningEnrichment: "ವಿಶ್ಲೇಷಣೆ ನಡೆಯುತ್ತಿದೆ...",
+      enrichmentDone: "AI ವಿಶ್ಲೇಷಣೆ ಪೂರ್ಣಗೊಂಡಿದೆ.",
+      enrichmentUnavailable: "ವಿಶ್ಲೇಷಣೆ ಸೇವೆ ಸದ್ಯ ಲಭ್ಯವಿಲ್ಲ.",
+      outbreakAlerts: "EWMA ಸಾಂಕ್ರಾಮಿಕ ಪ್ರಕೋಪ ಎಚ್ಚರಿಕೆಗಳು",
+      shapTitle: "SHAP ಅಪಾಯ ಕಾರಣಗಳ ವಿಶ್ಲೇಷಣೆ",
+      actionCards: "ತುರ್ತು ಕ್ರಿಯಾ ಕಾರ್ಡ್‌ಗಳು",
+      eventLog: "HLC CRDT ಘಟನೆಗಳ ದಾಖಲೆ ಪರಿಶೀಲಕ",
+      showEventLog: "ದಾಖಲೆ ತೋರಿಸಿ",
+      hideEventLog: "ದಾಖಲೆ ಮರೆಮಾಡಿ",
+      filterEvents: "ಘಟನೆ ಪ್ರಕಾರ ಆಯ್ಕೆ",
+      allEvents: "ಎಲ್ಲಾ ಘಟನೆಗಳು",
+      evPatientRegistered: "ರೋಗಿ ನೋಂದಣಿ",
+      evTriageCompleted: "ವರ್ಗೀಕರಣ ಪೂರ್ಣ",
+      evChecklistRecorded: "ತಪಾಸಣಾ ಪಟ್ಟಿ ದಾಖಲೆ",
+      evVaccinationLogged: "ಲಸಿಕೆ ದಾಖಲೆ",
+      evVoiceNoteRecorded: "ಧ್ವನಿ ಟಿಪ್ಪಣಿ ದಾಖಲೆ",
+      evEnrichmentCompleted: "AI ವಿಶ್ಲೇಷಣೆ ಪೂರ್ಣ",
+      evActionCardIssued: "ಕ್ರಿಯಾ ಕಾರ್ಡ್ ಜಾರಿ",
+      evOutbreakAlertRaised: "ಪ್ರಕೋಪ ಎಚ್ಚರಿಕೆ ಜಾರಿ",
+      synFebrile: "ಜ್ವರ ಸಂಬಂಧಿತ ಕಾಯಿಲೆ",
+      synDiarrheal: "ತೀವ್ರ ಅತಿಸಾರ ರೋಗ",
+      synRespiratory: "ತೀವ್ರ ಶ್ವಾಸಕೋಶ ಸೋಂಕು",
+      synMaternal: "ಗರ್ಭಿಣಿ ಅಪಾಯದ ಲಕ್ಷಣ",
+      synMalaria: "ಶಂಕಿತ ಮಲೇರಿಯಾ ಪ್ರಕರಣಗಳು",
+      synDengue: "ಶಂಕಿತ ಡೆಂಗ್ಯೂ ಪ್ರಕರಣಗಳು",
+      colHlc: "HLC ಸಮಯಮುದ್ರೆ",
+      colOrigin: "ಮೂಲ ಸಾಧನ",
+      colType: "ಘಟನೆ ಪ್ರಕಾರ",
+      colPatient: "ರೋಗಿ",
+      colEnrichment: "ವಿಶ್ಲೇಷಣೆ ಸ್ಥಿತಿ",
+      colSummary: "ದತ್ತಾಂಶ ವಿವರ",
+      noPatients: "ಇನ್ನೂ ಯಾವುದೇ ರೋಗಿಗಳು ಸಿಂಕ್ ಆಗಿಲ್ಲ. ಮೇಲಿನ ಸನ್ನಿವೇಶ ಆಯ್ಕೆಮಾಡಿ.",
+      noTriage: "ಇನ್ನೂ ಯಾವುದೇ ವೈದ್ಯಕೀಯ ವರ್ಗೀಕರಣ ದಾಖಲಾಗಿಲ್ಲ.",
+      noPeers: "ಯಾವುದೇ ಜಾಲ ಸಾಧನಗಳು ಇನ್ನೂ ಸಂಪರ್ಕಗೊಂಡಿಲ್ಲ.",
+      noOutbreaks: "ಯಾವುದೇ ಸಕ್ರಿಯ ಸಾಂಕ್ರಾಮಿಕ ಪ್ರಕೋಪ ಎಚ್ಚರಿಕೆಗಳಿಲ್ಲ.",
+      noShap: "ಇನ್ನೂ ಯಾವುದೇ SHAP ಅಪಾಯ ವಿಶ್ಲೇಷಣೆ ಲಭ್ಯವಿಲ್ಲ.",
+      noActionCards: "ಯಾವುದೇ ಸಕ್ರಿಯ ಕ್ರಿಯಾ ಕಾರ್ಡ್‌ಗಳಿಲ್ಲ.",
+      noEvents: "ಇನ್ನೂ ಯಾವುದೇ CRDT ಘಟನೆಗಳು ದಾಖಲಾಗಿಲ್ಲ.",
+      battery: "ಬ್ಯಾಟರಿ",
+      riskScore: "ಅಪಾಯದ ಮಟ್ಟ",
+      outbreakBannerPrefix: "ಸಕ್ರಿಯ EWMA ಸಾಂಕ್ರಾಮಿಕ ಪ್ರಕೋಪ ಎಚ್ಚರಿಕೆ",
+      pregnantWeeks: "ಗರ್ಭಿಣಿ",
+      weeksShort: "ವಾರ",
+      referralYes: "ತಕ್ಷಣ PHC ಗೆ ಕಳುಹಿಸಿ",
+      eventsUnit: "ಘಟನೆಗಳು",
+      peersUnit: "ಸಾಧನಗಳು",
+      moreCount: "+{n} ಇನ್ನಷ್ಟು",
+      villagePrefix: "ಗ್ರಾಮ:",
+      sevRed: "ಕೆಂಪು · ತುರ್ತು ಚಿಕಿತ್ಸೆ",
+      sevYellow: "ಹಳದಿ · PHC ತಪಾಸಣೆ",
+      sevGreen: "ಹಸಿರು · ಮನೆ ಆರೈಕೆ",
+      prioCritical: "ಅತಿ ಗಂಭೀರ",
+      prioHigh: "ಹೆಚ್ಚು",
+      prioMedium: "ಮಧ್ಯಮ",
+      prioLow: "ಸಾಮಾನ್ಯ",
+      statusOpen: "ಸಕ್ರಿಯ",
+      statusAcknowledged: "ಸ್ವೀಕರಿಸಲಾಗಿದೆ",
+      statusCompleted: "ಪೂರ್ಣಗೊಂಡಿದೆ",
+      statusDismissed: "ರದ್ದುಗೊಳಿಸಲಾಗಿದೆ",
+      riskHigh: "ಹೆಚ್ಚಿನ ಅಪಾಯ",
+      riskModerate: "ಮಧ್ಯಮ ಅಪಾಯ",
+      riskLow: "ಕಡಿಮೆ ಅಪಾಯ",
+      riskEnriched: "ವಿಶ್ಲೇಷಿತ",
+      enrPending: "ಬಾಕಿ ಇದೆ",
+      enrCompleted: "ಪೂರ್ಣಗೊಂಡಿದೆ",
+      enrNotNeeded: "ಅಗತ್ಯವಿಲ್ಲ",
+      enrFailed: "ವಿಫಲವಾಗಿದೆ",
+      watchModeChw: "ಆರೋಗ್ಯ ಕಾರ್ಯಕರ್ತೆ ಸಹಾಯಕ",
+      watchModeFamily: "ರೋಗಿ ಕುಟುಂಬ",
+      expandPayload: "ಪೂರ್ಣ JSON ವಿವರ ನೋಡಲು ಕ್ಲಿಕ್ ಮಾಡಿ",
+      collapsePayload: "ವಿವರ ಕುಗ್ಗಿಸಲು ಕ್ಲಿಕ್ ಮಾಡಿ",
+      proofCloudRpcs: "೦ ಕ್ಲೌಡ್ ಕರೆಗಳು",
+      proofSafetyFloor: "WHO ಸುರಕ್ಷತಾ ಮಾನದಂಡ · ೧.೦೦",
+      proofZeroBloat: "೦ PyTorch · ೦ CUDA",
+      convergedPatientsUnit: "ಸಂಯೋಜಿತ ರೋಗಿಗಳು",
+      crdtMergeTitle: "CRDT ದ್ವಂದ್ವ-ರಹಿತ ವಿಲೀನ ಪುರಾವೆ (LWW)",
+      zeroDataLoss: "ಶೂನ್ಯ ದತ್ತಾಂಶ ನಷ್ಟ",
+      simultaneousTieBreak: "ಏಕಕಾಲದ HLC ಸಂಘರ್ಷ ಪರಿಹಾರ",
+      convergedRecord: "ಸಂಯೋಜಿತ ರೋಗಿ ದಾಖಲೆ",
+      stageAudio: "ಧ್ವನಿ ಕಡತ",
+      stageAsr: "ಧ್ವನಿ ಲಿಪ್ಯಂತರ",
+      stageSlm: "ರಚನಾತ್ಮಕ SLM",
+      stageTriage: "WHO ನಿಯಮ (೧.೦೦)",
+      stageShap: "TreeSHAP",
+      symptomsLabel: "ಲಕ್ಷಣಗಳು",
+      dangerFlagsLabel: "ಅಪಾಯದ ಸೂಚನೆಗಳು",
+      shapPosLegend: "+ ಅಪಾಯ ಹೆಚ್ಚಿಸುವ",
+      shapNegLegend: "- ರಕ್ಷಣಾತ್ಮಕ",
+    },
+  };
+
+  const SCENARIO_TITLE_KEYS = {
+    maternal_sos: "scMaternalTitle",
+    pediatric_voice_offload: "scVoiceTitle",
+    village_outbreak: "scOutbreakTitle",
+    crdt_conflict_merge: "scCrdtTitle",
+  };
+
+  const LOCALIZED_SCENARIOS = {
+    hi: {
+      maternal_sos: {
+        title: "मातृ घटिका आपात संकेत → आशा दूरभाष",
+        persona: "गर्भवती परिवार घटिका → आशा दीदी",
+        subtitle: "गम्भीर मातृ संकट लक्षण एक-स्पर्श में घटिका से मुख्य केन्द्र एवं आशा दूरभाष तक पहुँचते हैं।",
+        steps: [
+          "परिवार घटिका पर गर्भावस्था संकट संकेत अंकित हुआ।",
+          "निश्चित विश्व स्वास्थ्य नियम द्वारा रक्त-आपात वर्गीकरण पूर्ण।",
+          "मुख्य केन्द्र ने तत्काल स्वास्थ्य केन्द्र प्रेषण कार्य पत्रक जारी किया।",
+        ],
+      },
+      pediatric_voice_offload: {
+        title: "अन्तर्जाल-रहित स्वर → मुख्य केन्द्र प्रज्ञा संवर्धन",
+        persona: "आशा दूरभाष → मुख्य केन्द्र प्रज्ञा",
+        subtitle: "क्षेत्रीय स्वर टिप्पणी स्थानीय संजाल द्वारा मुख्य केन्द्र पर आकर ध्वनि अनुलेखन एवं संकट कारक विश्लेषण करती है।",
+        steps: [
+          "आशा दूरभाष ने अन्तर्जाल-रहित अवस्था में स्वर टिप्पणी सहेजी।",
+          "मुख्य केन्द्र ने ध्वनि अनुलेखन, लक्षण निष्कर्षण एवं निश्चित वर्गीकरण किया।",
+          "संकट कारक विश्लेषण एवं कार्य पत्रक सभी सहकर्मियों पर समन्वित।",
+        ],
+      },
+      village_outbreak: {
+        title: "ग्राम संक्रमण प्रकोप संसूचन",
+        persona: "बहु-कर्मी संजाल → मुख्य केन्द्र निगरानी",
+        subtitle: "विभिन्न स्वास्थ्य कर्मियों के अभिलेखों से ग्राम में ज्वर अथवा अतिसार वृद्धि का स्वतः संसूचन।",
+        steps: [
+          "एकाधिक आशा दूरभाषों से ग्राम रोगी घटनाएँ समन्वित हुईं।",
+          "मुख्य केन्द्र की सांख्यिकीय निगरानी ने असामान्य वृद्धि पहचानी।",
+          "संक्रमण प्रकोप चेतावनी एवं ग्राम कार्य निर्देश जारी हुए।",
+        ],
+      },
+      crdt_conflict_merge: {
+        title: "अन्तर्जाल-रहित द्वन्द्व-रहित विलय प्रमाण",
+        persona: "दूरभाष एवं घटिका समकालीन अद्यतन",
+        subtitle: "समान क्षण पर दो उपकरणों के अद्यतन बिना किसी तथ्यांश हानि के एकीकृत रोगी अभिलेख में विलीन होते हैं।",
+        steps: [
+          "आशा दूरभाष एवं परिवार घटिका ने पृथक-पृथक अद्यतन अंकित किए।",
+          "कालक्रम मुहर द्वारा प्रत्येक क्षेत्र का द्वन्द्व-रहित विलय सम्पन्न।",
+          "दोनों अद्यतन सुरक्षित रहकर एकीकृत रोगी पंजिका निर्मित हुई।",
+        ],
+      },
+    },
+    kn: {
+      maternal_sos: {
+        title: "ಗರ್ಭಿಣಿ ವಾಚ್ ತುರ್ತು ಕರೆ → ಆಶಾ ಫೋನ್",
+        persona: "ಕುಟುಂಬ ವಾಚ್ → ಆಶಾ ಕಾರ್ಯಕರ್ತೆ",
+        subtitle: "ಗರ್ಭಿಣಿಯ ಅಪಾಯದ ಲಕ್ಷಣವು ಒಂದೇ ಸ್ಪರ್ಶದಲ್ಲಿ ವಾಚ್‌ನಿಂದ ಮುಖ್ಯ ಕೇಂದ್ರ ಮತ್ತು ಆಶಾ ಫೋನ್‌ಗೆ ತಲುಪುತ್ತದೆ.",
+        steps: [
+          "ಕುಟುಂಬದ ವಾಚ್‌ನಲ್ಲಿ ಗರ್ಭಿಣಿ ಅಪಾಯದ ತುರ್ತು ಕರೆ ದಾಖಲಾಗಿದೆ.",
+          "WHO ಖಚಿತ ನಿಯಮದಂತೆ ಕೆಂಪು ತುರ್ತು ವರ್ಗೀಕರಣ ಪೂರ್ಣಗೊಂಡಿದೆ.",
+          "ತಕ್ಷಣ PHC ಗೆ ಕರೆದೊಯ್ಯಲು ತುರ್ತು ಕ್ರಿಯಾ ಕಾರ್ಡ್ ಜಾರಿಯಾಗಿದೆ.",
+        ],
+      },
+      pediatric_voice_offload: {
+        title: "ಆಫ್‌ಲೈನ್ ಧ್ವನಿ ಟಿಪ್ಪಣಿ → ಕೇಂದ್ರದ AI ವಿಶ್ಲೇಷಣೆ",
+        persona: "ಆಶಾ ಫೋನ್ → PHC ಕೇಂದ್ರ AI",
+        subtitle: "ಆಫ್‌ಲೈನ್‌ನಲ್ಲಿ ದಾಖಲಿಸಿದ ಧ್ವನಿ ಟಿಪ್ಪಣಿಯು ಮುಖ್ಯ ಕೇಂದ್ರದಲ್ಲಿ ಲಿಪ್ಯಂತರ ಹಾಗೂ SHAP ಅಪಾಯ ವಿಶ್ಲೇಷಣೆಗೆ ಒಳಪಡುತ್ತದೆ.",
+        steps: [
+          "ಆಶಾ ಕಾರ್ಯಕರ್ತೆ ಇಂಟರ್ನೆಟ್ ಇಲ್ಲದೆ ಧ್ವನಿ ಟಿಪ್ಪಣಿ ದಾಖಲಿಸಿದ್ದಾರೆ.",
+          "ಮುಖ್ಯ ಕೇಂದ್ರವು ಧ್ವನಿ ಲಿಪ್ಯಂತರ, ಲಕ್ಷಣ ಗುರುತಿಸುವಿಕೆ ಮತ್ತು WHO ವರ್ಗೀಕರಣ ನಡೆಸಿದೆ.",
+          "SHAP ಅಪಾಯ ಕಾರಣಗಳು ಮತ್ತು ಕ್ರಿಯಾ ಕಾರ್ಡ್ ಎಲ್ಲಾ ಸಾಧನಗಳಿಗೆ ಸಿಂಕ್ ಆಗಿವೆ.",
+        ],
+      },
+      village_outbreak: {
+        title: "ಗ್ರಾಮ ಮಟ್ಟದ EWMA ಸಾಂಕ್ರಾಮಿಕ ಪ್ರಕೋಪ ಪತ್ತೆ",
+        persona: "ಬಹು-ಕಾರ್ಯಕರ್ತ ಜಾಲ → PHC ಕಣ್ಗಾವಲು",
+        subtitle: "ವಿವಿಧ ಆರೋಗ್ಯ ಕಾರ್ಯಕರ್ತೆಯರ ದಾಖಲೆಗಳಿಂದ ಗ್ರಾಮದಲ್ಲಿ ಜ್ವರ ಅಥವಾ ಅತಿಸಾರ ಹೆಚ್ಚಳವನ್ನು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಪತ್ತೆಹಚ್ಚುತ್ತದೆ.",
+        steps: [
+          "ಹಲವು ಆಶಾ ಫೋನ್‌ಗಳಿಂದ ಗ್ರಾಮದ ರೋಗಿಗಳ ವಿವರಗಳು ಸಿಂಕ್ ಆಗಿವೆ.",
+          "ಮುಖ್ಯ ಕೇಂದ್ರದ EWMA ವಿಶ್ಲೇಷಣೆ ಅಸಹಜ ಪ್ರಕರಣಗಳ ಏರಿಕೆಯನ್ನು ಗುರುತಿಸಿದೆ.",
+          "ಗ್ರಾಮ ಸಾಂಕ್ರಾಮಿಕ ಪ್ರಕೋಪ ಎಚ್ಚರಿಕೆ ಮತ್ತು ಕ್ರಮ ಸೂಚನೆ ಜಾರಿಯಾಗಿದೆ.",
+        ],
+      },
+      crdt_conflict_merge: {
+        title: "ಆಫ್‌ಲೈನ್ ದ್ವಂದ್ವ-ರಹಿತ CRDT ವಿಲೀನ ಪುರಾವೆ",
+        persona: "ಫೋನ್ ಮತ್ತು ವಾಚ್ ಏಕಕಾಲದ ನವೀಕರಣ",
+        subtitle: "ಒಂದೇ ಸಮಯದಲ್ಲಿ ಎರಡು ಸಾಧನಗಳಲ್ಲಿ ಮಾಡಿದ ಬದಲಾವಣೆಗಳು ಯಾವುದೇ ದತ್ತಾಂಶ ನಷ್ಟವಿಲ್ಲದೆ ಒಂದೇ ದಾಖಲೆಯಾಗಿ ವಿಲೀನಗೊಳ್ಳುತ್ತವೆ.",
+        steps: [
+          "ಆಶಾ ಫೋನ್ ಮತ್ತು ಕುಟುಂಬದ ವಾಚ್ ಪ್ರತ್ಯೇಕವಾಗಿ ರೋಗಿ ವಿವರ ನವೀಕರಿಸಿವೆ.",
+          "HLC ಸಮಯಮುದ್ರೆ ಮೂಲಕ ಪ್ರತಿ ಕ್ಷೇತ್ರದ ದ್ವಂದ್ವ-ರಹಿತ ವಿಲೀನ ಪೂರ್ಣಗೊಂಡಿದೆ.",
+          "ಎರಡೂ ಮಾಹಿತಿಗಳು ಸುರಕ್ಷಿತವಾಗಿ ಉಳಿದು ಸಂಯೋಜಿತ ರೋಗಿ ದಾಖಲೆ ಸಿದ್ಧವಾಗಿದೆ.",
+        ],
+      },
+    },
   };
 
   const state = {
@@ -277,6 +565,8 @@
     activeScenario: null,
     scenarioCatalog: {},
     narrativeDismissed: false,
+    demoStatus: null,
+    enrichmentStatusKey: null,
     expandedEventIds: new Set(),
     lastSummary: null,
     lastPeers: [],
@@ -438,13 +728,67 @@
     return mode || "";
   }
 
+  function readInitialLang() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const qLang = params.get("lang");
+      if (qLang && SUPPORTED_LANGS.includes(qLang)) {
+        writeStoredPref(STORAGE_LANG_KEY, qLang);
+        return qLang;
+      }
+    } catch (_err) {
+      // Ignore URL parsing errors
+    }
+    return readStoredPref(STORAGE_LANG_KEY, SUPPORTED_LANGS, "en");
+  }
+
+  function translateEventType(eventType) {
+    const map = {
+      PATIENT_REGISTERED: "evPatientRegistered",
+      TRIAGE_COMPLETED: "evTriageCompleted",
+      CHECKLIST_RECORDED: "evChecklistRecorded",
+      VACCINATION_LOGGED: "evVaccinationLogged",
+      VOICE_NOTE_RECORDED: "evVoiceNoteRecorded",
+      ENRICHMENT_COMPLETED: "evEnrichmentCompleted",
+      ACTION_CARD_ISSUED: "evActionCardIssued",
+      OUTBREAK_ALERT_RAISED: "evOutbreakAlertRaised",
+    };
+    const key = map[eventType];
+    return key ? t(key) : eventType || "--";
+  }
+
+  function translateSyndrome(syndrome) {
+    const raw = String(syndrome || "").toLowerCase();
+    if (raw === "febrile_illness" || raw === "fever") return t("synFebrile");
+    if (raw === "acute_diarrheal_disease" || raw === "diarrhea" || raw === "diarrheal_illness") {
+      return t("synDiarrheal");
+    }
+    if (raw === "acute_respiratory_illness" || raw === "respiratory_illness") {
+      return t("synRespiratory");
+    }
+    if (raw === "maternal_danger" || raw === "maternal_emergency") return t("synMaternal");
+    if (raw === "malaria") return t("synMalaria");
+    if (raw === "dengue") return t("synDengue");
+    return syndrome || "";
+  }
+
+  function syncLangSwitcher() {
+    const btns = document.querySelectorAll("#lang-switcher [data-lang]");
+    for (const btn of btns) {
+      const isSelected = btn.getAttribute("data-lang") === state.lang;
+      btn.classList.toggle("active", isSelected);
+      btn.setAttribute("aria-pressed", String(isSelected));
+    }
+  }
+
   function applyTranslations() {
     document.documentElement.lang = state.lang;
+    document.title = t("appTitle");
     setText("app-title", t("appTitle"));
     setText("app-subtitle", t("appSubtitle"));
     setText("badge-tier", t("badgeTier"));
     setText("badge-offline-text", t("badgeOffline"));
-    setText("btn-lang", t("langToggle"));
+    syncLangSwitcher();
     setText("btn-theme", state.theme === "dark" ? t("themeLight") : t("themeDark"));
     setText("btn-autorefresh", state.autoRefresh ? t("autoOn") : t("autoOff"));
     setText("btn-refresh", t("refresh"));
@@ -456,6 +800,15 @@
       if (key) node.textContent = t(key);
     }
     setText("btn-toggle-events", state.eventsExpanded ? t("hideEventLog") : t("showEventLog"));
+
+    if (state.enrichmentStatusKey) {
+      const status = document.getElementById("enrichment-status");
+      if (status) {
+        status.classList.remove("hidden");
+        status.textContent = t(state.enrichmentStatusKey);
+      }
+    }
+    renderDemoStatus();
   }
 
   function renderManifest(summary, connectInfo) {
@@ -514,7 +867,7 @@
       const chips = [];
       if (pat.village_id) chips.push(el("span", { className: "meta-chip mono" }, pat.village_id));
       if (pat.is_pregnant) {
-        const wk = pat.gestational_weeks ? ` · ${pat.gestational_weeks}w` : "";
+        const wk = pat.gestational_weeks ? ` · ${pat.gestational_weeks} ${t("weeksShort")}` : "";
         chips.push(el("span", { className: "meta-chip" }, `${t("pregnantWeeks")}${wk}`));
       }
       if (pat.metadata && typeof pat.metadata === "object") {
@@ -654,7 +1007,11 @@
       if (list.length > 0) {
         const latest = list[list.length - 1];
         const p = latest.payload || {};
-        const detail = p.message || p.syndrome || p.village_id || latest.event_id;
+        const detail =
+          p.message ||
+          (p.syndrome ? translateSyndrome(p.syndrome) : null) ||
+          (p.village_id ? `${t("villagePrefix")} ${p.village_id}` : null) ||
+          latest.event_id;
         banner.classList.remove("hidden");
         banner.replaceChildren(
           el("strong", null, `${t("outbreakBannerPrefix")}: ${detail}`),
@@ -674,7 +1031,9 @@
 
     const cards = list.map((alert) => {
       const p = alert.payload || {};
-      const title = p.syndrome || p.disease || p.title || alert.event_type;
+      const title = p.syndrome
+        ? translateSyndrome(p.syndrome)
+        : p.disease || p.title || translateEventType(alert.event_type);
       const village = p.village_id ? `${t("villagePrefix")} ${p.village_id}` : "EWMA";
       const detail = p.message || p.rationale || JSON.stringify(p);
       return el(
@@ -1036,7 +1395,7 @@
         null,
         el("td", { className: "mono" }, formatHlc(evt.hlc)),
         el("td", { className: "mono" }, evt.origin_node_id || "--"),
-        el("td", null, el("span", { className: "badge badge-accent" }, evt.event_type)),
+        el("td", null, el("span", { className: "badge badge-accent", title: evt.event_type || "" }, translateEventType(evt.event_type))),
         patientCell,
         el("td", null, el("span", { className: "badge" }, translateEnrichmentState(evt.enrichment_state))),
         el("td", { className: "payload-cell" }, payloadBtn)
@@ -1049,9 +1408,15 @@
     const card = document.getElementById("scenario-narrative-card");
     if (!card) return;
 
-    const info =
+    const rawInfo =
       state.activeScenario && !state.narrativeDismissed
         ? state.scenarioCatalog[state.activeScenario]
+        : null;
+    const locMap = LOCALIZED_SCENARIOS[state.lang] || {};
+    const locInfo = state.activeScenario ? locMap[state.activeScenario] : null;
+    const info =
+      state.activeScenario && !state.narrativeDismissed
+        ? locInfo || rawInfo
         : null;
     if (!info) {
       card.classList.add("hidden");
@@ -1081,7 +1446,7 @@
         el(
           "div",
           { className: "scenario-narrative-title-group" },
-          el("h3", { className: "scenario-narrative-title" }, info.title || info.id),
+          el("h3", { className: "scenario-narrative-title" }, info.title || state.activeScenario),
           info.persona ? el("span", { className: "badge badge-accent" }, info.persona) : null
         ),
         closeBtn
@@ -1105,9 +1470,33 @@
     renderScenarioNarrative();
   }
 
-  function showDemoStatus(message, meta) {
+  function localizeScenarioTitle(scenarioId) {
+    const key = SCENARIO_TITLE_KEYS[scenarioId];
+    return key ? t(key) : scenarioId;
+  }
+
+  function renderDemoStatus() {
     const banner = document.getElementById("demo-status-banner");
     if (!banner) return;
+    const ds = state.demoStatus;
+    if (!ds) return;
+    let message = "";
+    let meta = null;
+    if (ds.kind === "loading") {
+      message = t("demoLoading");
+      meta = localizeScenarioTitle(ds.scenarioId);
+    } else if (ds.kind === "loaded") {
+      message = `${t("demoLoaded")} ${localizeScenarioTitle(ds.scenarioId)}`;
+      meta = `${ds.eventsAdded} ${t("eventsUnit")} · ${ds.peersRegistered} ${t("peersUnit")}`;
+    } else if (ds.kind === "resetting") {
+      message = t("demoResetting");
+    } else if (ds.kind === "reset") {
+      message = t("demoResetDone");
+      meta = `0 ${t("eventsUnit")}`;
+    } else if (ds.kind === "unavailable") {
+      message = t("demoUnavailable");
+      meta = ds.code || null;
+    }
     banner.classList.remove("hidden");
     banner.replaceChildren(
       el("span", null, message),
@@ -1126,13 +1515,15 @@
   async function runScenario(scenarioId) {
     const buttons = document.querySelectorAll("[data-scenario], #btn-demo-reset");
     for (const b of buttons) b.disabled = true;
-    showDemoStatus(t("demoLoading"), scenarioId);
+    state.demoStatus = { kind: "loading", scenarioId };
+    renderDemoStatus();
     try {
       const res = await fetch(`/api/v1/demo/load/${encodeURIComponent(scenarioId)}`, {
         method: "POST",
       });
       if (!res.ok) {
-        showDemoStatus(t("demoUnavailable"), String(res.status));
+        state.demoStatus = { kind: "unavailable", code: String(res.status) };
+        renderDemoStatus();
         return;
       }
       const data = await res.json();
@@ -1140,11 +1531,17 @@
       state.narrativeDismissed = false;
       updateScenarioButtons();
       renderScenarioNarrative();
-      const meta = `${data.events_added ?? 0} ${t("eventsUnit")} · ${data.peers_registered ?? 0} ${t("peersUnit")}`;
-      showDemoStatus(`${t("demoLoaded")} ${scenarioId}`, meta);
+      state.demoStatus = {
+        kind: "loaded",
+        scenarioId,
+        eventsAdded: data.events_added ?? 0,
+        peersRegistered: data.peers_registered ?? 0,
+      };
+      renderDemoStatus();
       await refreshAll();
     } catch (_err) {
-      showDemoStatus(t("demoUnavailable"), null);
+      state.demoStatus = { kind: "unavailable", code: null };
+      renderDemoStatus();
     } finally {
       for (const b of buttons) b.disabled = false;
     }
@@ -1153,11 +1550,13 @@
   async function resetDemo() {
     const buttons = document.querySelectorAll("[data-scenario], #btn-demo-reset");
     for (const b of buttons) b.disabled = true;
-    showDemoStatus(t("demoResetting"), null);
+    state.demoStatus = { kind: "resetting" };
+    renderDemoStatus();
     try {
       const res = await fetch("/api/v1/demo/reset", { method: "POST" });
       if (!res.ok) {
-        showDemoStatus(t("demoUnavailable"), String(res.status));
+        state.demoStatus = { kind: "unavailable", code: String(res.status) };
+        renderDemoStatus();
         return;
       }
       state.activeScenario = null;
@@ -1165,10 +1564,12 @@
       state.expandedEventIds.clear();
       updateScenarioButtons();
       renderScenarioNarrative();
-      showDemoStatus(t("demoResetDone"), `0 ${t("eventsUnit")}`);
+      state.demoStatus = { kind: "reset" };
+      renderDemoStatus();
       await refreshAll();
     } catch (_err) {
-      showDemoStatus(t("demoUnavailable"), null);
+      state.demoStatus = { kind: "unavailable", code: null };
+      renderDemoStatus();
     } finally {
       for (const b of buttons) b.disabled = false;
     }
@@ -1239,15 +1640,17 @@
       if (res.status === 404) {
         res = await fetch("/api/v1/enrichment/run-once", { method: "POST" });
       }
+      state.enrichmentStatusKey = res.ok ? "enrichmentDone" : "enrichmentUnavailable";
       if (status) {
         status.classList.remove("hidden");
-        status.textContent = res.ok ? t("enrichmentDone") : t("enrichmentUnavailable");
+        status.textContent = t(state.enrichmentStatusKey);
       }
       await refreshAll();
     } catch (_err) {
+      state.enrichmentStatusKey = "enrichmentUnavailable";
       if (status) {
         status.classList.remove("hidden");
-        status.textContent = t("enrichmentUnavailable");
+        status.textContent = t(state.enrichmentStatusKey);
       }
     } finally {
       if (btn) {
@@ -1267,15 +1670,33 @@
     }
   }
 
+  function setLanguage(lang) {
+    if (!SUPPORTED_LANGS.includes(lang) || state.lang === lang) return;
+    state.lang = lang;
+    writeStoredPref(STORAGE_LANG_KEY, state.lang);
+    renderAll();
+  }
+
   function bindEvents() {
-    const langBtn = document.getElementById("btn-lang");
-    if (langBtn) {
-      langBtn.addEventListener("click", () => {
-        state.lang = state.lang === "en" ? "hi" : "en";
-        writeStoredPref(STORAGE_LANG_KEY, state.lang);
-        renderAll();
+    const langBtns = document.querySelectorAll("#lang-switcher [data-lang]");
+    for (const btn of langBtns) {
+      btn.addEventListener("click", () => {
+        const nextLang = btn.getAttribute("data-lang");
+        if (nextLang) setLanguage(nextLang);
       });
     }
+
+    window.addEventListener("message", (ev) => {
+      if (ev && ev.data && ev.data.type === "aarogya:setLang") {
+        setLanguage(ev.data.lang);
+      }
+    });
+
+    window.addEventListener("storage", (ev) => {
+      if (ev && ev.key === STORAGE_LANG_KEY && ev.newValue) {
+        setLanguage(ev.newValue);
+      }
+    });
 
     const themeBtn = document.getElementById("btn-theme");
     if (themeBtn) {
@@ -1357,7 +1778,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    state.lang = readStoredPref(STORAGE_LANG_KEY, ["en", "hi"], "en");
+    state.lang = readInitialLang();
     state.theme = readStoredPref(STORAGE_THEME_KEY, ["dark", "light"], "dark");
     document.documentElement.setAttribute("data-theme", state.theme);
     bindEvents();

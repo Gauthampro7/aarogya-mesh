@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { HI_TRIAGE_ACTIONS, HI_TRIAGE_RATIONALE } from "../../src/i18n/hi";
+import { KN_TRIAGE_ACTIONS, KN_TRIAGE_RATIONALE } from "../../src/i18n/kn";
 import { IMNCI_PEDIATRIC_RULES, MATERNAL_ANC_RULES } from "../../src/clinical";
 import { localizeTriageAction, localizeTriageRationale, vibrateIfEmergency } from "../../src/ui/screens/triage_result";
 import fixturesRaw from "../clinical/fixtures/triage_vectors.json";
@@ -73,6 +74,37 @@ describe("Hindi localization of fixtures", () => {
       expect(hi.length, name).toBeGreaterThan(0);
       expect(hi, name).not.toBe(e.rationale);
       for (const a of e.immediate_actions) expect(localizeTriageAction(a, "hi"), name).toBe(HI_TRIAGE_ACTIONS[a]);
+    }
+  });
+});
+
+describe("Kannada triage table coverage and localization", () => {
+  const ruleActions = new Set<string>();
+  const ruleIds = new Set<string>();
+  collect(IMNCI_PEDIATRIC_RULES, ruleActions, ruleIds);
+  collect(MATERNAL_ANC_RULES, ruleActions, ruleIds);
+
+  it("matches HI_TRIAGE_ACTIONS and HI_TRIAGE_RATIONALE keys 100%", () => {
+    expect(Object.keys(KN_TRIAGE_ACTIONS).sort()).toEqual(Object.keys(HI_TRIAGE_ACTIONS).sort());
+    expect(Object.keys(KN_TRIAGE_RATIONALE).sort()).toEqual(Object.keys(HI_TRIAGE_RATIONALE).sort());
+  });
+
+  it("covers every fixture and rule-table action and rule id in Kannada", () => {
+    const missA = [...ruleActions].filter((a) => !(a in KN_TRIAGE_ACTIONS));
+    const missR = [...ruleIds].filter((r) => !(r in KN_TRIAGE_RATIONALE));
+    expect(missA, `missing kn actions: ${JSON.stringify(missA)}`).toEqual([]);
+    expect(missR, `missing kn rule ids: ${JSON.stringify(missR)}`).toEqual([]);
+    for (const { name, e } of expectedList) {
+      if (e.matched_rules.length === 0) continue;
+      const kn = localizeTriageRationale(e.rationale, e.matched_rules, "kn");
+      expect(kn.length, name).toBeGreaterThan(0);
+      expect(kn, name).not.toBe(e.rationale);
+      expect(kn, name).toMatch(/[\u0C80-\u0CFF]/);
+      for (const a of e.immediate_actions) {
+        const act = localizeTriageAction(a, "kn");
+        expect(act, name).toBe(KN_TRIAGE_ACTIONS[a]);
+        expect(act, name).toMatch(/[\u0C80-\u0CFF]/);
+      }
     }
   });
 });

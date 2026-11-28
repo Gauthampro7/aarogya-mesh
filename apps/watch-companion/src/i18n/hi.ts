@@ -3,7 +3,10 @@ import type { Key } from "./en";
 /** Pure Shuddh Tatsama Hindi UI strings. Must have exact key parity with en.ts; zero Perso-Arabic, Hinglish, or nukta (U+093C). */
 export const hi: Record<Key, string> = {
   "app.title": "आरोग्य सहचर",
-  "lang.toggle": "EN",
+  "app.aria": "आरोग्य संगी उपकरण",
+  "nav.aria": "संगी उपकरण विभाग",
+  "lang.toggle": "हिन्दी",
+  "lang.switchAria": "भाषा परिवर्तित करें",
 
   "mode.CHW_COMPANION": "स्वास्थ्य कर्मी ⇄",
   "mode.PATIENT_FAMILY": "परिवार ⇄",

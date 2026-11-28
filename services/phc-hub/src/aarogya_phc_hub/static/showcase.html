@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Aarogya Mesh — 3-Tier Live Interactive Stage</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyOCAyOCI+PHJlY3QgeD0iMiIgeT0iMiIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiByeD0iNiIgZmlsbD0iIzBkOTQ4OCIvPjxwYXRoIGQ9Ik0xNCA3djE0TTcgMTRoMTQiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==" />
   <link rel="stylesheet" href="/static/showcase.css" />
 </head>
 <body>
@@ -37,7 +38,11 @@
           <span id="stage-offline-text" data-i18n="badgeOffline">OFFLINE SAFE</span>
         </span>
         <button id="btn-stage-theme" class="btn btn-secondary" type="button">Light</button>
-        <button id="btn-stage-lang" class="btn btn-secondary" type="button">हिन्दी</button>
+        <div id="stage-lang-switcher" class="lang-switcher" role="group" aria-label="Language">
+          <button id="btn-stage-lang-en" class="lang-btn active" type="button" data-lang="en" aria-pressed="true">EN</button>
+          <button id="btn-stage-lang-hi" class="lang-btn" type="button" data-lang="hi" aria-pressed="false">हिन्दी</button>
+          <button id="btn-stage-lang-kn" class="lang-btn" type="button" data-lang="kn" aria-pressed="false">ಕನ್ನಡ</button>
+        </div>
         <a id="link-command-center" class="btn btn-secondary" href="/" data-i18n="backToHub">← Hub</a>
       </div>
     </header>
@@ -71,7 +76,7 @@
       <section class="tier-column tier-col-watch" aria-labelledby="col-watch-title">
         <div class="col-header">
           <div class="col-title-wrap">
-            <span class="tier-eyebrow mono">TIER 0 · 256 MB</span>
+            <span class="tier-eyebrow mono" data-i18n="tier0Eyebrow">TIER 0 · 256 MB</span>
             <h2 id="col-watch-title" class="col-title" data-i18n="colWatchTitle">Watch Companion</h2>
             <p class="col-sub" data-i18n="colWatchSub">Patient-Family &amp; CHW</p>
           </div>
@@ -114,7 +119,7 @@
       <section class="tier-column tier-col-phone" aria-labelledby="col-phone-title">
         <div class="col-header">
           <div class="col-title-wrap">
-            <span class="tier-eyebrow mono">TIER 1 · 4 GB</span>
+            <span class="tier-eyebrow mono" data-i18n="tier1Eyebrow">TIER 1 · 4 GB</span>
             <h2 id="col-phone-title" class="col-title" data-i18n="colPhoneTitle">ASHA Field Phone</h2>
             <p class="col-sub" data-i18n="colPhoneSub">WHO IMNCI + Offline IndexedDB</p>
           </div>
@@ -153,7 +158,7 @@
       <section id="hub-brain-panel" class="tier-column tier-col-hub" aria-labelledby="col-hub-title">
         <div class="col-header">
           <div class="col-title-wrap">
-            <span id="hub-tier-eyebrow" class="tier-eyebrow mono">TIER 2 · PHC HUB BRAIN</span>
+            <span id="hub-tier-eyebrow" class="tier-eyebrow mono" data-i18n="tier2Eyebrow">TIER 2 · PHC HUB BRAIN</span>
             <h2 id="col-hub-title" class="col-title" data-i18n="colHubTitle">PHC Clinical Intelligence</h2>
             <p class="col-sub" data-i18n="colHubSub">Whisper + SLM + LightGBM SHAP + EWMA</p>
           </div>

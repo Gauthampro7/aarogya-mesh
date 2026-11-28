@@ -60,6 +60,7 @@ export interface WatchDangerSignDefinition {
   readonly category: WatchDangerCategory;
   readonly labelEn: string;
   readonly labelHi: string;
+  readonly labelKn: string;
   readonly immediateActions: readonly string[];
   readonly rationale: string;
 }
@@ -87,6 +88,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "PEDIATRIC",
     labelEn: "Unable to drink or breastfeed",
     labelHi: "पेय अथवा स्तनपान करने में असमर्थ",
+    labelKn: "ಕುಡಿಯಲು ಅಥವಾ ಹಾಲುಣಿಸಲು ಆಗುತ್ತಿಲ್ಲ",
     immediateActions: [
       "Immediate 108 emergency referral to PHC/FRU",
       "Keep child warm and prevent hypoglycemia during transport",
@@ -100,6 +102,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "PEDIATRIC",
     labelEn: "Vomits everything",
     labelHi: "प्रत्येक आहार पर वमन",
+    labelKn: "ಎಲ್ಲವನ್ನೂ ವಾಂತಿ ಮಾಡುತ್ತಿದೆ",
     immediateActions: [
       "Immediate 108 emergency referral to PHC/FRU",
       "Offer small frequent sips of ORS if conscious during transport",
@@ -113,6 +116,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "PEDIATRIC",
     labelEn: "Convulsions",
     labelHi: "आक्षेप",
+    labelKn: "ಸೆಳೆತ / ಫಿಟ್ಸ್",
     immediateActions: [
       "Place child in left lateral recovery position and keep airway clear",
       "Do NOT put anything in the mouth",
@@ -127,6 +131,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "PEDIATRIC",
     labelEn: "Lethargic or unconscious",
     labelHi: "अत्यंत शिथिल अथवा अचेत",
+    labelKn: "ತೀವ್ರ ನಿತ್ರಾಣ ಅಥವಾ ಪ್ರಜ್ಞೆ ತಪ್ಪಿದೆ",
     immediateActions: [
       "Check airway and breathing; position safely on side",
       "Immediate 108 emergency referral to PHC/FRU",
@@ -141,6 +146,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "PEDIATRIC",
     labelEn: "Severe respiratory distress",
     labelHi: "तीव्र श्वास कष्ट",
+    labelKn: "ತೀವ್ರ ಉಸಿರಾಟದ ತೊಂದರೆ",
     immediateActions: [
       "Keep child calm and upright; clear nasal passages gently",
       "Immediate 108 emergency referral to oxygen-equipped PHC/FRU",
@@ -154,6 +160,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "PEDIATRIC",
     labelEn: "Bluish lips or tongue (cyanosis)",
     labelHi: "ओष्ठ अथवा जिह्वा का नीलवर्ण",
+    labelKn: "ತುಟಿ ಅಥವಾ ನಾಲಿಗೆ ನೀಲಿ ಬಣ್ಣ",
     immediateActions: [
       "Immediate 108 emergency referral to oxygen-equipped PHC/FRU",
       "Maintain open airway and keep child calm and warm",
@@ -166,6 +173,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "PEDIATRIC",
     labelEn: "Stridor in a calm child",
     labelHi: "शांत शिशु में कर्कश श्वास ध्वनि",
+    labelKn: "ಶಾಂತ ಮಗುವಿನಲ್ಲಿ ಗೊರಕೆ ಉಸಿರಾಟ",
     immediateActions: [
       "Keep child calm in caregiver's lap; avoid unnecessary agitation",
       "Immediate 108 emergency referral to PHC/FRU for airway management",
@@ -179,6 +187,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "PEDIATRIC",
     labelEn: "Stiff neck or bulging fontanelle",
     labelHi: "ग्रीवा स्तंभता",
+    labelKn: "ಕುತ್ತಿಗೆ ಬಿಗಿತ ಅಥವಾ ನೆತ್ತಿ ಉಬ್ಬು",
     immediateActions: [
       "Immediate 108 emergency referral to FRU/District Hospital for suspected meningitis",
       "Give first pre-referral dose of antibiotic per ANM/MO standing order if available",
@@ -192,6 +201,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "PEDIATRIC",
     labelEn: "Severe bleeding",
     labelHi: "अत्यधिक रक्तस्राव",
+    labelKn: "ತೀವ್ರ ರಕ್ತಸ್ರಾವ",
     immediateActions: [
       "Apply direct clean pressure if external bleeding",
       "Immediate 108 emergency referral to FRU/District Hospital",
@@ -205,6 +215,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "PEDIATRIC",
     labelEn: "Very high fever",
     labelHi: "अति उच्च ज्वर",
+    labelKn: "ಅತಿ ಹೆಚ್ಚು ಜ್ವರ",
     immediateActions: [
       "Begin tepid sponging and administer age-appropriate paracetamol if able to swallow",
       "Immediate 108 emergency referral to PHC/FRU for severe febrile illness evaluation",
@@ -218,6 +229,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "MATERNAL",
     labelEn: "Vaginal bleeding",
     labelHi: "योनि से रक्तस्राव",
+    labelKn: "ಯೋನಿಯಿಂದ ರಕ್ತಸ್ರಾವ",
     immediateActions: [
       "Immediate 108 emergency referral to FRU/District Hospital",
       "Keep mother lying flat on left side with legs elevated; arrange blood donor contact",
@@ -232,6 +244,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "MATERNAL",
     labelEn: "Severe headache or blurred vision",
     labelHi: "तीव्र शिरोवेदना अथवा अस्पष्ट दृष्टि",
+    labelKn: "ತೀವ್ರ ತಲೆನೋವು ಅಥವಾ ಮಸುಕು ದೃಷ್ಟಿ",
     immediateActions: [
       "Suspect Pre-eclampsia / impending Eclampsia — measure BP immediately",
       "Immediate 108 emergency referral to FRU/CHC/District Hospital",
@@ -246,6 +259,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "MATERNAL",
     labelEn: "Maternal convulsions or fits (eclampsia)",
     labelHi: "गर्भावस्था में आक्षेप एवं मूर्च्छा",
+    labelKn: "ಗರ್ಭಿಣಿಗೆ ಸೆಳೆತ / ಫಿಟ್ಸ್",
     immediateActions: [
       "Protect airway, turn mother onto left lateral side, do NOT restrain or put anything in mouth",
       "Immediate 108 emergency transfer to FRU for Magnesium Sulfate and emergency obstetric care",
@@ -259,6 +273,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "MATERNAL",
     labelEn: "Reduced or absent fetal movement",
     labelHi: "गर्भस्थ शिशु की गति में न्यूनता",
+    labelKn: "ಹೊಟ್ಟೆಯಲ್ಲಿ ಮಗುವಿನ ಚಲನೆ ಕಡಿಮೆ",
     immediateActions: [
       "Immediate 108 emergency referral to FRU/PHC for fetal heart rate and ultrasound assessment",
       "Advise mother to lie on left side while arranging transport",
@@ -272,6 +287,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "MATERNAL",
     labelEn: "High maternal fever",
     labelHi: "माता को उच्च ज्वर",
+    labelKn: "ತಾಯಿಗೆ ಹೆಚ್ಚು ಜ್ವರ",
     immediateActions: [
       "Immediate 108 emergency referral to FRU/PHC for maternal sepsis management",
       "Give oral fluids and paracetamol if able to swallow during transport",
@@ -285,6 +301,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "MATERNAL",
     labelEn: "Severe pallor with breathlessness",
     labelHi: "अत्यधिक पांडुता एवं श्वास कष्ट",
+    labelKn: "ತೀವ್ರ ರಕ್ತಹೀನತೆ ಮತ್ತು ಉಸಿರಾಟ ಕಷ್ಟ",
     immediateActions: [
       "Immediate 108 emergency referral to FRU/CHC for hemoglobin check and possible IV iron or blood transfusion",
       "Keep mother resting upright; avoid exertion",
@@ -298,6 +315,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "MATERNAL",
     labelEn: "Severe abdominal pain",
     labelHi: "तीव्र उदर शूल",
+    labelKn: "ತೀವ್ರ ಹೊಟ್ಟೆ ನೋವು",
     immediateActions: [
       "Immediate 108 emergency referral to FRU/District Hospital (rule out placental abruption, ectopic pregnancy, or HELLP syndrome)",
     ],
@@ -310,6 +328,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "MATERNAL",
     labelEn: "Water breaking / leaking fluid before labor",
     labelHi: "प्रसव पूर्व जलस्राव",
+    labelKn: "ಹೆರಿಗೆಗೆ ಮುನ್ನ ನೀರು ಸೋರುವಿಕೆ",
     immediateActions: [
       "Immediate 108 emergency referral to FRU/PHC for PROM/PPROM assessment and infection prophylaxis",
       "Keep clean pad and avoid vaginal insertion",
@@ -323,6 +342,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "MATERNAL",
     labelEn: "Sudden swelling of face and hands",
     labelHi: "मुख एवं हस्त पर आकस्मिक शोथ",
+    labelKn: "ಮುಖ ಮತ್ತು ಕೈಗಳಲ್ಲಿ ದಿಢೀರ್ ಊತ",
     immediateActions: [
       "Check BP immediately and refer urgently via 108 to FRU/PHC for pre-eclampsia evaluation",
     ],
@@ -335,6 +355,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "MATERNAL",
     labelEn: "Maternal breathing difficulty or chest pain",
     labelHi: "तीव्र श्वास कष्ट अथवा वक्ष शूल",
+    labelKn: "ಉಸಿರಾಟದ ತೊಂದರೆ ಅಥವಾ ಎದೆ ನೋವು",
     immediateActions: [
       "Seat mother upright and arrange immediate 108 emergency transfer to FRU",
     ],
@@ -347,6 +368,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "PEDIATRIC",
     labelEn: "Umbilicus red or draining pus (<2m)",
     labelHi: "नाभि में लालिमा अथवा पूय स्राव",
+    labelKn: "ಹೊಕ್ಕುಳ ಕೆಂಪು ಅಥವಾ ಕೀವು (<2 ತಿಂಗಳು)",
     immediateActions: [
       "Immediate 108 emergency referral to SNCU/FRU for Possible Serious Bacterial Infection (PSBI)",
       "Keep cord clean and dry; do NOT apply oils or ash",
@@ -360,6 +382,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "PEDIATRIC",
     labelEn: "Poor feeding or weak cry (<2m)",
     labelHi: "स्तनपान में अक्षमता अथवा क्षीण रुदन",
+    labelKn: "ಹಾಲು ಕುಡಿಯದಿರುವುದು / ಕ್ಷೀಣ ಅಳು (<2 ತಿಂಗಳು)",
     immediateActions: [
       "Immediate 108 emergency referral to SNCU/FRU",
       "Keep infant warm skin-to-skin during transfer",
@@ -373,6 +396,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "PEDIATRIC",
     labelEn: "Yellow palms or soles (<2m jaundice)",
     labelHi: "पीली हथेलियाँ अथवा तलवे (कामला)",
+    labelKn: "ಅಂಗೈ ಅಥವಾ ಅಂಗಾಲು ಹಳದಿ (<2 ತಿಂಗಳು)",
     immediateActions: [
       "Urgent referral to SNCU/District Hospital for serum bilirubin and phototherapy",
     ],
@@ -385,6 +409,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "PEDIATRIC",
     labelEn: "Grunting or breathing pauses (<2m)",
     labelHi: "नवजात में कराहना अथवा श्वास विराम",
+    labelKn: "ನರಳಾಟ ಅಥವಾ ಉಸಿರು ನಿಲ್ಲುವುದು (<2 ತಿಂಗಳು)",
     immediateActions: [
       "Immediate 108 emergency transfer to oxygen-equipped SNCU/FRU",
     ],
@@ -397,6 +422,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "MATERNAL",
     labelEn: "Postpartum fever / foul discharge",
     labelHi: "प्रसवोत्तर ज्वर अथवा दुर्गन्धयुक्त स्राव",
+    labelKn: "ಹೆರಿಗೆ ನಂತರ ಜ್ವರ / ದುರ್ವಾಸನೆ ಸ್ರಾವ",
     immediateActions: [
       "Immediate 108 emergency referral to FRU/District Hospital for parenteral antibiotics",
     ],
@@ -409,6 +435,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "MATERNAL",
     labelEn: "Prior C-section scar pain",
     labelHi: "पूर्व शल्य प्रसव क्षत पर तीव्र शूल",
+    labelKn: "ಹಿಂದಿನ ಸಿಜೇರಿಯನ್ ಗಾಯದಲ್ಲಿ ನೋವು",
     immediateActions: [
       "Immediate 108 emergency transfer to FRU/District Hospital with emergency obstetric OT",
     ],
@@ -421,6 +448,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "MATERNAL",
     labelEn: "Heavy postpartum bleeding (PPH)",
     labelHi: "प्रसवोत्तर अत्यधिक रक्तस्राव",
+    labelKn: "ಹೆರಿಗೆ ನಂತರ ತೀವ್ರ ರಕ್ತಸ್ರಾವ",
     immediateActions: [
       "Call 108 immediately for emergency transfer to FRU with blood transfusion capability",
       "Keep mother flat with legs elevated and keep warm",
@@ -434,6 +462,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "MATERNAL",
     labelEn: "Late pregnancy bleeding (APH)",
     labelHi: "प्रसवपूर्व योनि रक्तस्राव",
+    labelKn: "ಗರ್ಭಾವಸ್ಥೆಯ ಕೊನೆಯಲ್ಲಿ ರಕ್ತಸ್ರಾವ",
     immediateActions: [
       "Immediate 108 transfer to FRU with surgical and blood bank facility",
       "Strictly NO vaginal examination; keep mother on left lateral side",
@@ -447,6 +476,7 @@ export const WATCH_DANGER_SIGNS: readonly WatchDangerSignDefinition[] = [
     category: "MATERNAL",
     labelEn: "Prolonged / obstructed labor (>12h)",
     labelHi: "अवरुद्ध अथवा विलम्बित प्रसव",
+    labelKn: "ದೀರ್ಘ / ತಡೆದ ಹೆರಿಗೆ (>12 ಗಂಟೆ)",
     immediateActions: [
       "Immediate 108 emergency transfer to FRU/CHC for obstetric evaluation",
     ],
@@ -514,7 +544,7 @@ export interface WatchDangerScreenInput {
   nodeId?: string;
   hlc?: HlcTimestamp;
   tickHlc?: () => HlcTimestamp;
-  language?: "en" | "hi";
+  language?: "en" | "hi" | "kn";
   watchMode?: WatchMode | null;
   dangerSigns?: readonly string[];
   unableToDrinkOrBreastfeed?: boolean;
@@ -633,6 +663,7 @@ export function evaluateWatchDangerScreen(
   const immediateActions: string[] = [];
   const rationales: string[] = [];
   const labelsHi: string[] = [];
+  const labelsKn: string[] = [];
 
   for (const flag of checkedFlags) {
     const def = DANGER_SIGN_BY_FLAG.get(flag as WatchDangerSignFlag);
@@ -641,11 +672,13 @@ export function evaluateWatchDangerScreen(
       immediateActions.push(...def.immediateActions);
       rationales.push(def.rationale);
       labelsHi.push(def.labelHi);
+      labelsKn.push(def.labelKn);
     } else {
       matchedRules.push(`WATCH_DANGER_SIGN_${flag.toUpperCase()}`);
       immediateActions.push("Immediate 108 emergency referral to PHC/FRU");
       rationales.push(`Tier-0 Watch danger sign detected (${flag}).`);
       labelsHi.push("आपातकालीन संकट संकेत");
+      labelsKn.push("ತುರ್ತು ಅಪಾಯದ ಲಕ್ಷಣ");
     }
   }
 
@@ -710,7 +743,8 @@ export function evaluateWatchDangerScreen(
     };
   }
 
-  const language: "en" | "hi" = input.language === "hi" ? "hi" : "en";
+  const language: "en" | "hi" | "kn" =
+    input.language === "hi" ? "hi" : input.language === "kn" ? "kn" : "en";
   const cardHlc: HlcTimestamp = input.tickHlc
     ? input.tickHlc()
     : {
@@ -720,16 +754,21 @@ export function evaluateWatchDangerScreen(
       };
 
   const uniqueLabelsHi = dedupePreserveOrder(labelsHi);
+  const uniqueLabelsKn = dedupePreserveOrder(labelsKn);
   const actionCard: ActionCard = {
     card_id: input.cardId ?? createId(),
     patient_id: normalizedPatientId,
     title:
       language === "hi"
         ? "गंभीर आपातकाल: तत्काल चिकित्सालय संदर्भ"
-        : "RED EMERGENCY: Immediate 108 Referral",
+        : language === "kn"
+          ? "ಕೆಂಪು ತುರ್ತು: ತಕ್ಷಣ 108 ಆಸ್ಪತ್ರೆಗೆ ಕರೆದೊಯ್ಯಿರಿ"
+          : "RED EMERGENCY: Immediate 108 Referral",
     summary: (language === "hi"
       ? `आपातकालीन संकट संकेत (${uniqueLabelsHi.join(", ")})। रोगी वाहन 108 से तत्काल चिकित्सालय ले जाएं।`
-      : assessment.rationale
+      : language === "kn"
+        ? `ತುರ್ತು ಅಪಾಯದ ಲಕ್ಷಣ (${uniqueLabelsKn.join(", ")}). ತಕ್ಷಣ 108 ಆಂಬ್ಯುಲೆನ್ಸ್ ಕರೆ ಮಾಡಿ ಆಸ್ಪತ್ರೆಗೆ ಕರೆದೊಯ್ಯಿರಿ.`
+        : assessment.rationale
     ).slice(0, 1000),
     action_steps:
       language === "hi"
@@ -738,7 +777,13 @@ export function evaluateWatchDangerScreen(
             "निकटतम प्राथमिक स्वास्थ्य केंद्र अथवा चिकित्सालय ले जाएं",
             "यात्रा के समय रोगी को शांत एवं सुरक्षित स्थिति में रखें",
           ]
-        : [...assessment.immediate_actions],
+        : language === "kn"
+          ? [
+              "ತಕ್ಷಣ 108 ತುರ್ತು ಆಂಬ್ಯುಲೆನ್ಸ್‌ಗೆ ಕರೆ ಮಾಡಿ",
+              "ಹತ್ತಿರದ ಪ್ರಾಥಮಿಕ ಆರೋಗ್ಯ ಕೇಂದ್ರ (PHC) ಅಥವಾ ಆಸ್ಪತ್ರೆಗೆ ಕರೆದೊಯ್ಯಿರಿ",
+              "ಪ್ರಯಾಣದ ಸಮಯದಲ್ಲಿ ರೋಗಿಯನ್ನು ಶಾಂತವಾಗಿ ಮತ್ತು ಸುರಕ್ಷಿತವಾಗಿ ಇರಿಸಿ",
+            ]
+          : [...assessment.immediate_actions],
     priority: "CRITICAL",
     severity: "RED_EMERGENCY",
     status: "OPEN",

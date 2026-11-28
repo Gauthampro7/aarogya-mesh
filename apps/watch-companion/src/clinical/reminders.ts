@@ -3,7 +3,7 @@
  *
  * Projects synced `VaccinationDueItem` records and open `PATIENT_FAMILY`
  * medication/care `ActionCard` items into glanceable, priority-ordered
- * watch reminders in English and pure *Shuddh Tatsama* Hindi.
+ * watch reminders in English, pure *Shuddh Tatsama* Hindi, and natural Kannada.
  */
 
 import {
@@ -25,8 +25,10 @@ export interface WatchReminderItem {
   daysDelta: number | null;
   titleEn: string;
   titleHi: string;
+  titleKn: string;
   messageEn: string;
   messageHi: string;
+  messageKn: string;
   title: string;
   message: string;
   sourceCardId: string | null;
@@ -36,7 +38,7 @@ export interface WatchReminderItem {
 export interface ReminderProjectionInput {
   vaccinations?: readonly VaccinationDueItem[];
   actionCards?: readonly ActionCard[];
-  language?: "en" | "hi";
+  language?: "en" | "hi" | "kn";
   includeUpcoming?: boolean;
   includeAcknowledged?: boolean;
 }
@@ -65,6 +67,8 @@ const MEDICATION_KEYWORDS = [
   "albendazole",
   "antibiotic",
   "औषधि",
+  "ಔಷಧ",
+  "ಮಾತ್ರೆ",
 ] as const;
 
 function isMedicationActionCard(card: ActionCard): boolean {
@@ -74,9 +78,20 @@ function isMedicationActionCard(card: ActionCard): boolean {
   return MEDICATION_KEYWORDS.some((kw) => haystack.includes(kw));
 }
 
+function pickLocalized(
+  language: "en" | "hi" | "kn",
+  enText: string,
+  hiText: string,
+  knText: string,
+): string {
+  if (language === "hi") return hiText;
+  if (language === "kn") return knText;
+  return enText;
+}
+
 function formatVaccinationReminder(
   item: VaccinationDueItem,
-  language: "en" | "hi",
+  language: "en" | "hi" | "kn",
   includeUpcoming: boolean,
 ): WatchReminderItem | null {
   if (item.status === "COMPLETED") {
@@ -89,23 +104,28 @@ function formatVaccinationReminder(
   let priority: ActionCardPriority;
   let titleEn: string;
   let titleHi: string;
+  let titleKn: string;
   let messageEn: string;
   let messageHi: string;
+  let messageKn: string;
 
   if (item.status === "OVERDUE") {
     const overdueDays = Math.abs(item.days_delta);
     priority = "HIGH";
     titleEn = `Overdue Vaccine: ${item.vaccine_name} (${item.dose_label})`;
     titleHi = `अतिदेय टीकाकरण: ${item.vaccine_name} (${item.dose_label})`;
+    titleKn = `ತಡವಾದ ಲಸಿಕೆ: ${item.vaccine_name} (${item.dose_label})`;
     messageEn =
       item.reminder_text.trim().length > 0
         ? item.reminder_text
         : `Overdue by ${overdueDays} day(s) (due ${item.due_date}). Visit VHND/PHC with MCP Card.`;
     messageHi = `${overdueDays} दिवस अतिदेय (निर्धारित तिथि ${item.due_date})। मातृ-शिशु सुरक्षा पत्रक सहित निकटतम प्राथमिक स्वास्थ्य केंद्र पर जाएं।`;
+    messageKn = `${overdueDays} ದಿನ ತಡವಾಗಿದೆ (ದಿನಾಂಕ ${item.due_date}). ತಾಯಿ-ಮಗು ಕಾರ್ಡ್ ತೆಗೆದುಕೊಂಡು ಆಸ್ಪತ್ರೆಗೆ ಭೇಟಿ ನೀಡಿ.`;
   } else if (item.status === "DUE_SOON") {
     priority = "MEDIUM";
     titleEn = `Vaccine Due Soon: ${item.vaccine_name} (${item.dose_label})`;
     titleHi = `शीघ्र देय टीकाकरण: ${item.vaccine_name} (${item.dose_label})`;
+    titleKn = `ಶೀಘ್ರ ಬಾಕಿ ಲಸಿಕೆ: ${item.vaccine_name} (${item.dose_label})`;
     messageEn =
       item.reminder_text.trim().length > 0
         ? item.reminder_text
@@ -116,15 +136,21 @@ function formatVaccinationReminder(
       item.days_delta === 0
         ? `अद्य देय (${item.due_date})। मातृ-शिशु सुरक्षा पत्रक सहित प्राथमिक स्वास्थ्य केंद्र पर जाएं।`
         : `${item.days_delta} दिवस में देय (${item.due_date})। टीकाकरण हेतु मातृ-शिशु सुरक्षा पत्रक प्रस्तुत रखें।`;
+    messageKn =
+      item.days_delta === 0
+        ? `ಇಂದು ಬಾಕಿ (${item.due_date}). ತಾಯಿ-ಮಗು ಕಾರ್ಡ್ ತೆಗೆದುಕೊಂಡು ಆಸ್ಪತ್ರೆಗೆ ಭೇಟಿ ನೀಡಿ.`
+        : `${item.days_delta} ದಿನಗಳಲ್ಲಿ ಬಾಕಿ (${item.due_date}). ಲಸಿಕೆಗಾಗಿ ತಾಯಿ-ಮಗು ಕಾರ್ಡ್ ಸಿದ್ಧವಾಗಿಡಿ.`;
   } else {
     priority = "LOW";
     titleEn = `Upcoming Vaccine: ${item.vaccine_name} (${item.dose_label})`;
     titleHi = `आगामी टीकाकरण: ${item.vaccine_name} (${item.dose_label})`;
+    titleKn = `ಮುಂಬರುವ ಲಸಿಕೆ: ${item.vaccine_name} (${item.dose_label})`;
     messageEn =
       item.reminder_text.trim().length > 0
         ? item.reminder_text
         : `Scheduled on ${item.due_date} (in ${item.days_delta} day(s)).`;
     messageHi = `निर्धारित तिथि ${item.due_date} (${item.days_delta} दिवस शेष)।`;
+    messageKn = `ನಿಗದಿತ ದಿನಾಂಕ ${item.due_date} (${item.days_delta} ದಿನ ಬಾಕಿ).`;
   }
 
   return {
@@ -136,10 +162,12 @@ function formatVaccinationReminder(
     daysDelta: item.days_delta,
     titleEn,
     titleHi,
+    titleKn,
     messageEn,
     messageHi,
-    title: language === "hi" ? titleHi : titleEn,
-    message: language === "hi" ? messageHi : messageEn,
+    messageKn,
+    title: pickLocalized(language, titleEn, titleHi, titleKn),
+    message: pickLocalized(language, messageEn, messageHi, messageKn),
     sourceCardId: null,
     vaccineCode: item.vaccine_code,
   };
@@ -147,7 +175,7 @@ function formatVaccinationReminder(
 
 function formatActionCardReminder(
   card: ActionCard,
-  language: "en" | "hi",
+  language: "en" | "hi" | "kn",
   includeAcknowledged: boolean,
 ): WatchReminderItem | null {
   if (card.watch_mode !== null && card.watch_mode !== "PATIENT_FAMILY") {
@@ -168,6 +196,8 @@ function formatActionCardReminder(
 
   let titleHi: string;
   let messageHi: string;
+  let titleKn: string;
+  let messageKn: string;
 
   if (card.language === "hi") {
     titleHi = card.title;
@@ -193,6 +223,30 @@ function formatActionCardReminder(
         : "स्वास्थ्य कार्यकर्ता द्वारा निर्दिष्ट गृह परिचर्या एवं परीक्षण का पालन करें।";
   }
 
+  if (card.language === "kn") {
+    titleKn = card.title;
+    messageKn = card.summary;
+  } else if (isMedication) {
+    titleKn =
+      card.priority === "CRITICAL"
+        ? "ತುರ್ತು ಔಷಧ ಸೂಚನೆ"
+        : card.priority === "HIGH"
+          ? "ಅಗತ್ಯ ಔಷಧ ನೆನಪು"
+          : "ಔಷಧ ಸೇವನೆ ನೆನಪು";
+    messageKn = card.due_by
+      ? `${card.due_by} ಒಳಗೆ ನಿಯಮಿತವಾಗಿ ಔಷಧ ತೆಗೆದುಕೊಳ್ಳಿ ಮತ್ತು ಆಶಾ ಕಾರ್ಯಕರ್ತೆಯ ಸೂಚನೆ ಪಾಲಿಸಿ.`
+      : "ನಿಯಮಿತವಾಗಿ ಔಷಧ ತೆಗೆದುಕೊಳ್ಳಿ ಮತ್ತು ಆಶಾ ಕಾರ್ಯಕರ್ತೆಯ ಸೂಚನೆ ಪಾಲಿಸಿ.";
+  } else {
+    titleKn =
+      card.priority === "CRITICAL"
+        ? "ಕೆಂಪು ತುರ್ತು: ತಕ್ಷಣ ಆಸ್ಪತ್ರೆಗೆ ಕರೆದೊಯ್ಯಿರಿ"
+        : "ಮನೆ ಆರೈಕೆ ನೆನಪು";
+    messageKn =
+      card.priority === "CRITICAL"
+        ? "ತಕ್ಷಣ 108 ಕರೆ ಮಾಡಿ ಮತ್ತು ಹತ್ತಿರದ ಆಸ್ಪತ್ರೆಗೆ ಕರೆದೊಯ್ಯಿರಿ."
+        : "ಆಶಾ ಕಾರ್ಯಕರ್ತೆ ತಿಳಿಸಿದ ಮನೆ ಆರೈಕೆ ಮತ್ತು ತಪಾಸಣೆ ಪಾಲಿಸಿ.";
+  }
+
   return {
     id: `card:${card.card_id}`,
     category,
@@ -202,10 +256,12 @@ function formatActionCardReminder(
     daysDelta: null,
     titleEn,
     titleHi,
+    titleKn,
     messageEn,
     messageHi,
-    title: language === "hi" ? titleHi : titleEn,
-    message: language === "hi" ? messageHi : messageEn,
+    messageKn,
+    title: pickLocalized(language, titleEn, titleHi, titleKn),
+    message: pickLocalized(language, messageEn, messageHi, messageKn),
     sourceCardId: card.card_id,
     vaccineCode: null,
   };
@@ -245,7 +301,8 @@ function compareReminders(a: WatchReminderItem, b: WatchReminderItem): number {
 export function projectPatientFamilyReminders(
   input: ReminderProjectionInput,
 ): WatchReminderItem[] {
-  const language: "en" | "hi" = input.language === "hi" ? "hi" : "en";
+  const language: "en" | "hi" | "kn" =
+    input.language === "hi" ? "hi" : input.language === "kn" ? "kn" : "en";
   const includeUpcoming = input.includeUpcoming ?? false;
   const includeAcknowledged = input.includeAcknowledged ?? false;
 

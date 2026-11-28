@@ -1,7 +1,19 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import {
+  WATCH_DANGER_SIGNS,
+  evaluateWatchDangerScreen,
+  projectPatientFamilyReminders,
+} from "../../src/clinical/index";
 import { en } from "../../src/i18n/en";
 import { hi } from "../../src/i18n/hi";
-import { getLang, setLang, t, toggleLang } from "../../src/i18n/index";
+import {
+  LANG_STORAGE_KEY,
+  getLang,
+  setLang,
+  t,
+  toggleLang,
+} from "../../src/i18n/index";
+import { kn } from "../../src/i18n/kn";
 
 const DENY_WORDS = [
   // Perso-Arabic / colloquial loanwords forbidden by Pure Indigenous Indic Vocabulary Rule
@@ -20,16 +32,20 @@ const DENY_WORDS = [
 const NUKTA_CHARS = ["ख़", "ग़", "ज़", "फ़", "ड़", "ढ़", "क़"];
 
 describe("watch-companion i18n tables", () => {
-  it("have identical key sets between en and hi", () => {
-    expect(Object.keys(hi).sort()).toEqual(Object.keys(en).sort());
+  it("have identical key sets between en, hi, and kn", () => {
+    const enKeys = Object.keys(en).sort();
+    expect(Object.keys(hi).sort()).toEqual(enKeys);
+    expect(Object.keys(kn).sort()).toEqual(enKeys);
   });
 
-  it("have non-empty strings and matching {placeholders}", () => {
+  it("have non-empty strings and matching {placeholders} across en, hi, and kn", () => {
     const placeholders = (s: string) => (s.match(/\{\w+\}/g) ?? []).sort().join(",");
     for (const key of Object.keys(en) as (keyof typeof en)[]) {
       expect(en[key].length, key).toBeGreaterThan(0);
       expect(hi[key].length, key).toBeGreaterThan(0);
-      expect(placeholders(hi[key]), key).toBe(placeholders(en[key]));
+      expect(kn[key].length, key).toBeGreaterThan(0);
+      expect(placeholders(hi[key]), `hi:${key}`).toBe(placeholders(en[key]));
+      expect(placeholders(kn[key]), `kn:${key}`).toBe(placeholders(en[key]));
     }
   });
 
@@ -61,6 +77,13 @@ describe("watch-companion i18n tables", () => {
     }
   });
 
+  it("Kannada strings use Kannada script for all UI keys except sync.hubHint", () => {
+    for (const [key, value] of Object.entries(kn)) {
+      if (key === "sync.hubHint") continue;
+      expect(value, `${key} should contain Kannada script`).toMatch(/[\u0C80-\u0CFF]/);
+    }
+  });
+
   it("uses mandated Shuddh Tatsama referral and clinical vocabulary", () => {
     expect(hi["danger.redBanner"]).toContain("चिकित्सालय भेजें");
     expect(hi["danger.redBanner"]).toContain("रोगी वाहन");
@@ -68,15 +91,87 @@ describe("watch-companion i18n tables", () => {
     expect(hi["rem.vaccines"]).toBe("टीकाकरण");
   });
 
-  it("supports language switching and variable interpolation", () => {
+  it("provides contextual Kannada labels for all 29 danger signs, RED ActionCards, and reminders", () => {
+    expect(WATCH_DANGER_SIGNS).toHaveLength(29);
+    for (const sign of WATCH_DANGER_SIGNS) {
+      expect(sign.labelKn.length, sign.flag).toBeGreaterThan(0);
+      expect(sign.labelKn, sign.flag).toMatch(/[\u0C80-\u0CFF]/);
+    }
+
+    const triage = evaluateWatchDangerScreen({
+      patientId: "pat-kn-1",
+      dangerSigns: ["convulsions"],
+      language: "kn",
+    });
+    expect(triage.actionCard?.language).toBe("kn");
+    expect(triage.actionCard?.title).toMatch(/[\u0C80-\u0CFF]/);
+    expect(triage.actionCard?.summary).toMatch(/[\u0C80-\u0CFF]/);
+
+    const reminders = projectPatientFamilyReminders({
+      vaccinations: [
+        {
+          vaccine_code: "PENTA_1",
+          vaccine_name: "Pentavalent-1",
+          dose_label: "6 weeks",
+          due_date: "2026-11-10",
+          status: "OVERDUE",
+          administered_date: null,
+          days_delta: -5,
+          reminder_text: "",
+          schedule_group: "UIP_INDIA",
+        },
+      ],
+      language: "kn",
+    });
+    expect(reminders).toHaveLength(1);
+    expect(reminders[0].title).toBe(reminders[0].titleKn);
+    expect(reminders[0].title).toMatch(/[\u0C80-\u0CFF]/);
+    expect(reminders[0].message).toMatch(/[\u0C80-\u0CFF]/);
+  });
+
+  it("cycles en -> hi -> kn -> en cleanly, updates toggle label, persists aarogya.lang, and notifies native bridge", () => {
+    const store = new Map<string, string>();
+    const setLanguageSpy = vi.fn();
+    vi.stubGlobal("localStorage", {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => store.set(k, v),
+      removeItem: (k: string) => store.delete(k),
+    });
+    vi.stubGlobal("window", {
+      AarogyaNativeBridge: { setLanguage: setLanguageSpy },
+    });
+
     setLang("en");
     expect(getLang()).toBe("en");
+    expect(t("lang.toggle")).toBe("EN");
     expect(t("sync.queued", { count: 3 })).toBe("3 queued");
+    expect(store.get(LANG_STORAGE_KEY)).toBe("en");
 
     expect(toggleLang()).toBe("hi");
     expect(getLang()).toBe("hi");
+    expect(t("lang.toggle")).toBe("हिन्दी");
     expect(t("sync.queued", { count: 3 })).toBe("3 प्रतीक्षित");
+    expect(store.get(LANG_STORAGE_KEY)).toBe("hi");
 
-    setLang("en");
+    expect(toggleLang()).toBe("kn");
+    expect(getLang()).toBe("kn");
+    expect(t("lang.toggle")).toBe("ಕನ್ನಡ");
+    expect(t("sync.queued", { count: 3 })).toBe("3 ಬಾಕಿ");
+    expect(store.get(LANG_STORAGE_KEY)).toBe("kn");
+
+    expect(toggleLang()).toBe("en");
+    expect(getLang()).toBe("en");
+    expect(t("lang.toggle")).toBe("EN");
+    expect(setLanguageSpy).toHaveBeenCalledWith("hi");
+    expect(setLanguageSpy).toHaveBeenCalledWith("kn");
+    expect(setLanguageSpy).toHaveBeenCalledWith("en");
+
+    setLanguageSpy.mockClear();
+    setLang("kn", { notifyBridge: false });
+    expect(getLang()).toBe("kn");
+    expect(setLanguageSpy).not.toHaveBeenCalled();
+
+    setLang("en", { notifyBridge: false });
+    vi.unstubAllGlobals();
   });
 });

@@ -1,7 +1,7 @@
 :root {
   --bg: #0b1220; --panel: #16213a; --line: #3b4a6b; --fg: #f8fafc; --muted: #b6c2d9;
   --teal: #14b8a6; --teal-d: #0f766e; --red: #b91c1c; --yellow: #facc15; --green: #15803d;
-  font: 18px/1.45 system-ui, -apple-system, "Noto Sans Devanagari", "Segoe UI", sans-serif;
+  font: 18px/1.45 system-ui, -apple-system, "Noto Sans Devanagari", "Noto Sans Kannada", "Segoe UI", sans-serif;
   color: var(--fg); background: var(--bg);
 }
 * { box-sizing: border-box; }
@@ -13,6 +13,10 @@ header { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-betwee
 .apptitle { font-size: 1.2rem; }
 small, .muted { color: var(--muted); font-size: 0.85rem; }
 .tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.lang-group { display: inline-flex; border: 2px solid var(--teal); border-radius: 10px; overflow: hidden; background: var(--panel); }
+.lang-btn { min-height: 44px; padding: 6px 10px; border: 0; border-radius: 0; background: transparent; color: var(--fg); font-size: 0.85rem; font-weight: 700; }
+.lang-btn + .lang-btn { border-left: 1px solid var(--line); }
+.lang-btn.active { background: var(--teal-d); color: #fff; }
 .badge { padding: 6px 10px; border-radius: 999px; font-weight: 700; font-size: 0.8rem; border: 2px solid currentColor; }
 .badge.on { color: #5eead4; } .badge.off { color: #fbbf24; }
 h1 { font-size: 1.5rem; margin: 16px 0 8px; } h2 { font-size: 1.2rem; margin: 20px 0 8px; } h3 { margin: 12px 0 4px; }

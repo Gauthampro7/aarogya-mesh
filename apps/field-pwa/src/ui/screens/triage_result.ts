@@ -1,6 +1,7 @@
 import type { TriageAssessment, TriageSeverity } from "../../../../../packages/contracts/ts/index";
 import { getLang, t, type Lang } from "../../i18n";
 import { HI_TRIAGE_ACTIONS, HI_TRIAGE_RATIONALE } from "../../i18n/hi";
+import { KN_TRIAGE_ACTIONS, KN_TRIAGE_RATIONALE } from "../../i18n/kn";
 import { h } from "../dom";
 
 const SEV = {
@@ -9,19 +10,31 @@ const SEV = {
   GREEN_HOME: { cls: "sev-green", icon: "✔", title: "sev.green", sub: "sev.greenSub" },
 } as const satisfies Record<TriageSeverity, { cls: string; icon: string; title: string; sub: string }>;
 
-/** Display-only Hindi for an engine action string; the stored English is never changed. */
+const ACTION_TABLES: Partial<Record<Lang, Readonly<Record<string, string>>>> = {
+  hi: HI_TRIAGE_ACTIONS,
+  kn: KN_TRIAGE_ACTIONS,
+};
+
+const RATIONALE_TABLES: Partial<Record<Lang, Readonly<Record<string, string>>>> = {
+  hi: HI_TRIAGE_RATIONALE,
+  kn: KN_TRIAGE_RATIONALE,
+};
+
+/** Display-only localized action string for hi/kn; the stored English is never changed. */
 export function localizeTriageAction(text: string, lang: Lang = getLang()): string {
-  return lang === "hi" ? (HI_TRIAGE_ACTIONS[text] ?? text) : text;
+  const tbl = ACTION_TABLES[lang];
+  return tbl ? (tbl[text] ?? text) : text;
 }
 
-/** Display-only Hindi rationale built from matched rule ids; any unknown id keeps the English. */
+/** Display-only localized rationale built from matched rule ids; any unknown id keeps the English. */
 export function localizeTriageRationale(text: string, matchedRules: readonly string[], lang: Lang = getLang()): string {
-  if (lang !== "hi" || matchedRules.length === 0) return text;
+  const tbl = RATIONALE_TABLES[lang];
+  if (!tbl || matchedRules.length === 0) return text;
   const out: string[] = [];
   for (const id of matchedRules) {
-    const hiText = HI_TRIAGE_RATIONALE[id];
-    if (hiText === undefined) return text;
-    if (!out.includes(hiText)) out.push(hiText);
+    const locText = tbl[id];
+    if (locText === undefined) return text;
+    if (!out.includes(locText)) out.push(locText);
   }
   return out.join(" ");
 }

@@ -1,8 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { en } from "../../src/i18n/en";
 import { hi } from "../../src/i18n/hi";
+import { kn } from "../../src/i18n/kn";
+import { getLang, notifyNativeLang, parseLang, queryLang, setLang, SUPPORTED_LANGS, t, tx } from "../../src/i18n";
 import { checklistItems, checklistTypes } from "../../src/ui/checklist_logic";
-import { dehydrationFlags, maternalRedOptions, maternalYellowOptions, pediatricDangerOptions } from "../../src/ui/triage_map";
+import { dehydrationFlags, flagLabel, maternalRedOptions, maternalYellowOptions, pediatricDangerOptions } from "../../src/ui/triage_map";
 
 const DENY = [
   // Perso-Arabic / colloquial words to avoid
@@ -20,16 +22,19 @@ const DENY = [
 const NUKTA = ["ख़", "ग़", "ज़", "फ़", "ड़", "ढ़", "क़"];
 
 describe("i18n tables", () => {
-  it("have identical key sets", () => {
+  it("have identical key sets across en, hi, and kn", () => {
     expect(Object.keys(hi).sort()).toEqual(Object.keys(en).sort());
+    expect(Object.keys(kn).sort()).toEqual(Object.keys(en).sort());
   });
 
-  it("have no empty strings and matching {placeholders}", () => {
+  it("have no empty strings and matching {placeholders} across en, hi, and kn", () => {
     const ph = (s: string) => (s.match(/\{\w+\}/g) ?? []).sort().join(",");
     for (const k of Object.keys(en) as (keyof typeof en)[]) {
       expect(en[k].length, k).toBeGreaterThan(0);
       expect(hi[k].length, k).toBeGreaterThan(0);
-      expect(ph(hi[k]), k).toBe(ph(en[k]));
+      expect(kn[k].length, k).toBeGreaterThan(0);
+      expect(ph(hi[k]), `hi ${k}`).toBe(ph(en[k]));
+      expect(ph(kn[k]), `kn ${k}`).toBe(ph(en[k]));
     }
   });
 
@@ -77,14 +82,16 @@ describe("i18n tables", () => {
     expect(maternalRedOptions().length).toBeGreaterThan(5);
   });
 
-  it("covers every rule-table flag and checklist item in both languages (en = canonical label)", () => {
+  it("covers every rule-table flag and checklist item in all three languages (en = canonical label)", () => {
     const enT = en as Record<string, string>;
     const hiT = hi as Record<string, string>;
+    const knT = kn as Record<string, string>;
     const flags = [...pediatricDangerOptions(), ...maternalRedOptions(), ...maternalYellowOptions()];
     expect(flags.length).toBeGreaterThan(20);
     for (const o of flags) {
       expect(enT[`flag.${o.flag}`], `en flag.${o.flag}`).toBe(o.label);
       expect(hiT[`flag.${o.flag}`], `hi flag.${o.flag}`).toBeTruthy();
+      expect(knT[`flag.${o.flag}`], `kn flag.${o.flag}`).toBeTruthy();
     }
     const types = checklistTypes();
     expect(types).toHaveLength(5);
@@ -93,7 +100,67 @@ describe("i18n tables", () => {
       for (const i of checklistItems(type)) {
         expect(enT[`cki.${i.id}`], `en cki.${i.id}`).toBe(i.label);
         expect(hiT[`cki.${i.id}`], `hi cki.${i.id}`).toBeTruthy();
+        expect(knT[`cki.${i.id}`], `kn cki.${i.id}`).toBeTruthy();
       }
     }
+  });
+
+  it("Kannada strings contain Kannada script (U+0C80–U+0CFF) and contextual ASHA terms", () => {
+    for (const [k, v] of Object.entries(kn)) {
+      expect(v, k).toMatch(/[\u0C80-\u0CFF]/);
+    }
+    expect(kn["app.name"]).toBe("ಆರೋಗ್ಯ ಸಂಜಾಲ");
+    expect(kn["app.subtitle"]).toContain("ಆಶಾ ಕಾರ್ಯಕರ್ತೆ");
+    expect(kn["sev.red"]).toContain("ತುರ್ತು ಅಪಾಯ");
+    expect(kn["nav.register"]).toBe("ರೋಗಿ ನೋಂದಣಿ");
+    expect(kn["vac.title"]).toBe("ಲಸಿಕೆ ವೇಳಾಪಟ್ಟಿ");
+    expect(kn["voice.title"]).toBe("ಧ್ವನಿ ಟಿಪ್ಪಣಿ");
+  });
+});
+
+describe("language switching and helpers", () => {
+  it("supports en, hi, and kn switching via setLang/getLang/t/tx", () => {
+    expect(SUPPORTED_LANGS).toEqual(["en", "hi", "kn"]);
+    const prev = getLang();
+    try {
+      setLang("en", { persist: false, notifyNative: false });
+      expect(getLang()).toBe("en");
+      expect(t("app.name")).toBe("Aarogya Mesh");
+      expect(flagLabel("sunken_eyes")).toBe("Sunken eyes");
+
+      setLang("hi", { persist: false, notifyNative: false });
+      expect(getLang()).toBe("hi");
+      expect(t("app.name")).toBe("आरोग्य जाल");
+      expect(tx("flag.convulsions", "fallback")).toBe(hi["flag.convulsions"]);
+      expect(flagLabel("sunken_eyes")).toBe(hi["dehy.sunken_eyes"]);
+
+      setLang("kn", { persist: false, notifyNative: false });
+      expect(getLang()).toBe("kn");
+      expect(t("app.name")).toBe("ಆರೋಗ್ಯ ಸಂಜಾಲ");
+      expect(tx("flag.convulsions", "fallback")).toBe(kn["flag.convulsions"]);
+      expect(flagLabel("sunken_eyes")).toBe(kn["dehy.sunken_eyes"]);
+    } finally {
+      setLang(prev, { persist: false, notifyNative: false });
+    }
+  });
+
+  it("parses valid languages from raw strings and query strings", () => {
+    expect(parseLang("en")).toBe("en");
+    expect(parseLang("HI")).toBe("hi");
+    expect(parseLang(" kn ")).toBe("kn");
+    expect(parseLang("fr")).toBeNull();
+    expect(parseLang(null)).toBeNull();
+    expect(queryLang("?lang=kn")).toBe("kn");
+    expect(queryLang("?foo=1&lang=hi")).toBe("hi");
+    expect(queryLang("?lang=invalid")).toBeNull();
+    expect(queryLang("")).toBeNull();
+  });
+
+  it("notifies AarogyaNativeBridge.setLanguage safely when present", () => {
+    const spy = vi.fn();
+    notifyNativeLang("kn", { AarogyaNativeBridge: { setLanguage: spy } });
+    expect(spy).toHaveBeenCalledWith("kn");
+    expect(() => notifyNativeLang("hi", {})).not.toThrow();
+    expect(() => notifyNativeLang("en", { AarogyaNativeBridge: { setLanguage: () => { throw new Error("boom"); } } })).not.toThrow();
   });
 });

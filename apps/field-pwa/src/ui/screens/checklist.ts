@@ -44,7 +44,23 @@ export async function checklist(ctx: Ctx): Promise<HTMLElement> {
     out.append(
       h("h2", {}, t("ck.score", { done: ev.completed_items.length, total: ev.total_items })),
       ev.has_critical_gaps
-        ? h("div", { class: "result sev-yellow", role: "alert" }, h("h3", {}, "▲ ", t("ck.escalate")), h("ul", {}, ev.action_cards.filter((c) => c.priority === "HIGH").map((c) => h("li", {}, h("strong", {}, c.title), h("div", {}, c.action_steps.join(" "))))))
+        ? h(
+            "div",
+            { class: "result sev-yellow", role: "alert" },
+            h("h3", {}, "▲ ", t("ck.escalate")),
+            h(
+              "ul",
+              {},
+              ev.action_cards
+                .filter((c) => c.priority === "HIGH")
+                .map((c, idx) => {
+                  const missId = ev.missing_critical_checks[idx];
+                  const missLabel = ev.missing_critical_labels[idx];
+                  const title = missId && missLabel ? t("ck.missingCritical", { label: tx(`cki.${missId}`, missLabel) }) : c.title;
+                  return h("li", {}, h("strong", {}, title), h("div", {}, c.action_steps.join(" ")));
+                }),
+            ),
+          )
         : h("div", { class: "result sev-green", role: "status" }, h("h3", {}, "✔ ", t("ck.noGaps"))),
     );
     const saved = h("p", { class: "muted", role: "status" }, t("triage.saving"));

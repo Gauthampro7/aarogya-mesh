@@ -22,7 +22,7 @@ import {
   type WatchReminderItem,
 } from "../clinical/index";
 import { resolveDefaultStorage, type StorageLike } from "../core/index";
-import { getLang, setLang, toggleLang, type Lang } from "../i18n/index";
+import { getLang, setLang, toggleLang, type Lang, type SetLangOptions } from "../i18n/index";
 import {
   DEFAULT_HUB_URL,
   WatchSyncClient,
@@ -194,8 +194,8 @@ export class WatchUiController {
     return getLang();
   }
 
-  public setLanguage(lang: Lang): Lang {
-    const updated = setLang(lang);
+  public setLanguage(lang: Lang, options?: SetLangOptions): Lang {
+    const updated = setLang(lang, options);
     this.emit();
     return updated;
   }

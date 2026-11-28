@@ -110,7 +110,8 @@ export const hiddenTickedFlags = (s: TriageFormState): string[] => {
 export function flagLabel(flag: string): string {
   const all = [...pediatricDangerOptions(), ...maternalRedOptions(), ...maternalYellowOptions()];
   const found = all.find((o) => o.flag === flag);
-  return found ? tx(`flag.${flag}`, found.label) : flag.replaceAll("_", " ");
+  if (found) return tx(`flag.${flag}`, found.label);
+  return tx(`dehy.${flag}`, flag.replaceAll("_", " "));
 }
 
 /**

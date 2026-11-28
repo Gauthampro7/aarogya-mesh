@@ -1,7 +1,10 @@
-/** English UI strings for the Tier-0 Watch Companion. Keys here define the canonical set; hi.ts must match exactly. */
+/** English UI strings for the Tier-0 Watch Companion. Keys here define the canonical set; hi.ts and kn.ts must match exactly. */
 export const en = {
   "app.title": "Aarogya Watch",
-  "lang.toggle": "हिं",
+  "app.aria": "Tier-0 Watch Companion 360x360",
+  "nav.aria": "Watch views",
+  "lang.toggle": "EN",
+  "lang.switchAria": "Switch language",
 
   "mode.CHW_COMPANION": "CHW ⇄",
   "mode.PATIENT_FAMILY": "Family ⇄",

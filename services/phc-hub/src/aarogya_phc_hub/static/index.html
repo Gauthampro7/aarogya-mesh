@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Aarogya Mesh — Tier-2 PHC Command Center</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyOCAyOCI+PHJlY3QgeD0iMiIgeT0iMiIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiByeD0iNiIgZmlsbD0iIzBkOTQ4OCIvPjxwYXRoIGQ9Ik0xNCA3djE0TTcgMTRoMTQiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==" />
   <link rel="stylesheet" href="/static/app.css" />
 </head>
 <body>
@@ -28,7 +29,11 @@
           <span class="pulse-dot" aria-hidden="true"></span>
           <span id="badge-offline-text">AIRPLANE-MODE SAFE</span>
         </span>
-        <button id="btn-lang" class="btn btn-secondary" type="button">हिन्दी</button>
+        <div id="lang-switcher" class="lang-switcher" role="group" aria-label="Language">
+          <button id="btn-lang-en" class="lang-btn active" type="button" data-lang="en" aria-pressed="true">EN</button>
+          <button id="btn-lang-hi" class="lang-btn" type="button" data-lang="hi" aria-pressed="false">हिन्दी</button>
+          <button id="btn-lang-kn" class="lang-btn" type="button" data-lang="kn" aria-pressed="false">ಕನ್ನಡ</button>
+        </div>
         <button id="btn-theme" class="btn btn-secondary" type="button">Light</button>
         <button id="btn-autorefresh" class="btn btn-toggle active" type="button" aria-pressed="true">Auto-Refresh: ON</button>
         <button id="btn-refresh" class="btn btn-secondary" type="button">Refresh</button>
@@ -83,7 +88,7 @@
               <span id="tier0-count" class="mono">0</span>
               <span data-i18n="activePeersShort">active</span>
             </span>
-            <span class="arch-cap-tag">1-Tap SOS · BLE/LAN</span>
+            <span class="arch-cap-tag" data-i18n="tier0CapTag">1-Tap SOS · BLE/LAN</span>
           </div>
         </article>
 
@@ -105,7 +110,7 @@
               <span id="tier1-count" class="mono">0</span>
               <span data-i18n="activePeersShort">active</span>
             </span>
-            <span class="arch-cap-tag">Voice Queue · Delta Sync</span>
+            <span class="arch-cap-tag" data-i18n="tier1CapTag">Voice Queue · Delta Sync</span>
           </div>
         </article>
 
@@ -278,14 +283,14 @@
             <label for="event-type-filter" class="sr-only" data-i18n="filterEvents">Filter by event type</label>
             <select id="event-type-filter" class="select-input">
               <option value="" data-i18n="allEvents">All Events</option>
-              <option value="PATIENT_REGISTERED">PATIENT_REGISTERED</option>
-              <option value="TRIAGE_COMPLETED">TRIAGE_COMPLETED</option>
-              <option value="CHECKLIST_RECORDED">CHECKLIST_RECORDED</option>
-              <option value="VACCINATION_LOGGED">VACCINATION_LOGGED</option>
-              <option value="VOICE_NOTE_RECORDED">VOICE_NOTE_RECORDED</option>
-              <option value="ENRICHMENT_COMPLETED">ENRICHMENT_COMPLETED</option>
-              <option value="ACTION_CARD_ISSUED">ACTION_CARD_ISSUED</option>
-              <option value="OUTBREAK_ALERT_RAISED">OUTBREAK_ALERT_RAISED</option>
+              <option value="PATIENT_REGISTERED" data-i18n="evPatientRegistered">PATIENT_REGISTERED</option>
+              <option value="TRIAGE_COMPLETED" data-i18n="evTriageCompleted">TRIAGE_COMPLETED</option>
+              <option value="CHECKLIST_RECORDED" data-i18n="evChecklistRecorded">CHECKLIST_RECORDED</option>
+              <option value="VACCINATION_LOGGED" data-i18n="evVaccinationLogged">VACCINATION_LOGGED</option>
+              <option value="VOICE_NOTE_RECORDED" data-i18n="evVoiceNoteRecorded">VOICE_NOTE_RECORDED</option>
+              <option value="ENRICHMENT_COMPLETED" data-i18n="evEnrichmentCompleted">ENRICHMENT_COMPLETED</option>
+              <option value="ACTION_CARD_ISSUED" data-i18n="evActionCardIssued">ACTION_CARD_ISSUED</option>
+              <option value="OUTBREAK_ALERT_RAISED" data-i18n="evOutbreakAlertRaised">OUTBREAK_ALERT_RAISED</option>
             </select>
             <button id="btn-toggle-events" class="btn btn-secondary" type="button" aria-expanded="false" data-i18n="showEventLog">Show Log</button>
           </div>

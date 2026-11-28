@@ -59,7 +59,7 @@ import java.util.Locale;
  *
  * Maintains two persistent WebView instances (phoneWebView for /phone/ and watchWebView for /watch/)
  * toggled via VISIBLE/GONE so switching modes never reloads or wipes unsaved forms/recordings.
- * Provides a slim EN / Shuddh Tatsama Hindi top bar, native Set Hub URL dialog, hardware bridge,
+ * Provides a slim EN / Shuddh Tatsama Hindi / Kannada top bar, native Set Hub URL dialog, hardware bridge,
  * microphone capture auto-grant for 127.0.0.1, tel:108 dialing, and OnBackInvokedCallback handling.
  */
 public class MainActivity extends Activity {
@@ -333,48 +333,89 @@ public class MainActivity extends Activity {
         return d;
     }
 
-    private boolean isHindi() {
-        return "hi".equals(uiLang);
+    private static String normalizeLang(String lang) {
+        if ("hi".equalsIgnoreCase(lang)) {
+            return "hi";
+        }
+        if ("kn".equalsIgnoreCase(lang)) {
+            return "kn";
+        }
+        return "en";
+    }
+
+    private static String tr(String lang, String en, String hi, String kn) {
+        if ("hi".equals(lang)) {
+            return hi;
+        }
+        if ("kn".equals(lang)) {
+            return kn;
+        }
+        return en;
+    }
+
+    private String tr(String en, String hi, String kn) {
+        return tr(uiLang, en, hi, kn);
     }
 
     private void applyTopBarLocale() {
-        boolean hi = isHindi();
         if (tabPhone != null) {
-            tabPhone.setText(hi ? "आशा क्षेत्र" : "ASHA Field");
-            tabPhone.setContentDescription(hi ? "आशा क्षेत्र अनुप्रयोग खोलें" : "Switch to ASHA Field App");
+            tabPhone.setText(tr("ASHA Field", "आशा क्षेत्र", "ಆಶಾ ಕ್ಷೇತ್ರ"));
+            tabPhone.setContentDescription(tr(
+                    "Switch to ASHA Field App",
+                    "आशा क्षेत्र अनुप्रयोग खोलें",
+                    "ಆಶಾ ಕ್ಷೇತ್ರ ಆ್ಯಪ್ ತೆರೆಯಿರಿ"
+            ));
         }
         if (tabWatch != null) {
-            tabWatch.setText(hi ? "घटिका / आपात" : "Watch / SOS");
-            tabWatch.setContentDescription(hi ? "घटिका एवं परिवार आपात अनुप्रयोग खोलें" : "Switch to Watch and Family SOS");
+            tabWatch.setText(tr("Watch / SOS", "घटिका / आपात", "ವಾಚ್ / ತುರ್ತು"));
+            tabWatch.setContentDescription(tr(
+                    "Switch to Watch and Family SOS",
+                    "घटिका एवं परिवार आपात अनुप्रयोग खोलें",
+                    "ವಾಚ್ ಮತ್ತು ಕುಟುಂಬ ತುರ್ತು ಆ್ಯಪ್ ತೆರೆಯಿರಿ"
+            ));
         }
         if (langToggle != null) {
-            langToggle.setText(hi ? "EN" : "हिन्दी");
-            langToggle.setContentDescription(hi ? "Switch language to English" : "भाषा हिन्दी में बदलें");
+            langToggle.setText(tr("EN", "हिन्दी", "ಕನ್ನಡ"));
+            langToggle.setContentDescription(tr(
+                    "भाषा हिन्दी में बदलें",
+                    "ಕನ್ನಡಕ್ಕೆ ಭಾಷೆ ಬದಲಿಸಿ",
+                    "Switch language to English"
+            ));
         }
         if (hubTelemetryPill != null) {
-            hubTelemetryPill.setContentDescription(hi ? "स्वास्थ्य केन्द्र का संजाल पता निर्धारित करें" : "Set Hub URL and device status");
+            hubTelemetryPill.setContentDescription(tr(
+                    "Set Hub URL and device status",
+                    "स्वास्थ्य केन्द्र का संजाल पता निर्धारित करें",
+                    "ಆರೋಗ್ಯ ಕೇಂದ್ರದ ಜಾಲ ವಿಳಾಸ ಹೊಂದಿಸಿ"
+            ));
         }
         updateTelemetryBadge();
     }
 
     private void setUiLanguage(String lang, boolean propagateToWeb) {
-        String normalized = "hi".equalsIgnoreCase(lang) ? "hi" : "en";
+        String normalized = normalizeLang(lang);
         boolean changed = !normalized.equals(uiLang);
         uiLang = normalized;
         applyTopBarLocale();
         if (propagateToWeb && changed) {
             String js = "(function(){try{localStorage.setItem('aarogya.lang','" + normalized + "');"
                     + "window.dispatchEvent(new StorageEvent('storage',{key:'aarogya.lang',newValue:'" + normalized + "'}));"
+                    + "window.postMessage({type:'aarogya:setLang',lang:'" + normalized + "'},'*');"
                     + "}catch(e){}})();";
-            WebView active = getActiveWebView();
-            if (active != null) {
-                active.evaluateJavascript(js, null);
-            }
+            evalOnLoadedWebViews(js);
         }
     }
 
     private void toggleUiLanguage() {
-        setUiLanguage(isHindi() ? "en" : "hi", true);
+        String next;
+        if ("en".equals(uiLang)) {
+            next = "hi";
+        } else if ("hi".equals(uiLang)) {
+            next = "kn";
+        } else {
+            next = "en";
+        }
+        setUiLanguage(next, true);
     }
 
     private void syncLocaleFromWebView(WebView view) {
@@ -387,7 +428,7 @@ public class MainActivity extends Activity {
                     @Override
                     public void onReceiveValue(String value) {
                         String cleaned = unquoteJsString(value);
-                        if ("hi".equals(cleaned) || "en".equals(cleaned)) {
+                        if ("hi".equals(cleaned) || "kn".equals(cleaned) || "en".equals(cleaned)) {
                             if (!cleaned.equals(uiLang)) {
                                 uiLang = cleaned;
                                 applyTopBarLocale();
@@ -556,15 +597,15 @@ public class MainActivity extends Activity {
     }
 
     private void showHubUrlAlertDialog(String currentHubUrl) {
-        final boolean hi = isHindi();
-        String netLabel = localizedNetworkLabel(nativeBridge.getNetworkType(), hi);
+        final String lang = uiLang;
+        String netLabel = localizedNetworkLabel(nativeBridge.getNetworkType(), lang);
         int pct = nativeBridge.getBatteryPercent();
         String telemetry = Build.MODEL
                 + " · " + (pct >= 0 ? pct + "%" : "--%")
                 + " · " + netLabel
                 + " · " + nativeBridge.getTotalRamMb() + " MB";
         String currentDisplay = (currentHubUrl == null || currentHubUrl.isEmpty())
-                ? (hi ? "निर्धारित नहीं (स्वतः)" : "Not set (auto)")
+                ? tr(lang, "Not set (auto)", "निर्धारित नहीं (स्वतः)", "ನಿಗದಿಪಡಿಸಿಲ್ಲ (ಸ್ವಯಂ)")
                 : currentHubUrl;
 
         LinearLayout box = new LinearLayout(this);
@@ -572,7 +613,7 @@ public class MainActivity extends Activity {
         box.setPadding(dp(20), dp(10), dp(20), dp(4));
 
         TextView info = new TextView(this);
-        info.setText(telemetry + "\n" + (hi ? "वर्तमान केन्द्र: " : "Current Hub: ") + currentDisplay);
+        info.setText(telemetry + "\n" + tr(lang, "Current Hub: ", "वर्तमान केन्द्र: ", "ಪ್ರಸ್ತುತ ಕೇಂದ್ರ: ") + currentDisplay);
         info.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f);
         info.setPadding(0, 0, 0, dp(10));
         box.addView(info);
@@ -588,9 +629,9 @@ public class MainActivity extends Activity {
         box.addView(input);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(hi ? "स्वास्थ्य केन्द्र का संजाल पता" : "Set Hub URL");
+        builder.setTitle(tr(lang, "Set Hub URL", "स्वास्थ्य केन्द्र का संजाल पता", "ಕೇಂದ್ರದ ಜಾಲ ವಿಳಾಸ ಹೊಂದಿಸಿ"));
         builder.setView(box);
-        builder.setPositiveButton(hi ? "संचित करें" : "Save", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton(tr(lang, "Save", "संचित करें", "ಉಳಿಸಿ"), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 String raw = input.getText() != null ? input.getText().toString().trim() : "";
@@ -598,31 +639,36 @@ public class MainActivity extends Activity {
                     raw = raw.substring(0, raw.length() - 1);
                 }
                 if (raw.isEmpty()) {
-                    clearSavedHubUrl(hi);
+                    clearSavedHubUrl(lang);
                     return;
                 }
                 if (!isValidHttpUrl(raw)) {
                     Toast.makeText(
                             MainActivity.this,
-                            hi ? "कृपया मान्य http:// अथवा https:// पता भरें" : "Enter a valid http:// or https:// URL",
+                            tr(
+                                    lang,
+                                    "Enter a valid http:// or https:// URL",
+                                    "कृपया मान्य http:// अथवा https:// पता भरें",
+                                    "ದಯವಿಟ್ಟು ಮಾನ್ಯವಾದ http:// ಅಥವಾ https:// ವಿಳಾಸ ನಮೂದಿಸಿ"
+                            ),
                             Toast.LENGTH_SHORT
                     ).show();
                     return;
                 }
-                applySavedHubUrl(raw, hi);
+                applySavedHubUrl(raw, lang);
             }
         });
-        builder.setNeutralButton(hi ? "हटाएँ" : "Clear", new DialogInterface.OnClickListener() {
+        builder.setNeutralButton(tr(lang, "Clear", "हटाएँ", "ತೆರವುಗೊಳಿಸಿ"), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                clearSavedHubUrl(hi);
+                clearSavedHubUrl(lang);
             }
         });
-        builder.setNegativeButton(hi ? "निरस्त करें" : "Cancel", null);
+        builder.setNegativeButton(tr(lang, "Cancel", "निरस्त करें", "ರದ್ದುಮಾಡಿ"), null);
         builder.show();
     }
 
-    private void applySavedHubUrl(String url, boolean hi) {
+    private void applySavedHubUrl(String url, String lang) {
         String escaped = escapeJsSingleQuoted(url);
         String js = "(function(){try{"
                 + "localStorage.setItem('aarogya.hubUrl','" + escaped + "');"
@@ -634,12 +680,12 @@ public class MainActivity extends Activity {
         evalOnLoadedWebViews(js);
         Toast.makeText(
                 this,
-                (hi ? "संजाल पता संचित हुआ: " : "Hub URL saved: ") + url,
+                tr(lang, "Hub URL saved: ", "संजाल पता संचित हुआ: ", "ಕೇಂದ್ರದ ವಿಳಾಸ ಉಳಿಸಲಾಗಿದೆ: ") + url,
                 Toast.LENGTH_SHORT
         ).show();
     }
 
-    private void clearSavedHubUrl(boolean hi) {
+    private void clearSavedHubUrl(String lang) {
         String js = "(function(){try{"
                 + "localStorage.removeItem('aarogya.hubUrl');"
                 + "localStorage.removeItem('aarogya.watch.hubUrl');"
@@ -650,7 +696,7 @@ public class MainActivity extends Activity {
         evalOnLoadedWebViews(js);
         Toast.makeText(
                 this,
-                hi ? "संजाल पता हटाया गया" : "Hub URL cleared",
+                tr(lang, "Hub URL cleared", "संजाल पता हटाया गया", "ಕೇಂದ್ರದ ವಿಳಾಸ ತೆರವುಗೊಳಿಸಲಾಗಿದೆ"),
                 Toast.LENGTH_SHORT
         ).show();
     }
@@ -766,18 +812,25 @@ public class MainActivity extends Activity {
         } catch (ActivityNotFoundException e) {
             Toast.makeText(
                     this,
-                    isHindi() ? "इस क्रिया हेतु कोई अनुप्रयोग उपलब्ध नहीं" : "No app available to handle action",
+                    tr(
+                            "No app available to handle action",
+                            "इस क्रिया हेतु कोई अनुप्रयोग उपलब्ध नहीं",
+                            "ಈ ಕ್ರಿಯೆಗೆ ಯಾವುದೇ ಆ್ಯಪ್ ಲಭ್ಯವಿಲ್ಲ"
+                    ),
                     Toast.LENGTH_SHORT
             ).show();
         }
     }
 
-    private static String localizedNetworkLabel(String netType, boolean hi) {
+    private static String localizedNetworkLabel(String netType, String lang) {
         if ("OFFLINE".equals(netType)) {
-            return hi ? "संजाल-रहित" : "OFFLINE";
+            return tr(lang, "OFFLINE", "संजाल-रहित", "ಆಫ್‌ಲೈನ್");
         }
-        if (hi) {
+        if ("hi".equals(lang)) {
             return "संजाल";
+        }
+        if ("kn".equals(lang)) {
+            return "ಆನ್‌ಲೈನ್";
         }
         if ("CELLULAR".equals(netType)) {
             return "CELL";
@@ -793,7 +846,7 @@ public class MainActivity extends Activity {
             return;
         }
         int pct = nativeBridge.getBatteryPercent();
-        String net = localizedNetworkLabel(nativeBridge.getNetworkType(), isHindi());
+        String net = localizedNetworkLabel(nativeBridge.getNetworkType(), uiLang);
         String label = (pct >= 0 ? pct + "%" : "--%") + " · " + net + " ⚙";
         hubTelemetryPill.setText(label);
     }
@@ -1135,7 +1188,7 @@ public class MainActivity extends Activity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    setUiLanguage(lang, false);
+                    setUiLanguage(lang, true);
                 }
             });
         }
