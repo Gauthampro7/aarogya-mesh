@@ -61,7 +61,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: system-ui, -apple-system, "Noto Sans Devanagari", "Noto Sans Kannada", "Segoe UI", Roboto, sans-serif;
+  font-family: system-ui, -apple-system, "Noto Sans Devanagari", "Noto Sans Kannada", "Noto Sans Tamil", "Segoe UI", Roboto, sans-serif;
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
 }

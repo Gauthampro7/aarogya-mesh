@@ -99,7 +99,7 @@ export async function syncPanel(ctx: Ctx): Promise<HTMLElement> {
     btn,
     msg,
     h("p", {}, `${t("home.pendingSync")}: `, pendingEl),
-    h("p", { class: "muted" }, last ? `${t("sync.last")}: ${new Date(last.at).toLocaleString(getLang() === "hi" ? "hi-IN" : getLang() === "kn" ? "kn-IN" : "en-IN")} — ${lastText}` : t("sync.never")),
+    h("p", { class: "muted" }, last ? `${t("sync.last")}: ${new Date(last.at).toLocaleString(getLang() === "hi" ? "hi-IN" : getLang() === "kn" ? "kn-IN" : getLang() === "ta" ? "ta-IN" : "en-IN")} — ${lastText}` : t("sync.never")),
     proofCard,
     h("h2", {}, t("cards.title")),
     cards.length ? h("ul", { class: "list" }, sortCards(cards).map(card)) : h("p", { class: "muted" }, t("cards.none")),

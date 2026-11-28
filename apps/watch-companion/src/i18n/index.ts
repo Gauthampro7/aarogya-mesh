@@ -1,12 +1,13 @@
 import { en, type Key } from "./en";
 import { hi } from "./hi";
 import { kn } from "./kn";
+import { ta } from "./ta";
 
-export type Lang = "en" | "hi" | "kn";
+export type Lang = "en" | "hi" | "kn" | "ta";
 export type { Key };
 
-export const SUPPORTED_LANGS: readonly Lang[] = ["en", "hi", "kn"] as const;
-export const TABLES: Record<Lang, Record<Key, string>> = { en, hi, kn };
+export const SUPPORTED_LANGS: readonly Lang[] = ["en", "hi", "kn", "ta"] as const;
+export const TABLES: Record<Lang, Record<Key, string>> = { en, hi, kn, ta };
 
 export const LANG_STORAGE_KEY = "aarogya.lang";
 const LEGACY_LANG_STORAGE_KEY = "aarogya.watch.lang";
@@ -16,7 +17,7 @@ interface AarogyaNativeBridgeLike {
 }
 
 export function isValidLang(value: unknown): value is Lang {
-  return value === "en" || value === "hi" || value === "kn";
+  return value === "en" || value === "hi" || value === "kn" || value === "ta";
 }
 
 function readQueryLang(): Lang | null {
@@ -97,6 +98,7 @@ export function setLang(lang: Lang, options: SetLangOptions = {}): Lang {
 export function nextLang(lang: Lang): Lang {
   if (lang === "en") return "hi";
   if (lang === "hi") return "kn";
+  if (lang === "kn") return "ta";
   return "en";
 }
 

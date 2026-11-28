@@ -349,3 +349,34 @@ def test_fallback_negation_safety_and_maternal_sos_extraction() -> None:
     assert neg_hi_flags == []
     assert "convulsions" not in neg_hi_sym
     assert "severe_bleeding" not in neg_hi_sym
+
+
+def test_untranscribed_stub_and_unrelated_transcripts_never_fabricate_fever_cough() -> None:
+    """Stub untranscribed audio markers and unrelated transcripts must not fabricate fever/cough."""
+    structurer = LlamaCppSlmStructurer(model_path=None)
+
+    stub_en = structurer.structure_note(
+        "[stub-audio-2048-bytes] Audio recorded; local Whisper ASR model not loaded.",
+        language="en",
+    )
+    assert stub_en.extracted_symptoms == []
+    assert stub_en.candidate_danger_flags == []
+    assert "fever" not in stub_en.recommended_follow_up.lower()
+    assert "cough" not in stub_en.recommended_follow_up.lower()
+
+    stub_hi = structurer.structure_note(
+        "[stub-audio-2048-bytes] Audio recorded; local Whisper ASR model not loaded.",
+        language="hi",
+    )
+    assert stub_hi.extracted_symptoms == []
+    assert stub_hi.candidate_danger_flags == []
+    assert "\u093c" not in unicodedata.normalize("NFD", stub_hi.recommended_follow_up)
+
+    headache_only = structurer.structure_note("Patient reports mild headache.", language="en")
+    assert headache_only.extracted_symptoms == ["headache"]
+    assert "fever" not in headache_only.extracted_symptoms
+    assert "cough" not in headache_only.extracted_symptoms
+
+    routine = structurer.structure_note("Routine immunization and growth monitoring visit.", language="en")
+    assert "fever" not in routine.extracted_symptoms
+    assert "cough" not in routine.extracted_symptoms

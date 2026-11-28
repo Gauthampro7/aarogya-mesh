@@ -127,7 +127,7 @@ def create_app(
 
     hub_app = FastAPI(
         title="Aarogya Mesh — Tier-2 PHC Hub",
-        version="0.3.0",
+        version="0.4.0",
         description="Autonomous offline-first Tier-2 PHC Hub with CRDT delta sync and deterministic clinical triage.",
         lifespan=lifespan,
     )

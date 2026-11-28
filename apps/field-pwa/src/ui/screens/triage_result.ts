@@ -2,6 +2,7 @@ import type { TriageAssessment, TriageSeverity } from "../../../../../packages/c
 import { getLang, t, type Lang } from "../../i18n";
 import { HI_TRIAGE_ACTIONS, HI_TRIAGE_RATIONALE } from "../../i18n/hi";
 import { KN_TRIAGE_ACTIONS, KN_TRIAGE_RATIONALE } from "../../i18n/kn";
+import { TA_TRIAGE_ACTIONS, TA_TRIAGE_RATIONALE } from "../../i18n/ta";
 import { h } from "../dom";
 
 const SEV = {
@@ -13,11 +14,13 @@ const SEV = {
 const ACTION_TABLES: Partial<Record<Lang, Readonly<Record<string, string>>>> = {
   hi: HI_TRIAGE_ACTIONS,
   kn: KN_TRIAGE_ACTIONS,
+  ta: TA_TRIAGE_ACTIONS,
 };
 
 const RATIONALE_TABLES: Partial<Record<Lang, Readonly<Record<string, string>>>> = {
   hi: HI_TRIAGE_RATIONALE,
   kn: KN_TRIAGE_RATIONALE,
+  ta: TA_TRIAGE_RATIONALE,
 };
 
 /** Display-only localized action string for hi/kn; the stored English is never changed. */

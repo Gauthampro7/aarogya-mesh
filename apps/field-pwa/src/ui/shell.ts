@@ -13,6 +13,7 @@ const LANG_OPTIONS: ReadonlyArray<{ code: Lang; label: string }> = [
   { code: "en", label: "EN" },
   { code: "hi", label: "हिन्दी" },
   { code: "kn", label: "ಕನ್ನಡ" },
+  { code: "ta", label: "தமிழ்" },
 ];
 
 /** Build the persistent chrome (header, connectivity badge, 3-language switcher, home link). */

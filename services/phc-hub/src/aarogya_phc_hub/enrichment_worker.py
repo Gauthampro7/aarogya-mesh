@@ -120,6 +120,7 @@ class EnrichmentWorkerStatus(BaseModel):
     running: bool = False
     interval_sec: float = Field(..., gt=0.0)
     pending_enrichments: int = Field(default=0, ge=0)
+    active_stages: dict[str, str] = Field(default_factory=dict)
     asr_target: ExecutionTarget
     slm_target: ExecutionTarget
     outbreak_target: ExecutionTarget
@@ -395,6 +396,8 @@ class EnrichmentWorker:
         self._poll_interval_sec = float(poll_interval_sec)
 
         self._run_lock = threading.Lock()
+        self._status_lock = threading.Lock()
+        self._active_stages: dict[str, str] = {}
         self._total_runs = 0
         self._total_processed = 0
         self._total_emitted_events = 0
@@ -403,6 +406,20 @@ class EnrichmentWorker:
 
         self._task: asyncio.Task[None] | None = None
         self._stop_event: asyncio.Event | None = None
+
+    @property
+    def active_stages(self) -> dict[str, str]:
+        """Return a thread-safe snapshot of currently active per-event enrichment stages."""
+        with self._status_lock:
+            return dict(self._active_stages)
+
+    def _set_active_stage(self, event_id: str, stage: str) -> None:
+        with self._status_lock:
+            self._active_stages[event_id] = stage
+
+    def _clear_active_stage(self, event_id: str) -> None:
+        with self._status_lock:
+            self._active_stages.pop(event_id, None)
 
     @property
     def is_running(self) -> bool:
@@ -473,83 +490,92 @@ class EnrichmentWorker:
         projected: ProjectedState,
         in_batch_triages: dict[str, TriageAssessment],
     ) -> tuple[list[CrdtEvent], TriageAssessment] | None:
-        resolved = self._resolve_audio_payload(voice_event)
-        if resolved is None:
-            return None
-        audio_bytes, audio_source, blob_key = resolved
+        try:
+            resolved = self._resolve_audio_payload(voice_event)
+            if resolved is None:
+                return None
+            audio_bytes, audio_source, blob_key = resolved
 
-        patient = (
-            projected.patients.get(voice_event.patient_id)
-            if voice_event.patient_id is not None
-            else None
-        )
-        default_lang = patient.preferred_language if patient is not None else "hi"
-        language_hint = _clean_language(voice_event.payload.get("language"), default=default_lang)
+            patient = (
+                projected.patients.get(voice_event.patient_id)
+                if voice_event.patient_id is not None
+                else None
+            )
+            default_lang = patient.preferred_language if patient is not None else "hi"
+            language_hint = _clean_language(
+                voice_event.payload.get("language"), default=default_lang
+            )
 
-        asr_result = self._transcriber.transcribe(audio_bytes, language_hint=language_hint)
-        structured = self._structurer.structure_note(
-            asr_result.transcript,
-            language=asr_result.language,
-        )
+            self._set_active_stage(voice_event.event_id, "transcribing_audio")
+            asr_result = self._transcriber.transcribe(audio_bytes, language_hint=language_hint)
 
-        # Mandatory Clinical Safety Floor: deterministic engine owns TriageSeverity and
-        # never downgrades an active higher-severity triage for the same patient.
-        triage_input, risk_features = _build_triage_input(voice_event, structured, patient)
-        raw_triage = evaluate_triage(triage_input)
-        existing_triage = self._existing_patient_triage(
-            voice_event.patient_id,
-            projected,
-            in_batch_triages,
-        )
-        triage_assessment = _apply_monotonic_severity_floor(raw_triage, existing_triage)
+            self._set_active_stage(voice_event.event_id, "structuring_note")
+            structured = self._structurer.structure_note(
+                asr_result.transcript,
+                language=asr_result.language,
+            )
 
-        risk_features["has_danger_sign"] = (
-            triage_assessment.severity == TriageSeverity.RED_EMERGENCY
-            or bool(structured.candidate_danger_flags)
-        )
-        risk = self._risk_scorer.score_risk(risk_features)
+            self._set_active_stage(voice_event.event_id, "scoring_risk")
+            # Mandatory Clinical Safety Floor: deterministic engine owns TriageSeverity and
+            # never downgrades an active higher-severity triage for the same patient.
+            triage_input, risk_features = _build_triage_input(voice_event, structured, patient)
+            raw_triage = evaluate_triage(triage_input)
+            existing_triage = self._existing_patient_triage(
+                voice_event.patient_id,
+                projected,
+                in_batch_triages,
+            )
+            triage_assessment = _apply_monotonic_severity_floor(raw_triage, existing_triage)
 
-        enrichment_payload: dict[str, Any] = {
-            "audio_source": audio_source,
-            "transcription": asr_result.model_dump(mode="json"),
-            "structured_note": structured.model_dump(mode="json"),
-            "triage_assessment": triage_assessment.model_dump(mode="json"),
-            "risk_score": risk.model_dump(mode="json"),
-        }
-        if blob_key is not None:
-            enrichment_payload["audio_blob_key"] = blob_key
+            risk_features["has_danger_sign"] = (
+                triage_assessment.severity == TriageSeverity.RED_EMERGENCY
+                or bool(structured.candidate_danger_flags)
+            )
+            risk = self._risk_scorer.score_risk(risk_features)
 
-        enrichment_event = CrdtEvent(
-            event_id=str(uuid4()),
-            hlc=self._clock.tick(),
-            origin_node_id=self._manifest.node_id,
-            patient_id=voice_event.patient_id,
-            event_type=EventType.ENRICHMENT_COMPLETED,
-            enrichment_state=EnrichmentState.COMPLETED,
-            ref_event_id=voice_event.event_id,
-            payload=enrichment_payload,
-        )
+            enrichment_payload: dict[str, Any] = {
+                "audio_source": audio_source,
+                "transcription": asr_result.model_dump(mode="json"),
+                "structured_note": structured.model_dump(mode="json"),
+                "triage_assessment": triage_assessment.model_dump(mode="json"),
+                "risk_score": risk.model_dump(mode="json"),
+            }
+            if blob_key is not None:
+                enrichment_payload["audio_blob_key"] = blob_key
 
-        card = _card_from_deterministic_triage(
-            patient_id=voice_event.patient_id,
-            triage=triage_assessment,
-            structured=structured,
-            risk_band=risk.risk_band,
-            risk_score=risk.risk_score,
-            source_event_id=enrichment_event.event_id,
-            language=_clean_language(asr_result.language, default=language_hint),
-        )
-        card_event = CrdtEvent(
-            event_id=str(uuid4()),
-            hlc=self._clock.tick(),
-            origin_node_id=self._manifest.node_id,
-            patient_id=voice_event.patient_id,
-            event_type=EventType.ACTION_CARD_ISSUED,
-            enrichment_state=EnrichmentState.COMPLETED,
-            ref_event_id=voice_event.event_id,
-            payload=card.model_dump(mode="json"),
-        )
-        return [enrichment_event, card_event], triage_assessment
+            enrichment_event = CrdtEvent(
+                event_id=str(uuid4()),
+                hlc=self._clock.tick(),
+                origin_node_id=self._manifest.node_id,
+                patient_id=voice_event.patient_id,
+                event_type=EventType.ENRICHMENT_COMPLETED,
+                enrichment_state=EnrichmentState.COMPLETED,
+                ref_event_id=voice_event.event_id,
+                payload=enrichment_payload,
+            )
+
+            card = _card_from_deterministic_triage(
+                patient_id=voice_event.patient_id,
+                triage=triage_assessment,
+                structured=structured,
+                risk_band=risk.risk_band,
+                risk_score=risk.risk_score,
+                source_event_id=enrichment_event.event_id,
+                language=_clean_language(asr_result.language, default=language_hint),
+            )
+            card_event = CrdtEvent(
+                event_id=str(uuid4()),
+                hlc=self._clock.tick(),
+                origin_node_id=self._manifest.node_id,
+                patient_id=voice_event.patient_id,
+                event_type=EventType.ACTION_CARD_ISSUED,
+                enrichment_state=EnrichmentState.COMPLETED,
+                ref_event_id=voice_event.event_id,
+                payload=card.model_dump(mode="json"),
+            )
+            return [enrichment_event, card_event], triage_assessment
+        finally:
+            self._clear_active_stage(voice_event.event_id)
 
     def _run_outbreak_sweep(self) -> list[CrdtEvent]:
         """Aggregate unique village daily syndrome cases and emit deduplicated outbreak alerts."""
@@ -763,30 +789,39 @@ class EnrichmentWorker:
                 processed_event_ids=processed_event_ids,
             )
 
-            self._total_runs += 1
-            self._total_processed += processed
-            self._total_emitted_events += emitted_events
-            self._total_outbreak_alerts += outbreak_alerts
-            self._last_run = summary
+            with self._status_lock:
+                self._total_runs += 1
+                self._total_processed += processed
+                self._total_emitted_events += emitted_events
+                self._total_outbreak_alerts += outbreak_alerts
+                self._last_run = summary
             return summary
 
     def get_status(self) -> EnrichmentWorkerStatus:
         """Return current worker status and cumulative telemetry."""
-        with self._run_lock:
-            return EnrichmentWorkerStatus(
-                node_id=self._manifest.node_id,
-                running=self.is_running,
-                interval_sec=self._poll_interval_sec,
-                pending_enrichments=len(self._store.get_pending_enrichments()),
-                asr_target=route_workload(self._manifest, WorkloadKind.VOICE_ASR),
-                slm_target=route_workload(self._manifest, WorkloadKind.CLINICAL_SLM_STRUCTURING),
-                outbreak_target=route_workload(self._manifest, WorkloadKind.OUTBREAK_DETECTION),
-                total_runs=self._total_runs,
-                total_processed=self._total_processed,
-                total_emitted_events=self._total_emitted_events,
-                total_outbreak_alerts=self._total_outbreak_alerts,
-                last_run=self._last_run,
-            )
+        with self._status_lock:
+            active_stages = dict(self._active_stages)
+            total_runs = self._total_runs
+            total_processed = self._total_processed
+            total_emitted_events = self._total_emitted_events
+            total_outbreak_alerts = self._total_outbreak_alerts
+            last_run = self._last_run
+
+        return EnrichmentWorkerStatus(
+            node_id=self._manifest.node_id,
+            running=self.is_running,
+            interval_sec=self._poll_interval_sec,
+            pending_enrichments=len(self._store.get_pending_enrichments()),
+            active_stages=active_stages,
+            asr_target=route_workload(self._manifest, WorkloadKind.VOICE_ASR),
+            slm_target=route_workload(self._manifest, WorkloadKind.CLINICAL_SLM_STRUCTURING),
+            outbreak_target=route_workload(self._manifest, WorkloadKind.OUTBREAK_DETECTION),
+            total_runs=total_runs,
+            total_processed=total_processed,
+            total_emitted_events=total_emitted_events,
+            total_outbreak_alerts=total_outbreak_alerts,
+            last_run=last_run,
+        )
 
     async def _poll_loop(self, interval_sec: float) -> None:
         assert self._stop_event is not None

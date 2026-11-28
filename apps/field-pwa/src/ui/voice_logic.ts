@@ -1,4 +1,72 @@
 import type { CrdtEvent, PatientRecord, TriageSeverity } from "../../../../packages/contracts/ts/index";
+import type { SyncState } from "../sync";
+import type { SyncPhase } from "../sync/engine";
+
+export type VoiceStageId =
+  | "waiting_connection"
+  | "uploading_audio"
+  | "queued_on_hub"
+  | "hub_processing"
+  | "completed";
+
+export type HubActiveStage = "transcribing_audio" | "structuring_note" | "scoring_risk";
+
+export interface HubEnrichmentStatus {
+  pending_enrichments?: number;
+  running?: boolean;
+  active_stages?: Record<string, string>;
+}
+
+export interface VoiceStageContext {
+  outboxIds: ReadonlySet<string>;
+  isOnline: boolean;
+  syncStatus: SyncState;
+  syncPhase: SyncPhase;
+  heldBlobKeys?: ReadonlySet<string>;
+  uploadingBlobKeys?: ReadonlySet<string>;
+  hubStatus?: HubEnrichmentStatus | null;
+}
+
+export interface VoiceStageInfo {
+  stage: VoiceStageId;
+  step: 1 | 2 | 3 | 4 | 5;
+  totalSteps: 5;
+  hubSubStage: HubActiveStage | null;
+  isHeldClip: boolean;
+  hasAudio: boolean;
+}
+
+const HUB_SUB_STAGES = new Set<HubActiveStage>(["transcribing_audio", "structuring_note", "scoring_risk"]);
+
+/** Derive the current 5-step lifecycle stage for a voice note in the history list. */
+export function deriveVoiceStage(
+  item: Pick<VoiceHistoryItem, "eventId" | "status" | "blobKey">,
+  ctx: VoiceStageContext,
+): VoiceStageInfo {
+  const hasAudio = item.blobKey !== null;
+  if (item.status === "COMPLETED") {
+    return { stage: "completed", step: 5, totalSteps: 5, hubSubStage: null, isHeldClip: false, hasAudio };
+  }
+  const inOutbox = ctx.outboxIds.has(item.eventId);
+  if (!inOutbox) {
+    const rawSub = ctx.hubStatus?.active_stages?.[item.eventId];
+    if (typeof rawSub === "string" && rawSub.length > 0) {
+      const hubSubStage = HUB_SUB_STAGES.has(rawSub as HubActiveStage) ? (rawSub as HubActiveStage) : null;
+      return { stage: "hub_processing", step: 4, totalSteps: 5, hubSubStage, isHeldClip: false, hasAudio };
+    }
+    return { stage: "queued_on_hub", step: 3, totalSteps: 5, hubSubStage: null, isHeldClip: false, hasAudio };
+  }
+  const isHeldClip = !!(item.blobKey && ctx.heldBlobKeys?.has(item.blobKey));
+  const isActivelyUploadingBlob = !!(item.blobKey && ctx.uploadingBlobKeys?.has(item.blobKey));
+  const isActivelySyncing =
+    ctx.isOnline &&
+    ctx.syncStatus === "syncing" &&
+    (isActivelyUploadingBlob || ctx.syncPhase === "uploading_blobs" || ctx.syncPhase === "syncing_events" || !isHeldClip);
+  if (isActivelySyncing) {
+    return { stage: "uploading_audio", step: 2, totalSteps: 5, hubSubStage: null, isHeldClip: false, hasAudio };
+  }
+  return { stage: "waiting_connection", step: 1, totalSteps: 5, hubSubStage: null, isHeldClip, hasAudio };
+}
 
 export interface VoiceNotePayload {
   transcript_hint: string;

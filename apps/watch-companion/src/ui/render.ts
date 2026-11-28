@@ -153,7 +153,9 @@ export function mountWatchUi(root: HTMLElement, controller: WatchUiController): 
           ? armedSign.labelHi
           : lang === "kn"
             ? armedSign.labelKn
-            : armedSign.labelEn
+            : lang === "ta"
+              ? armedSign.labelTa
+              : armedSign.labelEn
         : armedFlag;
       confirmBar.append(
         el("div", "confirm-title", t("danger.confirmPrompt")),
@@ -180,7 +182,13 @@ export function mountWatchUi(root: HTMLElement, controller: WatchUiController): 
       const btn = el(
         "button",
         `sign-btn${armedFlag === sign.flag ? " armed" : ""}`,
-        lang === "hi" ? sign.labelHi : lang === "kn" ? sign.labelKn : sign.labelEn,
+        lang === "hi"
+          ? sign.labelHi
+          : lang === "kn"
+            ? sign.labelKn
+            : lang === "ta"
+              ? sign.labelTa
+              : sign.labelEn,
       );
       btn.type = "button";
       btn.setAttribute("data-flag", sign.flag);

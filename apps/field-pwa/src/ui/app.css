@@ -1,7 +1,7 @@
 :root {
   --bg: #0b1220; --panel: #16213a; --line: #3b4a6b; --fg: #f8fafc; --muted: #b6c2d9;
   --teal: #14b8a6; --teal-d: #0f766e; --red: #b91c1c; --yellow: #facc15; --green: #15803d;
-  font: 18px/1.45 system-ui, -apple-system, "Noto Sans Devanagari", "Noto Sans Kannada", "Segoe UI", sans-serif;
+  font: 18px/1.45 system-ui, -apple-system, "Noto Sans Devanagari", "Noto Sans Kannada", "Noto Sans Tamil", "Segoe UI", sans-serif;
   color: var(--fg); background: var(--bg);
 }
 * { box-sizing: border-box; }
@@ -91,3 +91,24 @@ details summary { min-height: 48px; display: flex; align-items: center; cursor: 
 .proof-grid dt { color: var(--muted); font-weight: 700; }
 .proof-grid dd { margin: 0; word-break: break-all; }
 .hlc-code { font-family: ui-monospace, monospace; font-size: 0.8rem; color: #7dd3fc; }
+/* === Voice Note Multi-Stage Progress === */
+.voice-card-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.voice-stage-pill {
+  font-size: 0.75rem; font-weight: 800; padding: 2px 8px; border-radius: 999px;
+  border: 1px solid var(--line); background: rgba(15, 23, 42, 0.7); color: var(--muted);
+}
+.voice-stage-pill.stage-waiting_connection { border-color: #fbbf24; color: #fde68a; }
+.voice-stage-pill.stage-uploading_audio { border-color: #38bdf8; color: #bae6fd; }
+.voice-stage-pill.stage-queued_on_hub { border-color: #818cf8; color: #c7d2fe; }
+.voice-stage-pill.stage-hub_processing { border-color: var(--teal); color: #5eead4; }
+.voice-stage-pill.stage-completed { border-color: #4ade80; color: #bbf7d0; }
+.voice-progress-track {
+  height: 6px; width: 100%; border-radius: 999px; background: #0f172a;
+  overflow: hidden; margin: 8px 0 4px; border: 1px solid var(--line);
+}
+.voice-progress-fill { height: 100%; border-radius: 999px; transition: width 0.25s ease; }
+.voice-progress-fill.stage-waiting_connection { background: #fbbf24; }
+.voice-progress-fill.stage-uploading_audio { background: #38bdf8; }
+.voice-progress-fill.stage-queued_on_hub { background: #818cf8; }
+.voice-progress-fill.stage-hub_processing { background: var(--teal); }
+.voice-progress-fill.stage-completed { background: #4ade80; }

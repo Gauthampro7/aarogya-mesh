@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import threading
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -31,6 +32,7 @@ from aarogya_ml_pipeline import (
     LlamaCppSlmStructurer,
     RiskScoreResult,
     StructuredClinicalNote,
+    TranscriptionResult,
     WhisperVoiceTranscriber,
 )
 from aarogya_phc_hub.blob_store import LocalBlobStore
@@ -895,5 +897,180 @@ def test_risk_features_strictly_conform_to_canonical_risk_feature_names(tmp_path
     assert feats["is_pregnant"] is False
     assert feats["has_danger_sign"] is False
     assert feats["symptom_count"] >= 2
+
+
+def test_active_stages_tracks_progress_and_status_endpoint_while_running(tmp_path: Path) -> None:
+    """Verify active_stages updates per stage during enrichment and is readable via GET /status."""
+    transcribe_entered = threading.Event()
+    transcribe_release = threading.Event()
+    structure_entered = threading.Event()
+    structure_release = threading.Event()
+    risk_entered = threading.Event()
+    risk_release = threading.Event()
+
+    class _PausedTranscriber:
+        def transcribe(self, audio_bytes: bytes, language_hint: str | None = None) -> TranscriptionResult:
+            transcribe_entered.set()
+            assert transcribe_release.wait(timeout=5.0)
+            return TranscriptionResult(
+                transcript="Child has fever and cough.",
+                language=language_hint or "en",
+                confidence=0.95,
+                backend="test-paused-asr",
+            )
+
+    class _PausedStructurer:
+        def structure_note(self, transcript: str, language: str = "en") -> StructuredClinicalNote:
+            structure_entered.set()
+            assert structure_release.wait(timeout=5.0)
+            return StructuredClinicalNote(
+                extracted_symptoms=["fever", "cough"],
+                candidate_danger_flags=[],
+                recommended_follow_up="Follow up at PHC.",
+                language=language,
+                backend="test-paused-slm",
+            )
+
+    class _PausedRiskScorer:
+        def score_risk(self, features: dict[str, float | int | bool]) -> RiskScoreResult:
+            risk_entered.set()
+            assert risk_release.wait(timeout=5.0)
+            return RiskScoreResult(
+                risk_score=0.25,
+                risk_band="LOW",
+                shap_attributions={"fever_days": 0.1},
+                backend="test-paused-risk",
+            )
+
+    store = EventStore(":memory:")
+    blob_store = LocalBlobStore(tmp_path / "blobs")
+    clock = HlcClock("phc-hub-stages")
+    manifest = _make_hub_manifest("phc-hub-stages")
+
+    _register_patient(store, patient_id="pat-stages-1", age_months=24)
+    store.append(
+        CrdtEvent(
+            event_id="evt-voice-stages-1",
+            hlc=HlcTimestamp(wall_ms=_BASE_DAY_MS + 60_000, logical=0, node_id="phone-asha-01"),
+            origin_node_id="phone-asha-01",
+            patient_id="pat-stages-1",
+            event_type=EventType.VOICE_NOTE_RECORDED,
+            enrichment_state=EnrichmentState.PENDING,
+            payload={"transcript_hint": "Child has fever and cough.", "language": "en"},
+        )
+    )
+
+    worker = EnrichmentWorker(
+        store,
+        blob_store,
+        clock,
+        manifest,
+        transcriber=_PausedTranscriber(),
+        structurer=_PausedStructurer(),
+        risk_scorer=_PausedRiskScorer(),
+    )
+    app = FastAPI()
+    app.include_router(create_enrichment_router(worker))
+    client = TestClient(app)
+
+    initial_status = client.get("/api/v1/enrichment/status")
+    assert initial_status.status_code == 200
+    assert initial_status.json()["active_stages"] == {}
+
+    results: list[EnrichmentRunSummary] = []
+    worker_thread = threading.Thread(target=lambda: results.append(worker.run_once()), daemon=True)
+    worker_thread.start()
+
+    try:
+        assert transcribe_entered.wait(timeout=5.0)
+        assert worker.active_stages == {"evt-voice-stages-1": "transcribing_audio"}
+        resp = client.get("/api/v1/enrichment/status")
+        assert resp.status_code == 200
+        assert resp.json()["active_stages"] == {"evt-voice-stages-1": "transcribing_audio"}
+        transcribe_release.set()
+
+        assert structure_entered.wait(timeout=5.0)
+        assert worker.active_stages == {"evt-voice-stages-1": "structuring_note"}
+        resp = client.get("/api/v1/enrichment/status")
+        assert resp.status_code == 200
+        assert resp.json()["active_stages"] == {"evt-voice-stages-1": "structuring_note"}
+        structure_release.set()
+
+        assert risk_entered.wait(timeout=5.0)
+        assert worker.active_stages == {"evt-voice-stages-1": "scoring_risk"}
+        resp = client.get("/api/v1/enrichment/status")
+        assert resp.status_code == 200
+        assert resp.json()["active_stages"] == {"evt-voice-stages-1": "scoring_risk"}
+        risk_release.set()
+    finally:
+        transcribe_release.set()
+        structure_release.set()
+        risk_release.set()
+        worker_thread.join(timeout=5.0)
+
+    assert len(results) == 1
+    assert results[0].processed == 1
+    assert worker.active_stages == {}
+    final_status = client.get("/api/v1/enrichment/status")
+    assert final_status.status_code == 200
+    assert final_status.json()["active_stages"] == {}
+
+
+def test_active_stages_cleared_on_error_and_skipped_blob(tmp_path: Path) -> None:
+    """Verify active_stages is cleared when enrichment is skipped or raises an error."""
+
+    class _FailingTranscriber:
+        def transcribe(self, audio_bytes: bytes, language_hint: str | None = None) -> TranscriptionResult:
+            raise RuntimeError("asr failure")
+
+    store = EventStore(":memory:")
+    blob_store = LocalBlobStore(tmp_path / "blobs")
+    clock = HlcClock("phc-hub-err")
+    manifest = _make_hub_manifest("phc-hub-err")
+
+    # Missing blob -> skipped before ASR.
+    store.append(
+        CrdtEvent(
+            event_id="evt-voice-skip-stage",
+            hlc=HlcTimestamp(wall_ms=_BASE_DAY_MS + 70_000, logical=0, node_id="phone-asha-01"),
+            origin_node_id="phone-asha-01",
+            patient_id="pat-skip-1",
+            event_type=EventType.VOICE_NOTE_RECORDED,
+            enrichment_state=EnrichmentState.PENDING,
+            payload={"audio_blob_key": "missing-blob", "language": "en"},
+        )
+    )
+    skip_worker = EnrichmentWorker(store, blob_store, clock, manifest)
+    skip_summary = skip_worker.run_once()
+    assert skip_summary.skipped_missing_blob == 1
+    assert skip_worker.active_stages == {}
+
+    # Error during transcribe -> active_stages must be cleared in finally.
+    store.append(
+        CrdtEvent(
+            event_id="evt-voice-err-stage",
+            hlc=HlcTimestamp(wall_ms=_BASE_DAY_MS + 71_000, logical=0, node_id="phone-asha-01"),
+            origin_node_id="phone-asha-01",
+            patient_id="pat-err-1",
+            event_type=EventType.VOICE_NOTE_RECORDED,
+            enrichment_state=EnrichmentState.PENDING,
+            payload={"transcript_hint": "Fever", "language": "en"},
+        )
+    )
+    err_worker = EnrichmentWorker(
+        store,
+        blob_store,
+        clock,
+        manifest,
+        transcriber=_FailingTranscriber(),
+    )
+    try:
+        err_worker.run_once()
+        raise AssertionError("Expected RuntimeError from failing transcriber")
+    except RuntimeError:
+        pass
+    assert err_worker.active_stages == {}
+    assert err_worker.get_status().active_stages == {}
+
 
 

@@ -211,3 +211,25 @@ def test_zero_bloat_no_torch_imports() -> None:
     forbidden_modules = ["torch", "torchvision", "torchaudio", "tensorflow", "nvidia"]
     for forbidden in forbidden_modules:
         assert forbidden not in whisper_mod.__dict__, f"Forbidden module {forbidden} found in module dict"
+
+
+def test_binary_webm_and_empty_audio_never_fabricate_symptoms() -> None:
+    """Binary WebM/WAV/OGG or empty audio in fallback mode must not fabricate fever/cough."""
+    transcriber = WhisperVoiceTranscriber(model_path="/tmp/nonexistent_model_weights_path")
+    assert transcriber.is_model_loaded is False
+
+    samples = [
+        b"\x1a\x45\xdf\xa3\x9f\x42\x86\x81\x01\x42\xf7\x81\x01webm-binary-payload",
+        b"RIFF\x24\x00\x00\x00WAVEfmt \x10\x00\x00\x00\x00\xff\xfe",
+        b"OggS\x00\x02\x00\x00\x00\x00\x00\x00\x00\x00opus-binary",
+        b"",
+        b"   ",
+    ]
+    for sample in samples:
+        res = transcriber.transcribe(sample, language_hint="en")
+        assert res.backend == FALLBACK_BACKEND
+        assert res.transcript.startswith(f"[stub-audio-{len(sample.strip()) if not sample.strip() else len(sample)}-bytes]")
+        assert res.confidence == 0.0
+        lowered = res.transcript.lower()
+        assert "fever" not in lowered
+        assert "cough" not in lowered

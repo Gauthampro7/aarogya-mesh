@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { en } from "../../src/i18n/en";
 import { hi } from "../../src/i18n/hi";
 import { kn } from "../../src/i18n/kn";
+import { ta } from "../../src/i18n/ta";
 import { getLang, notifyNativeLang, parseLang, queryLang, setLang, SUPPORTED_LANGS, t, tx } from "../../src/i18n";
 import { checklistItems, checklistTypes } from "../../src/ui/checklist_logic";
 import { dehydrationFlags, flagLabel, maternalRedOptions, maternalYellowOptions, pediatricDangerOptions } from "../../src/ui/triage_map";
@@ -22,19 +23,22 @@ const DENY = [
 const NUKTA = ["ख़", "ग़", "ज़", "फ़", "ड़", "ढ़", "क़"];
 
 describe("i18n tables", () => {
-  it("have identical key sets across en, hi, and kn", () => {
+  it("have identical key sets across en, hi, kn, and ta", () => {
     expect(Object.keys(hi).sort()).toEqual(Object.keys(en).sort());
     expect(Object.keys(kn).sort()).toEqual(Object.keys(en).sort());
+    expect(Object.keys(ta).sort()).toEqual(Object.keys(en).sort());
   });
 
-  it("have no empty strings and matching {placeholders} across en, hi, and kn", () => {
+  it("have no empty strings and matching {placeholders} across en, hi, kn, and ta", () => {
     const ph = (s: string) => (s.match(/\{\w+\}/g) ?? []).sort().join(",");
     for (const k of Object.keys(en) as (keyof typeof en)[]) {
       expect(en[k].length, k).toBeGreaterThan(0);
       expect(hi[k].length, k).toBeGreaterThan(0);
       expect(kn[k].length, k).toBeGreaterThan(0);
+      expect(ta[k].length, k).toBeGreaterThan(0);
       expect(ph(hi[k]), `hi ${k}`).toBe(ph(en[k]));
       expect(ph(kn[k]), `kn ${k}`).toBe(ph(en[k]));
+      expect(ph(ta[k]), `ta ${k}`).toBe(ph(en[k]));
     }
   });
 
@@ -82,16 +86,18 @@ describe("i18n tables", () => {
     expect(maternalRedOptions().length).toBeGreaterThan(5);
   });
 
-  it("covers every rule-table flag and checklist item in all three languages (en = canonical label)", () => {
+  it("covers every rule-table flag and checklist item in all four languages (en = canonical label)", () => {
     const enT = en as Record<string, string>;
     const hiT = hi as Record<string, string>;
     const knT = kn as Record<string, string>;
+    const taT = ta as Record<string, string>;
     const flags = [...pediatricDangerOptions(), ...maternalRedOptions(), ...maternalYellowOptions()];
     expect(flags.length).toBeGreaterThan(20);
     for (const o of flags) {
       expect(enT[`flag.${o.flag}`], `en flag.${o.flag}`).toBe(o.label);
       expect(hiT[`flag.${o.flag}`], `hi flag.${o.flag}`).toBeTruthy();
       expect(knT[`flag.${o.flag}`], `kn flag.${o.flag}`).toBeTruthy();
+      expect(taT[`flag.${o.flag}`], `ta flag.${o.flag}`).toBeTruthy();
     }
     const types = checklistTypes();
     expect(types).toHaveLength(5);
@@ -101,6 +107,7 @@ describe("i18n tables", () => {
         expect(enT[`cki.${i.id}`], `en cki.${i.id}`).toBe(i.label);
         expect(hiT[`cki.${i.id}`], `hi cki.${i.id}`).toBeTruthy();
         expect(knT[`cki.${i.id}`], `kn cki.${i.id}`).toBeTruthy();
+        expect(taT[`cki.${i.id}`], `ta cki.${i.id}`).toBeTruthy();
       }
     }
   });
@@ -116,11 +123,23 @@ describe("i18n tables", () => {
     expect(kn["vac.title"]).toBe("ಲಸಿಕೆ ವೇಳಾಪಟ್ಟಿ");
     expect(kn["voice.title"]).toBe("ಧ್ವನಿ ಟಿಪ್ಪಣಿ");
   });
+
+  it("Tamil strings contain Tamil script (U+0B80–U+0BFF) and contextual ASHA terms", () => {
+    for (const [k, v] of Object.entries(ta)) {
+      expect(v, k).toMatch(/[\u0B80-\u0BFF]/);
+    }
+    expect(ta["app.name"]).toBe("ஆரோக்கிய வலையமைப்பு");
+    expect(ta["app.subtitle"]).toContain("ஆஷா பணியாளர்");
+    expect(ta["sev.red"]).toContain("அவசர ஆபத்து");
+    expect(ta["nav.register"]).toBe("நோயாளி பதிவு");
+    expect(ta["vac.title"]).toBe("தடுப்பூசி அட்டவணை");
+    expect(ta["voice.title"]).toBe("குரல் குறிப்பு");
+  });
 });
 
 describe("language switching and helpers", () => {
-  it("supports en, hi, and kn switching via setLang/getLang/t/tx", () => {
-    expect(SUPPORTED_LANGS).toEqual(["en", "hi", "kn"]);
+  it("supports en, hi, kn, and ta switching via setLang/getLang/t/tx", () => {
+    expect(SUPPORTED_LANGS).toEqual(["en", "hi", "kn", "ta"]);
     const prev = getLang();
     try {
       setLang("en", { persist: false, notifyNative: false });
@@ -139,6 +158,12 @@ describe("language switching and helpers", () => {
       expect(t("app.name")).toBe("ಆರೋಗ್ಯ ಸಂಜಾಲ");
       expect(tx("flag.convulsions", "fallback")).toBe(kn["flag.convulsions"]);
       expect(flagLabel("sunken_eyes")).toBe(kn["dehy.sunken_eyes"]);
+
+      setLang("ta", { persist: false, notifyNative: false });
+      expect(getLang()).toBe("ta");
+      expect(t("app.name")).toBe("ஆரோக்கிய வலையமைப்பு");
+      expect(tx("flag.convulsions", "fallback")).toBe(ta["flag.convulsions"]);
+      expect(flagLabel("sunken_eyes")).toBe(ta["dehy.sunken_eyes"]);
     } finally {
       setLang(prev, { persist: false, notifyNative: false });
     }
@@ -148,9 +173,11 @@ describe("language switching and helpers", () => {
     expect(parseLang("en")).toBe("en");
     expect(parseLang("HI")).toBe("hi");
     expect(parseLang(" kn ")).toBe("kn");
+    expect(parseLang("TA")).toBe("ta");
     expect(parseLang("fr")).toBeNull();
     expect(parseLang(null)).toBeNull();
     expect(queryLang("?lang=kn")).toBe("kn");
+    expect(queryLang("?lang=ta")).toBe("ta");
     expect(queryLang("?foo=1&lang=hi")).toBe("hi");
     expect(queryLang("?lang=invalid")).toBeNull();
     expect(queryLang("")).toBeNull();
@@ -158,8 +185,8 @@ describe("language switching and helpers", () => {
 
   it("notifies AarogyaNativeBridge.setLanguage safely when present", () => {
     const spy = vi.fn();
-    notifyNativeLang("kn", { AarogyaNativeBridge: { setLanguage: spy } });
-    expect(spy).toHaveBeenCalledWith("kn");
+    notifyNativeLang("ta", { AarogyaNativeBridge: { setLanguage: spy } });
+    expect(spy).toHaveBeenCalledWith("ta");
     expect(() => notifyNativeLang("hi", {})).not.toThrow();
     expect(() => notifyNativeLang("en", { AarogyaNativeBridge: { setLanguage: () => { throw new Error("boom"); } } })).not.toThrow();
   });

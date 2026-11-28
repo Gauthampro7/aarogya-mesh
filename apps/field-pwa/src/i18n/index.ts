@@ -2,18 +2,19 @@ import { lsGet, lsSet } from "../ui/settings";
 import { en, type Key } from "./en";
 import { hi } from "./hi";
 import { kn } from "./kn";
+import { ta } from "./ta";
 
-export type Lang = "en" | "hi" | "kn";
+export type Lang = "en" | "hi" | "kn" | "ta";
 export type { Key };
-export const SUPPORTED_LANGS: readonly Lang[] = ["en", "hi", "kn"] as const;
+export const SUPPORTED_LANGS: readonly Lang[] = ["en", "hi", "kn", "ta"] as const;
 export const LANG_STORAGE_KEY = "aarogya.lang";
-export const TABLES: Record<Lang, Record<Key, string>> = { en, hi, kn };
+export const TABLES: Record<Lang, Record<Key, string>> = { en, hi, kn, ta };
 
 /** Parse an untrusted value into a supported Lang, or null if invalid. */
 export function parseLang(raw: unknown): Lang | null {
   if (typeof raw !== "string") return null;
   const v = raw.trim().toLowerCase();
-  if (v === "en" || v === "hi" || v === "kn") return v;
+  if (v === "en" || v === "hi" || v === "kn" || v === "ta") return v;
   return null;
 }
 

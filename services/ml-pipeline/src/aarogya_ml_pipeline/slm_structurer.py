@@ -715,6 +715,20 @@ class LlamaCppSlmStructurer:
             self._is_available = False
 
     def _fallback(self, transcript: str, language: str = "hi") -> StructuredClinicalNote:
+        if transcript.strip().startswith("[stub-audio-"):
+            follow_up = (
+                "स्थानीय वाक्-से-पाठ प्रतिमान उपलब्ध नहीं; ध्वनि टिप्पणी की प्रत्यक्ष समीक्षा करें।"
+                if language == "hi"
+                else "Audio recorded without local Whisper ASR model; manual review or transcript required."
+            )
+            return StructuredClinicalNote(
+                extracted_symptoms=[],
+                candidate_danger_flags=[],
+                recommended_follow_up=follow_up,
+                language=language,
+                backend="stub-slm-fallback",
+            )
+
         lex_symptoms, lex_flags = extract_clinical_signals_from_text(transcript)
         merged_symptoms = list(lex_symptoms) if lex_symptoms else ["general_checkup"]
 

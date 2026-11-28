@@ -36,9 +36,13 @@ export interface SyncEngineOptions {
   blobTimeoutMs?: number;
 }
 
+export type SyncPhase = "idle" | "uploading_blobs" | "syncing_events";
+
 interface BlobPass {
   /** Voice notes whose clip is still not on the hub: not sent this round. */
   held: Set<string>;
+  /** Blob keys that failed transiently and are waiting for retry. */
+  heldBlobKeys: Set<string>;
   failure?: SyncTransportError;
 }
 
@@ -59,6 +63,9 @@ export class SyncEngine {
   /** Event ids sent over WS and not yet acked; WS replies may only ack these. */
   private wsSent = new Set<string>();
   private held = 0;
+  private phase: SyncPhase = "idle";
+  private uploadingBlobs = new Set<string>();
+  private heldBlobs = new Set<string>();
 
   constructor(readonly store: FieldStore, private readonly opts: SyncEngineOptions = {}) {
     this.hubUrl = opts.hubUrl ?? "http://127.0.0.1:8000";
@@ -66,6 +73,21 @@ export class SyncEngine {
 
   get status(): SyncState {
     return this.state;
+  }
+
+  /** Current network phase within a sync exchange. */
+  get syncPhase(): SyncPhase {
+    return this.phase;
+  }
+
+  /** Audio blob keys currently being uploaded to the hub. */
+  get uploadingBlobKeys(): ReadonlySet<string> {
+    return this.uploadingBlobs;
+  }
+
+  /** Audio blob keys withheld after a transient failure and waiting for retry. */
+  get heldBlobKeys(): ReadonlySet<string> {
+    return this.heldBlobs;
   }
 
   /** Voice notes withheld by the last push because their clip has not reached the hub yet. */
@@ -97,13 +119,21 @@ export class SyncEngine {
   /** One HTTP exchange. Never throws; resolves null on failure (status says why). */
   syncNow(): Promise<ApplyResult | null> {
     return this.serial(async () => {
+      this.phase = "idle";
+      this.uploadingBlobs.clear();
       await this.setState("syncing");
       try {
         await this.ensureViews();
         const { env, failure } = await this.prepareEnvelope();
+        const wasUploading = this.phase === "uploading_blobs";
+        this.phase = "syncing_events";
+        if (wasUploading) await this.setState("syncing");
         const reply = await postSync(this.hubUrl, env, this.fetchImpl);
+        this.phase = "idle";
         return await this.applyReply(reply, env.events.map((e) => e.event_id), failure);
       } catch (err) {
+        this.phase = "idle";
+        this.uploadingBlobs.clear();
         const kind = err instanceof SyncTransportError ? err.kind : "error";
         await this.setState(kind, String(err instanceof Error ? err.message : err));
         return null;
@@ -135,9 +165,18 @@ export class SyncEngine {
     return this.serial(async () => {
       await this.ensureViews();
       if (!this.mesh?.connected) return void (await this.setState("offline"));
+      this.phase = "idle";
+      this.uploadingBlobs.clear();
       const { env, failure } = await this.prepareEnvelope();
-      if (!this.mesh?.send(env)) return void (await this.setState("offline"));
+      const wasUploading = this.phase === "uploading_blobs";
+      this.phase = "syncing_events";
+      if (wasUploading) await this.setState("syncing");
+      if (!this.mesh?.send(env)) {
+        this.phase = "idle";
+        return void (await this.setState("offline"));
+      }
       env.events.forEach((e) => this.wsSent.add(e.event_id));
+      this.phase = "idle";
       if (failure) await this.setState(failure.kind, blobFailureMessage(failure));
     });
   }
@@ -145,8 +184,9 @@ export class SyncEngine {
   /** Outbox envelope minus voice notes whose clip is not on the hub (and their dependents). */
   private async prepareEnvelope(): Promise<{ env: SyncEnvelope; failure?: SyncTransportError }> {
     const env = await buildEnvelope(this.store, this.opts.manifest);
-    const { held, failure } = await this.uploadPendingBlobs(env.events);
+    const { held, heldBlobKeys, failure } = await this.uploadPendingBlobs(env.events);
     this.held = held.size;
+    this.heldBlobs = heldBlobKeys;
     const withheld = new Set(held);
     // Outbox is HLC-sorted, so a referenced event precedes its dependents: one pass is transitive.
     for (const e of env.events) if (e.ref_event_id && withheld.has(e.ref_event_id)) withheld.add(e.event_id);
@@ -182,7 +222,7 @@ export class SyncEngine {
    * release the event so a lost clip can never pin it in the outbox forever.
    */
   private async uploadPendingBlobs(events: CrdtEvent[]): Promise<BlobPass> {
-    const pass: BlobPass = { held: new Set() };
+    const pass: BlobPass = { held: new Set(), heldBlobKeys: new Set() };
     const done = new Map<string, boolean>(); // key -> settled (false = transient failure)
     const load = this.opts.getAudioBlob ?? ((key: string) => getAudio(key));
     for (const ev of events) {
@@ -192,6 +232,9 @@ export class SyncEngine {
       if (!done.has(key)) {
         if (pass.failure?.kind === "offline") done.set(key, false);
         else {
+          this.phase = "uploading_blobs";
+          this.uploadingBlobs.add(key);
+          await this.setState(this.state);
           try {
             await uploadBlobIfMissing(this.hubUrl, key, () => load(key), this.fetchImpl, this.opts.blobTimeoutMs);
             done.set(key, true);
@@ -199,10 +242,15 @@ export class SyncEngine {
             done.set(key, false);
             const e = err instanceof SyncTransportError ? err : new SyncTransportError(String(err), "error");
             if (!pass.failure || e.kind === "offline") pass.failure = e;
+          } finally {
+            this.uploadingBlobs.delete(key);
           }
         }
       }
-      if (!done.get(key)) pass.held.add(ev.event_id);
+      if (!done.get(key)) {
+        pass.held.add(ev.event_id);
+        pass.heldBlobKeys.add(key);
+      }
     }
     return pass;
   }

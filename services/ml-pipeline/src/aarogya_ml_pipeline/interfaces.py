@@ -116,23 +116,49 @@ class OutbreakDetector(Protocol):
         """Evaluate daily case counts for an anomalous EWMA surge."""
 
 
+_BINARY_AUDIO_MAGIC_PREFIXES: tuple[bytes, ...] = (
+    b"\x1a\x45\xdf\xa3",  # WebM / Matroska
+    b"RIFF",  # WAV
+    b"OggS",  # OGG / Opus
+    b"fLaC",  # FLAC
+    b"ID3",  # MP3 with ID3 tag
+    b"\xff\xfb",  # MP3 frame sync
+)
+
+
 class StubVoiceTranscriber:
     """Deterministic fallback ASR used when Whisper weights are not present."""
 
     def transcribe(self, audio_bytes: bytes, language_hint: str = "hi") -> TranscriptionResult:
-        if audio_bytes:
-            decoded = audio_bytes.decode("utf-8", errors="ignore").strip()
-            transcript = (
-                decoded
-                if decoded and decoded.isprintable()
-                else f"[stub-audio-{len(audio_bytes)}-bytes] Patient reports fever and cough."
+        if not audio_bytes or not audio_bytes.strip():
+            return TranscriptionResult(
+                transcript="[stub-audio-0-bytes] No audio or transcript provided.",
+                language=language_hint,
+                confidence=0.0,
+                backend="stub-asr-deterministic",
             )
-        else:
-            transcript = "Patient reports mild fever for 2 days."
+
+        is_binary = any(audio_bytes.startswith(prefix) for prefix in _BINARY_AUDIO_MAGIC_PREFIXES)
+        if not is_binary:
+            try:
+                decoded = audio_bytes.decode("utf-8").strip()
+            except UnicodeDecodeError:
+                decoded = ""
+            if decoded and all(ch.isprintable() or ch in "\n\r\t" for ch in decoded):
+                return TranscriptionResult(
+                    transcript=decoded,
+                    language=language_hint,
+                    confidence=0.95,
+                    backend="stub-asr-deterministic",
+                )
+
         return TranscriptionResult(
-            transcript=transcript,
+            transcript=(
+                f"[stub-audio-{len(audio_bytes)}-bytes] "
+                "Audio recorded; local Whisper ASR model not loaded."
+            ),
             language=language_hint,
-            confidence=0.95,
+            confidence=0.0,
             backend="stub-asr-deterministic",
         )
 

@@ -566,3 +566,33 @@ def test_default_pipeline_maternal_sos_hindi_and_v2_psbi_force_red_emergency() -
     sepsis_triage = sepsis_emitted[0].payload["triage_assessment"]
     assert sepsis_triage["severity"] == TriageSeverity.RED_EMERGENCY
     assert "MAT_RED_11" in sepsis_triage["matched_rules"]
+
+
+def test_binary_webm_audio_without_whisper_never_fabricates_fever_or_cough() -> None:
+    """Opaque binary WebM audio in fallback mode must not emit fabricated fever/cough symptoms."""
+    pipeline = EnrichmentPipeline(
+        transcriber=WhisperVoiceTranscriber(model_path="/tmp/nonexistent_model_weights_path"),
+        structurer=LlamaCppSlmStructurer(model_path=None),
+    )
+    voice_event = _make_voice_event(
+        event_id="evt-webm-no-whisper",
+        patient_id="pat-webm-01",
+        payload={"language": "en"},
+    )
+    emitted = pipeline.process_voice_note(
+        voice_event,
+        hub_node_id="hub-01",
+        hlc=HlcTimestamp(wall_ms=1_700_002_300_000, logical=0, node_id="hub-01"),
+        audio_bytes=b"\x1a\x45\xdf\xa3\x9f\x42\x86\x81\x01\x42\xf7\x81\x01binary-webm-audio",
+    )
+    assert len(emitted) == 2
+    enrichment_evt, card_evt = emitted
+    transcript = enrichment_evt.payload["transcription"]["transcript"]
+    extracted = enrichment_evt.payload["structured_note"]["extracted_symptoms"]
+
+    assert transcript.startswith("[stub-audio-")
+    assert "fever" not in transcript.lower()
+    assert "cough" not in transcript.lower()
+    assert extracted == []
+    assert "fever" not in card_evt.payload["summary"].lower()
+    assert "cough" not in card_evt.payload["summary"].lower()

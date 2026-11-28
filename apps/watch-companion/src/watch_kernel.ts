@@ -34,7 +34,7 @@ export interface WatchDangerCheckInput {
   severeHeadacheOrBlurredVision?: boolean;
   convulsionsOrFits?: boolean;
   dangerSigns?: readonly string[];
-  language?: "en" | "hi" | "kn";
+  language?: "en" | "hi" | "kn" | "ta";
 }
 
 export interface WatchScreenDangerOptions {

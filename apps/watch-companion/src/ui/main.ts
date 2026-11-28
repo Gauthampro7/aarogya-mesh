@@ -49,7 +49,7 @@ function bootstrap(): void {
         (data as { type?: unknown }).type === "aarogya:setLang" &&
         isValidLang((data as { lang?: unknown }).lang)
       ) {
-        const next = (data as { lang: "en" | "hi" | "kn" }).lang;
+        const next = (data as { lang: "en" | "hi" | "kn" | "ta" }).lang;
         if (controller.getLanguage() !== next) {
           controller.setLanguage(next, { notifyBridge: false });
         }

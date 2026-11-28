@@ -3,7 +3,7 @@
  *
  * Projects synced `VaccinationDueItem` records and open `PATIENT_FAMILY`
  * medication/care `ActionCard` items into glanceable, priority-ordered
- * watch reminders in English, pure *Shuddh Tatsama* Hindi, and natural Kannada.
+ * watch reminders in English, pure *Shuddh Tatsama* Hindi, natural Kannada, and natural Tamil.
  */
 
 import {
@@ -26,9 +26,11 @@ export interface WatchReminderItem {
   titleEn: string;
   titleHi: string;
   titleKn: string;
+  titleTa: string;
   messageEn: string;
   messageHi: string;
   messageKn: string;
+  messageTa: string;
   title: string;
   message: string;
   sourceCardId: string | null;
@@ -38,7 +40,7 @@ export interface WatchReminderItem {
 export interface ReminderProjectionInput {
   vaccinations?: readonly VaccinationDueItem[];
   actionCards?: readonly ActionCard[];
-  language?: "en" | "hi" | "kn";
+  language?: "en" | "hi" | "kn" | "ta";
   includeUpcoming?: boolean;
   includeAcknowledged?: boolean;
 }
@@ -69,6 +71,8 @@ const MEDICATION_KEYWORDS = [
   "औषधि",
   "ಔಷಧ",
   "ಮಾತ್ರೆ",
+  "மருந்து",
+  "மாத்திரை",
 ] as const;
 
 function isMedicationActionCard(card: ActionCard): boolean {
@@ -79,19 +83,21 @@ function isMedicationActionCard(card: ActionCard): boolean {
 }
 
 function pickLocalized(
-  language: "en" | "hi" | "kn",
+  language: "en" | "hi" | "kn" | "ta",
   enText: string,
   hiText: string,
   knText: string,
+  taText: string,
 ): string {
   if (language === "hi") return hiText;
   if (language === "kn") return knText;
+  if (language === "ta") return taText;
   return enText;
 }
 
 function formatVaccinationReminder(
   item: VaccinationDueItem,
-  language: "en" | "hi" | "kn",
+  language: "en" | "hi" | "kn" | "ta",
   includeUpcoming: boolean,
 ): WatchReminderItem | null {
   if (item.status === "COMPLETED") {
@@ -105,9 +111,11 @@ function formatVaccinationReminder(
   let titleEn: string;
   let titleHi: string;
   let titleKn: string;
+  let titleTa: string;
   let messageEn: string;
   let messageHi: string;
   let messageKn: string;
+  let messageTa: string;
 
   if (item.status === "OVERDUE") {
     const overdueDays = Math.abs(item.days_delta);
@@ -115,17 +123,20 @@ function formatVaccinationReminder(
     titleEn = `Overdue Vaccine: ${item.vaccine_name} (${item.dose_label})`;
     titleHi = `अतिदेय टीकाकरण: ${item.vaccine_name} (${item.dose_label})`;
     titleKn = `ತಡವಾದ ಲಸಿಕೆ: ${item.vaccine_name} (${item.dose_label})`;
+    titleTa = `தாமதமான தடுப்பூசி: ${item.vaccine_name} (${item.dose_label})`;
     messageEn =
       item.reminder_text.trim().length > 0
         ? item.reminder_text
         : `Overdue by ${overdueDays} day(s) (due ${item.due_date}). Visit VHND/PHC with MCP Card.`;
     messageHi = `${overdueDays} दिवस अतिदेय (निर्धारित तिथि ${item.due_date})। मातृ-शिशु सुरक्षा पत्रक सहित निकटतम प्राथमिक स्वास्थ्य केंद्र पर जाएं।`;
     messageKn = `${overdueDays} ದಿನ ತಡವಾಗಿದೆ (ದಿನಾಂಕ ${item.due_date}). ತಾಯಿ-ಮಗು ಕಾರ್ಡ್ ತೆಗೆದುಕೊಂಡು ಆಸ್ಪತ್ರೆಗೆ ಭೇಟಿ ನೀಡಿ.`;
+    messageTa = `${overdueDays} நாள் தாமதம் (தேதி ${item.due_date}). தாய்-சேய் அட்டையுடன் ஆரம்ப சுகாதார நிலையம் செல்லவும்.`;
   } else if (item.status === "DUE_SOON") {
     priority = "MEDIUM";
     titleEn = `Vaccine Due Soon: ${item.vaccine_name} (${item.dose_label})`;
     titleHi = `शीघ्र देय टीकाकरण: ${item.vaccine_name} (${item.dose_label})`;
     titleKn = `ಶೀಘ್ರ ಬಾಕಿ ಲಸಿಕೆ: ${item.vaccine_name} (${item.dose_label})`;
+    titleTa = `விரைவில் தடுப்பூசி: ${item.vaccine_name} (${item.dose_label})`;
     messageEn =
       item.reminder_text.trim().length > 0
         ? item.reminder_text
@@ -140,17 +151,23 @@ function formatVaccinationReminder(
       item.days_delta === 0
         ? `ಇಂದು ಬಾಕಿ (${item.due_date}). ತಾಯಿ-ಮಗು ಕಾರ್ಡ್ ತೆಗೆದುಕೊಂಡು ಆಸ್ಪತ್ರೆಗೆ ಭೇಟಿ ನೀಡಿ.`
         : `${item.days_delta} ದಿನಗಳಲ್ಲಿ ಬಾಕಿ (${item.due_date}). ಲಸಿಕೆಗಾಗಿ ತಾಯಿ-ಮಗು ಕಾರ್ಡ್ ಸಿದ್ಧವಾಗಿಡಿ.`;
+    messageTa =
+      item.days_delta === 0
+        ? `இன்று நிலுவை (${item.due_date}). தாய்-சேய் அட்டையுடன் ஆரம்ப சுகாதார நிலையம் செல்லவும்.`
+        : `${item.days_delta} நாட்களில் நிலுவை (${item.due_date}). தடுப்பூசிக்கு தாய்-சேய் அட்டையை தயாராக வைக்கவும்.`;
   } else {
     priority = "LOW";
     titleEn = `Upcoming Vaccine: ${item.vaccine_name} (${item.dose_label})`;
     titleHi = `आगामी टीकाकरण: ${item.vaccine_name} (${item.dose_label})`;
     titleKn = `ಮುಂಬರುವ ಲಸಿಕೆ: ${item.vaccine_name} (${item.dose_label})`;
+    titleTa = `வரவிருக்கும் தடுப்பூசி: ${item.vaccine_name} (${item.dose_label})`;
     messageEn =
       item.reminder_text.trim().length > 0
         ? item.reminder_text
         : `Scheduled on ${item.due_date} (in ${item.days_delta} day(s)).`;
     messageHi = `निर्धारित तिथि ${item.due_date} (${item.days_delta} दिवस शेष)।`;
     messageKn = `ನಿಗದಿತ ದಿನಾಂಕ ${item.due_date} (${item.days_delta} ದಿನ ಬಾಕಿ).`;
+    messageTa = `திட்டமிட்ட தேதி ${item.due_date} (${item.days_delta} நாட்கள் உள்ளன).`;
   }
 
   return {
@@ -163,11 +180,13 @@ function formatVaccinationReminder(
     titleEn,
     titleHi,
     titleKn,
+    titleTa,
     messageEn,
     messageHi,
     messageKn,
-    title: pickLocalized(language, titleEn, titleHi, titleKn),
-    message: pickLocalized(language, messageEn, messageHi, messageKn),
+    messageTa,
+    title: pickLocalized(language, titleEn, titleHi, titleKn, titleTa),
+    message: pickLocalized(language, messageEn, messageHi, messageKn, messageTa),
     sourceCardId: null,
     vaccineCode: item.vaccine_code,
   };
@@ -175,7 +194,7 @@ function formatVaccinationReminder(
 
 function formatActionCardReminder(
   card: ActionCard,
-  language: "en" | "hi" | "kn",
+  language: "en" | "hi" | "kn" | "ta",
   includeAcknowledged: boolean,
 ): WatchReminderItem | null {
   if (card.watch_mode !== null && card.watch_mode !== "PATIENT_FAMILY") {
@@ -198,6 +217,8 @@ function formatActionCardReminder(
   let messageHi: string;
   let titleKn: string;
   let messageKn: string;
+  let titleTa: string;
+  let messageTa: string;
 
   if (card.language === "hi") {
     titleHi = card.title;
@@ -247,6 +268,30 @@ function formatActionCardReminder(
         : "ಆಶಾ ಕಾರ್ಯಕರ್ತೆ ತಿಳಿಸಿದ ಮನೆ ಆರೈಕೆ ಮತ್ತು ತಪಾಸಣೆ ಪಾಲಿಸಿ.";
   }
 
+  if (card.language === "ta") {
+    titleTa = card.title;
+    messageTa = card.summary;
+  } else if (isMedication) {
+    titleTa =
+      card.priority === "CRITICAL"
+        ? "அவசர மருந்து அறிவுறுத்தல்"
+        : card.priority === "HIGH"
+          ? "முக்கிய மருந்து நினைவூட்டல்"
+          : "மருந்து உட்கொள்ளல் நினைவூட்டல்";
+    messageTa = card.due_by
+      ? `${card.due_by} க்குள் தவறாமல் மருந்து உட்கொண்டு ஆஷா பணியாளர் அறிவுறுத்தலைப் பின்பற்றவும்.`
+      : "தவறாமல் மருந்து உட்கொண்டு ஆஷா பணியாளர் அறிவுறுத்தலைப் பின்பற்றவும்.";
+  } else {
+    titleTa =
+      card.priority === "CRITICAL"
+        ? "சிவப்பு அவசரம்: உடனடி மருத்துவமனை"
+        : "வீட்டு பராமரிப்பு நினைவூட்டல்";
+    messageTa =
+      card.priority === "CRITICAL"
+        ? "உடனடியாக 108 அழைத்து அருகிலுள்ள மருத்துவமனைக்கு அழைத்துச் செல்லவும்."
+        : "ஆஷா பணியாளர் தெரிவித்த வீட்டு பராமரிப்பு மற்றும் பரிசோதனையைப் பின்பற்றவும்.";
+  }
+
   return {
     id: `card:${card.card_id}`,
     category,
@@ -257,11 +302,13 @@ function formatActionCardReminder(
     titleEn,
     titleHi,
     titleKn,
+    titleTa,
     messageEn,
     messageHi,
     messageKn,
-    title: pickLocalized(language, titleEn, titleHi, titleKn),
-    message: pickLocalized(language, messageEn, messageHi, messageKn),
+    messageTa,
+    title: pickLocalized(language, titleEn, titleHi, titleKn, titleTa),
+    message: pickLocalized(language, messageEn, messageHi, messageKn, messageTa),
     sourceCardId: card.card_id,
     vaccineCode: null,
   };
@@ -301,8 +348,14 @@ function compareReminders(a: WatchReminderItem, b: WatchReminderItem): number {
 export function projectPatientFamilyReminders(
   input: ReminderProjectionInput,
 ): WatchReminderItem[] {
-  const language: "en" | "hi" | "kn" =
-    input.language === "hi" ? "hi" : input.language === "kn" ? "kn" : "en";
+  const language: "en" | "hi" | "kn" | "ta" =
+    input.language === "hi"
+      ? "hi"
+      : input.language === "kn"
+        ? "kn"
+        : input.language === "ta"
+          ? "ta"
+          : "en";
   const includeUpcoming = input.includeUpcoming ?? false;
   const includeAcknowledged = input.includeAcknowledged ?? false;
 
