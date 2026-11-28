@@ -191,11 +191,9 @@ def reconcile_envelopes(
     incoming_ids = {event.event_id for event in incoming.events}
 
     existing_peer_cursor = store.get_peer_cursor(peer_id)
-    peer_wanted_cursor = (
-        incoming.since_cursor
-        if incoming.since_cursor is not None
-        else (existing_peer_cursor.last_sent_cursor if existing_peer_cursor is not None else None)
-    )
+    # Honor incoming.since_cursor literally: when a cleared/fresh peer sends None,
+    # replay from the beginning instead of skipping events via stale last_sent_cursor.
+    peer_wanted_cursor = incoming.since_cursor
 
     outgoing_events = store.get_delta_since(
         peer_wanted_cursor,
