@@ -1,6 +1,6 @@
 ---
 name: Module Claim
-about: Claim one of the parallel hackathon tracks in TEAM_BOARD.md
+about: Claim one of the parallel module tracks
 title: "claim(<module>): <Your Name> claiming track"
 labels: ["track-claim"]
 ---
@@ -18,6 +18,6 @@ labels: ["track-claim"]
 
 ## First Milestone Plan (Day 1)
 
-- [ ] Read `TEAM_BOARD.md`, `CONTRIBUTING.md`, and module `MODULE_GUIDE.md`
+- [ ] Read `ARCHITECTURE.md`, `CONTRIBUTING.md`, and module `MODULE_GUIDE.md`
 - [ ] Run `uv sync` and `make verify` locally
 - [ ] Implement initial slice and open first PR (< 300 LOC)

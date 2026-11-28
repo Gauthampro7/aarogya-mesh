@@ -2,7 +2,7 @@
 
 **Autonomous, Offline-First, Capability-Proportional Edge Health Mesh** for Community Health Workers (CHWs / ASHAs) and dual-mode Patient-Family/CHW wearable companions.
 
-Built for Hackathon Problem Statement #8 (Offline Health Assistant for Community Health Workers, with dual-mode Tier-0 Watch companion).
+Designed for disconnected rural primary healthcare — enabling deterministic clinical triage, peer-to-peer CRDT sync, and local edge AI across Tier-0 Watch, Tier-1 Phone, and Tier-2 PHC Clinic Hub.
 
 ---
 
@@ -37,7 +37,7 @@ flowchart LR
     T2 -.-> CORE
 ```
 
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for the full mechanism-first specification, and [docs/JUDGE_QA_AND_PITCH_BIBLE.md](./docs/JUDGE_QA_AND_PITCH_BIBLE.md) for the **Adversarial Judge Q&A, 5 Technical Moats & 3-Minute Stage Pitch Playbook**.
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for the full mechanism-first specification and [docs/QUICKSTART_GUIDE.md](./docs/QUICKSTART_GUIDE.md) for quick start, phone sync, and presentation deck instructions.
 
 ---
 
@@ -51,17 +51,6 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for the full mechanism-first specificat
 | **Track 4: Local ML Pipeline** | `services/ml-pipeline` | `@Krishnanand-10` & Core (`@Gauthampro7`) | Complete & Merged (`#22`, `T4-07`) |
 | **Track 5: Native Android APK** | `apps/android-app` | Core / `@Gauthampro7` | Complete & Verified (`T5-01`, signed APK `v0.1.0`) |
 
-See [TEAM_BOARD.md](./TEAM_BOARD.md) for exact interface contracts, entrypoints, and Definition of Done for each track.
-
-### Atomic Starter Prompts (`prompts/`)
-
-Every feature slice has a self-contained, copy-pasteable prompt for teammates and their AI coding agents — see [`prompts/README.md`](./prompts/README.md) for the dependency DAG and index:
-
-- **Track 1 (`services/phc-hub`)**: [`prompts/track-1-phc-hub/`](./prompts/track-1-phc-hub/)
-- **Track 2 (`apps/field-pwa`)**: [`prompts/track-2-field-pwa/`](./prompts/track-2-field-pwa/)
-- **Track 3 (`apps/watch-companion`)**: [`prompts/track-3-watch-companion/`](./prompts/track-3-watch-companion/)
-- **Track 4 (`services/ml-pipeline`)**: [`prompts/track-4-ml-pipeline/`](./prompts/track-4-ml-pipeline/)
-- **Track 5 (`apps/android-app`)**: [`prompts/track-5-android-app/`](./prompts/track-5-android-app/)
 
 ---
 
@@ -92,9 +81,9 @@ Once the Hub is running, inspect:
 
 ---
 
-## 3-Minute Winning Hackathon Demo Script (`/showcase` on `:8000`)
+## Interactive 3-Tier Walkthrough (`/showcase` on `:8000`)
 
-Present the entire **3-Tier Offline Mesh** (Watch + Phone + Hub Brain) live on a single port (`:8000`). For the stage playbook and 5 Technical Moats, see [docs/JUDGE_QA_AND_PITCH_BIBLE.md](./docs/JUDGE_QA_AND_PITCH_BIBLE.md), and for the short **36 Judge Q&As**, see [docs/JUDGE_QA_CHEATSHEET.md](./docs/JUDGE_QA_CHEATSHEET.md):
+Explore the complete **3-Tier Offline Mesh** (Watch + Phone + Hub Brain) live on a single port (`:8000`), along with the interactive offline presentation deck at `/deck/`:
 
 1. **Boot the Unified Stage** (auto-builds `apps/field-pwa` and `apps/watch-companion` bundles if needed):
    ```bash
@@ -145,46 +134,7 @@ Demonstrate full offline autonomy and opportunistic CRDT convergence without int
 
 ---
 
-## Team Onboarding Guide
+## Contributing
 
-1. Read [AGENTS.md](./AGENTS.md) (if using an AI coding agent), [TEAM_BOARD.md](./TEAM_BOARD.md), and [CONTRIBUTING.md](./CONTRIBUTING.md).
-2. Claim your track (`apps/field-pwa`, `apps/watch-companion`, or `services/ml-pipeline`) via the **Module Claim** GitHub issue template and **assign the Issue to yourself**.
-3. Read [ARCHITECTURE.md](./ARCHITECTURE.md) and your module's `MODULE_GUIDE.md` before branching from `origin/main`:
-   ```bash
-   git fetch origin
-   git checkout -b feat/<module>-<short-slug> origin/main
-   ```
-4. Never edit files outside your assigned module without coordinating first (see [.github/CODEOWNERS](./.github/CODEOWNERS)).
-5. Run `make verify` before marking your Pull Request Ready for Review.
-
----
-
-## How We Proceed: Maintainer & Contributor Playbook
-
-### How Gautham (Core Bedrock Maintainer / Coordinator) Proceeds
-
-1. **Protect `main` on GitHub**: Enable branch protection rules on `main` requiring Pull Requests, passing `CI` workflow checks, and CODEOWNERS/peer review (zero direct pushes to `main`).
-2. **Fast-Track Contract & Dependency PRs**: Prioritize and review tiny standalone `packages/contracts` schema bumps or root `pyproject.toml` dependency PRs immediately so no teammate track is ever blocked.
-3. **Rapid PR Review & Merge Cadence**: Review and merge small (< 300 LOC) teammate PRs every **2–4 hours** to keep `main` moving smoothly with minimal rebase friction.
-4. **Integration & Airplane-Mode Rehearsals**: Coordinate cross-tier integration (Tier-0 Watch -> Tier-1 Field PWA -> Tier-2 PHC Hub + ML Pipeline) and run full Airplane-Mode demo rehearsals leading up to Thursday's final demo.
-
-### Step-by-Step Onboarding & Daily Workflow (Teammates + AI Agents)
-
-1. **One-Time Setup**:
-   ```bash
-   git clone https://github.com/Gauthampro7/aarogya-mesh.git
-   cd aarogya-mesh
-   uv sync
-   make verify
-   ```
-2. **Pre-Flight Check (Every Session / Before AI Agent Prompting)**:
-   - Run `gh issue list`, `gh pr list`, and `git fetch origin`.
-   - Ensure your AI agent reads [AGENTS.md](./AGENTS.md) and works strictly inside your claimed track directory.
-3. **Claim & Build Loop (Every 2–4 Hours)**:
-   - **Assign** the sub-task GitHub Issue to yourself (never touch an already-assigned Issue).
-   - Branch from `origin/main` (`feat/<module>-<slug>`), push your first small commit early, and open a **Draft PR** (**Claim-by-Draft-PR**) so active files are visible to everyone.
-   - Implement a focused slice (< 300 LOC) while honoring contract schemas and zero-bloat rules.
-   - Escalate any needed contract/dependency change via a tiny standalone PR first.
-4. **Verify & Merge**:
-   - Run `make verify` locally and rebase onto `origin/main` (`git fetch origin && git rebase origin/main`).
-   - Mark the PR **Ready for Review**, merge once CI is green, and delete the short-lived branch.
+1. Read [ARCHITECTURE.md](./ARCHITECTURE.md) and [CONTRIBUTING.md](./CONTRIBUTING.md).
+2. Branch from `origin/main` (`feat/<module>-<short-slug>`), respect module boundaries in [.github/CODEOWNERS](./.github/CODEOWNERS), and run `make verify` before opening a Pull Request.

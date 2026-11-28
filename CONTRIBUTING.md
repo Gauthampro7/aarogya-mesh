@@ -1,8 +1,6 @@
 # Contributing to Aarogya Mesh
 
-We use **Trunk-Based Development**, **Contract-First Engineering**, and strict **module boundaries** so 4 developers (and their AI coding agents) can build simultaneously from Mon Nov 23 to Thu Nov 26 with zero merge conflicts.
-
-> **Using an AI coding agent (Antigravity, Cursor, Claude Code, etc.)?** Read [AGENTS.md](./AGENTS.md) first — it encodes the mandatory pre-flight checks, directory isolation, and verification gates.
+We use **Trunk-Based Development**, **Contract-First Engineering**, and clear **module boundaries** so contributors can develop across all tiers in parallel with minimal merge friction.
 
 ---
 
@@ -22,9 +20,9 @@ We use **Trunk-Based Development**, **Contract-First Engineering**, and strict *
 To eliminate duplicate work and merge collisions across 4 parallel tracks:
 
 1. **Check & Assign the Issue First**: Run `gh issue list` (or check GitHub Issues) before writing code. **Assign** the Issue to yourself before starting. If an Issue is already assigned to another teammate, **do not touch it**.
-2. **Claim-by-Draft-PR**: Push your first small commit early and open a **Draft PR** (`gh pr create --draft`) immediately so teammates and AI agents can see live active files in GitHub before conflicts happen.
-3. **Small, Frequent Slices (< 300 LOC)**: Break work into small slices (< 300 lines changed) and merge to `main` every **2–4 hours**. Avoid long-lived mega-branches.
-4. **Strict Module Isolation**: Only edit files inside your claimed track directory (see [TEAM_BOARD.md](./TEAM_BOARD.md) and [.github/CODEOWNERS](./.github/CODEOWNERS)).
+2. **Claim-by-Draft-PR**: Push your first small commit early and open a **Draft PR** (`gh pr create --draft`) so teammates can see active files in GitHub before conflicts happen.
+3. **Small, Frequent Slices (< 300 LOC)**: Break work into small slices (< 300 lines changed) and merge to `main` frequently. Avoid long-lived mega-branches.
+4. **Strict Module Isolation**: Only edit files inside your owned track directory (see [.github/CODEOWNERS](./.github/CODEOWNERS)).
 5. **Edge-Case Escalation (Contracts & Root Dependencies)**:
    - Never bundle a `packages/contracts/` schema change or root `pyproject.toml` dependency change inside a feature PR.
    - Instead, open a **tiny standalone PR first** (e.g., `feat(contracts): add field X` or `chore(deps): add lightgbm`), ping `@Gauthampro7` for fast-track review, verify `make verify` passes, merge it to `main`, and then rebase your feature branch onto `origin/main`.

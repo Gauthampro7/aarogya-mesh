@@ -49,7 +49,7 @@ On the phone's browser (Chrome), open:
 - **To use each app standalone (register patients, run IMNCI triage, record voice, trigger SOS):** **NO Wi-Fi or internet is needed.** Turn on Airplane Mode and both work independently.
 - **To sync Phone ↔ Laptop Hub:** They just need **one local path** between them (no internet required). Pick any of the 3 options below:
 
-### Connection Option 1: Phone Hotspot (Best for Hackathon Hall)
+### Connection Option 1: Phone Hotspot (Recommended for Restricted Wi-Fi)
 *Venue Wi-Fi often blocks device-to-device traffic (AP isolation). A hotspot avoids that completely.*
 1. Turn on **Mobile Hotspot** on the phone (mobile data can be **OFF**).
 2. Connect your Fedora laptop to the phone's hotspot.

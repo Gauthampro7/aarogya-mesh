@@ -3,7 +3,6 @@
 **Track**: Tier-1 CHW Offline Phone PWA  
 **Owned Path**: `apps/field-pwa/` (do NOT edit `packages/` or `services/`)
 
-> **Atomic Starter Prompts**: Pick one independent slice from [`prompts/track-2-field-pwa/`](../../prompts/track-2-field-pwa/) (see the dependency DAG in [`prompts/README.md`](../../prompts/README.md)) and read only that file before coding.
 
 ---
 
