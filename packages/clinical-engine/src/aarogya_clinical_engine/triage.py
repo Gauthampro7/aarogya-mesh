@@ -364,6 +364,16 @@ def _evaluate_maternal(
                 ],
                 f"Maternal temperature {data.temperature_c:.1f}C requires timely clinical review.",
             )
+    elif "fever" in flags or data.fever_days > 0:
+        acc.record(
+            "MAT_FEVER_REPORTED_YELLOW",
+            TriageSeverity.YELLOW_PHC,
+            [
+                "Refer to PHC/ANM within 24 hours for fever workup (malaria/UTI/infection)",
+                "Encourage safe hydration and monitor temperature",
+            ],
+            "Reported maternal fever without measured temperature requires timely PHC clinical review.",
+        )
 
     # Maternal anemia (Hemoglobin)
     if data.hemoglobin_g_dl is not None:
@@ -502,6 +512,16 @@ def _evaluate_pediatric(
     fast_breathing = (
         data.respiratory_rate_bpm is not None and data.respiratory_rate_bpm >= rr_threshold
     )
+    reported_fast_breathing = bool(
+        flags
+        & {
+            "fast_breathing",
+            "breathing_difficulty",
+            "difficulty_breathing",
+            "shortness_of_breath",
+            "breathlessness",
+        }
+    )
     if is_young_infant and (fast_breathing or data.chest_indrawing):
         young_red = syndromes["respiratory"]["red_rules"][1]
         detail = (
@@ -515,13 +535,14 @@ def _evaluate_pediatric(
             young_red["immediate_actions"],
             f"{detail}: {young_red['rationale']}",
         )
-    elif fast_breathing or data.chest_indrawing:
+    elif fast_breathing or data.chest_indrawing or reported_fast_breathing:
         pneumonia_rule = syndromes["respiratory"]["yellow_rules"][0]
-        detail = (
-            f"Respiratory rate {data.respiratory_rate_bpm}/min >= {rr_threshold}/min"
-            if fast_breathing
-            else "Lower chest wall indrawing observed"
-        )
+        if fast_breathing:
+            detail = f"Respiratory rate {data.respiratory_rate_bpm}/min >= {rr_threshold}/min"
+        elif data.chest_indrawing:
+            detail = "Lower chest wall indrawing observed"
+        else:
+            detail = "Reported fast or difficult breathing"
         acc.record(
             pneumonia_rule["id"],
             TriageSeverity.YELLOW_PHC,
@@ -616,8 +637,17 @@ def _evaluate_pediatric(
             fever_cfg["yellow_actions"],
             f"Fever persisting for {data.fever_days} days (>=3 days) requires PHC clinical workup.",
         )
+    elif "high_fever" in flags or (
+        data.temperature_c is None and (data.fever_days > 0 or "fever" in flags)
+    ):
+        acc.record(
+            "IMNCI_FEVER_REPORTED_YELLOW",
+            TriageSeverity.YELLOW_PHC,
+            fever_cfg["yellow_actions"],
+            "Reported pediatric fever without measured temperature requires PHC/ANM evaluation and malaria RDT.",
+        )
     elif data.fever_days > 0 and (
-        data.temperature_c is None or data.temperature_c < vt["temp_moderate_fever_c"]
+        data.temperature_c is not None and data.temperature_c < vt["temp_moderate_fever_c"]
     ):
         acc.record(
             "IMNCI_FEVER_LOW_GRADE_GREEN",
@@ -677,8 +707,38 @@ def _evaluate_pediatric(
             )
 
 
+_GENERAL_RESPIRATORY_YELLOW_FLAGS = frozenset(
+    {
+        "chest_indrawing",
+        "fast_breathing",
+        "breathing_difficulty",
+        "difficulty_breathing",
+        "shortness_of_breath",
+        "breathlessness",
+    }
+)
+
+_GENERAL_ACUTE_YELLOW_FLAGS = frozenset(
+    {
+        "dengue",
+        "jaundice",
+        "rash",
+        "measles",
+        "measles_uncomplicated_rash",
+        "acute_ear_pain_or_discharge",
+        "chronic_ear_discharge",
+        "anemia",
+        "palmar_pallor",
+        "bilateral_pedal_edema",
+        "vomiting",
+        "persistent_vomiting",
+    }
+)
+
+
 def _evaluate_general(
     data: TriageInput,
+    flags: set[str],
     acc: _EvaluationAccumulator,
 ) -> None:
     if data.spo2_pct is not None:
@@ -730,6 +790,62 @@ def _evaluate_general(
                 ["Refer to PHC NCD clinic for hypertension confirmation and management"],
                 f"Elevated blood pressure ({data.systolic_bp}/{data.diastolic_bp} mmHg >= 140/90).",
             )
+
+    # Symptom-based escalation when numeric vitals are absent or sub-threshold
+    if (
+        data.malaria_rdt_positive
+        or data.fever_days > 0
+        or "fever" in flags
+        or "high_fever" in flags
+        or "malaria" in flags
+    ) and (data.temperature_c is None or data.temperature_c < 38.0):
+        acc.record(
+            "GEN_FEVER_SYMPTOM_YELLOW",
+            TriageSeverity.YELLOW_PHC,
+            [
+                "Refer to PHC/ANM for fever evaluation and malaria/dengue testing",
+                "Ensure oral hydration and monitor temperature",
+            ],
+            "Reported fever symptom warrants PHC clinical review.",
+        )
+
+    if data.chest_indrawing or bool(flags & _GENERAL_RESPIRATORY_YELLOW_FLAGS):
+        acc.record(
+            "GEN_RESPIRATORY_SYMPTOM_YELLOW",
+            TriageSeverity.YELLOW_PHC,
+            [
+                "Refer to PHC/ANM today for respiratory assessment and pulse oximetry",
+                "Monitor breathing rate and oxygen saturation closely",
+            ],
+            "Reported breathing difficulty or fast breathing warrants PHC clinical review.",
+        )
+
+    if (
+        data.has_diarrhea
+        or data.diarrhea_days > 0
+        or data.blood_in_stool
+        or bool(flags & {"diarrhea", "blood_in_stool", "dysentery"})
+    ):
+        acc.record(
+            "GEN_DIARRHEA_SYMPTOM_YELLOW",
+            TriageSeverity.YELLOW_PHC,
+            [
+                "Start ORS + Zinc immediately and refer to PHC/ANM for diarrhea assessment",
+                "Seek urgent care if blood in stool, inability to drink, or severe dehydration develops",
+            ],
+            "Reported diarrhea warrants PHC clinical review and hydration management.",
+        )
+
+    if data.palmar_pallor or data.bilateral_pedal_edema or bool(flags & _GENERAL_ACUTE_YELLOW_FLAGS):
+        acc.record(
+            "GEN_ACUTE_SYMPTOM_YELLOW",
+            TriageSeverity.YELLOW_PHC,
+            [
+                "Refer to PHC/ANM for timely clinical evaluation",
+                "Monitor for any danger signs and seek immediate care if symptoms worsen",
+            ],
+            "Reported acute clinical symptoms warrant PHC review.",
+        )
 
 
 def evaluate_triage(
@@ -794,7 +910,7 @@ def evaluate_triage(
         _evaluate_pediatric(data, all_flags, imnci_rules, acc)
         protocol_source = "WHO_IMNCI_PEDIATRIC_DETERMINISTIC"
     else:
-        _evaluate_general(data, acc)
+        _evaluate_general(data, all_flags, acc)
         protocol_source = "WHO_IMNCI_ASHA_DETERMINISTIC"
 
     # Step 3: Default GREEN_HOME message when no rules matched.

@@ -22,7 +22,8 @@ export const checklistItems = (type: ChecklistType) =>
  * CHECKLIST_RECORDED payload: summary only. Deliberately has NO card_id/status,
  * so projectors never mistake it for an ActionCard.
  */
-export function buildChecklistPayload(ev: ChecklistEvaluation): Record<string, unknown> {
+export function buildChecklistPayload(ev: ChecklistEvaluation, additionalNotes?: string): Record<string, unknown> {
+  const notes = additionalNotes?.trim();
   return {
     checklist_type: ev.checklist_type,
     protocol: ev.protocol,
@@ -32,6 +33,7 @@ export function buildChecklistPayload(ev: ChecklistEvaluation): Record<string, u
     completion_score: ev.completion_score,
     is_complete: ev.is_complete,
     has_critical_gaps: ev.has_critical_gaps,
+    ...(notes ? { additional_notes: notes } : {}),
   };
 }
 

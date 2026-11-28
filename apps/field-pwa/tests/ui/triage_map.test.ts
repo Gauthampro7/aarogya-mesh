@@ -3,11 +3,14 @@ import { evaluateTriage, evaluateWatchRapidTriage } from "../../src/clinical";
 import {
   applyCategory,
   buildTriageInput,
+  convertTempDisplay,
+  fahrenheitToCelsius,
   hiddenTickedFlags,
   visibleFlags,
   maternalRedOptions,
   maternalYellowOptions,
   parseNum,
+  parseTemp,
   patientAgeMonths,
   pediatricDangerOptions,
   dangerOptionsForCategory,
@@ -88,6 +91,21 @@ describe("buildTriageInput", () => {
   });
   it("a healthy child with normal vitals is GREEN", () => {
     expect(run(base({ nums: { age_months: "24", temperature_c: "36.8", spo2_pct: "98" } })).severity).toBe("GREEN_HOME");
+  });
+  it("converts Fahrenheit inputs to Celsius and validates 86-113 °F bounds", () => {
+    expect(fahrenheitToCelsius(98.6)).toBe(37);
+    expect(parseTemp("85.9", "F")).toMatchObject({ reason: "range" });
+    expect(parseTemp("113.1", "F")).toMatchObject({ reason: "range" });
+    expect(parseTemp("100.4", "F")).toBe(38);
+    expect(convertTempDisplay("98.6", "C")).toBe("37");
+    expect(convertTempDisplay("37", "F")).toBe("98.6");
+    const r = buildTriageInput(base({ tempUnit: "F", nums: { age_months: "24", temperature_c: "103.1", spo2_pct: "98" } }));
+    expect(r.ok && r.input.temperature_c).toBe(39.5);
+    expect(run(base({ tempUnit: "F", nums: { age_months: "24", temperature_c: "103.1", spo2_pct: "98" } })).severity).toBe("RED_EMERGENCY");
+  });
+  it("merges comma-separated additionalSymptoms into TriageInput.symptoms", () => {
+    const r = buildTriageInput(base({ category: "MATERNAL", isPregnant: true, symptomFlags: ["mild_pedal_edema"], additionalSymptoms: "dizziness, mild_pedal_edema, ear pain" }));
+    expect(r.ok && r.input.symptoms).toEqual(["mild_pedal_edema", "dizziness", "ear pain"]);
   });
 });
 

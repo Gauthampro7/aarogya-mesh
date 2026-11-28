@@ -560,3 +560,38 @@ def test_uip_expanded_boosters_vitamin_a_and_maternal_td_schedule() -> None:
 
     with pytest.raises(ValueError, match="cannot precede lmp_date"):
         compute_maternal_td_schedule(lmp_date=lmp, as_of_date=date(2026, 5, 1))
+
+
+def test_symptom_only_voice_triage_escalates_without_numeric_vitals() -> None:
+    """Reported fever/diarrhea/respiratory symptoms without numeric vitals must not default to GREEN."""
+    gen_fever = evaluate_triage(symptoms=["fever"])
+    assert gen_fever.severity == TriageSeverity.YELLOW_PHC
+    assert gen_fever.referral_required is True
+    assert "GEN_FEVER_SYMPTOM_YELLOW" in gen_fever.matched_rules
+
+    gen_diarrhea = evaluate_triage(symptoms=["diarrhea"])
+    assert gen_diarrhea.severity == TriageSeverity.YELLOW_PHC
+    assert "GEN_DIARRHEA_SYMPTOM_YELLOW" in gen_diarrhea.matched_rules
+
+    gen_resp = evaluate_triage(symptoms=["fast_breathing"])
+    assert gen_resp.severity == TriageSeverity.YELLOW_PHC
+    assert "GEN_RESPIRATORY_SYMPTOM_YELLOW" in gen_resp.matched_rules
+
+    ped_unmeasured_fever = evaluate_triage(age_months=24, symptoms=["fever"], fever_days=1)
+    assert ped_unmeasured_fever.severity == TriageSeverity.YELLOW_PHC
+    assert "IMNCI_FEVER_REPORTED_YELLOW" in ped_unmeasured_fever.matched_rules
+
+    ped_measured_low_fever = evaluate_triage(
+        age_months=24, symptoms=["fever"], fever_days=1, temperature_c=37.6
+    )
+    assert ped_measured_low_fever.severity == TriageSeverity.GREEN_HOME
+    assert "IMNCI_FEVER_LOW_GRADE_GREEN" in ped_measured_low_fever.matched_rules
+
+    mat_unmeasured_fever = evaluate_triage(is_pregnant=True, gestational_weeks=20, symptoms=["fever"])
+    assert mat_unmeasured_fever.severity == TriageSeverity.YELLOW_PHC
+    assert "MAT_FEVER_REPORTED_YELLOW" in mat_unmeasured_fever.matched_rules
+
+    routine_general = evaluate_triage(symptoms=[])
+    assert routine_general.severity == TriageSeverity.GREEN_HOME
+    assert "CLINICAL_ROUTINE_GREEN" in routine_general.matched_rules
+

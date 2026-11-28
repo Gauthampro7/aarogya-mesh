@@ -300,9 +300,83 @@ def test_discovery_router_endpoints(monkeypatch: pytest.MonkeyPatch) -> None:
     assert info.tier == NodeTier.TIER_2_HUB
     assert info.lan_ip == "192.168.43.10"
     assert info.port == 8000
+    assert info.preferred_url == "http://192.168.43.10:8000"
     assert info.http_url == "http://192.168.43.10:8000"
     assert info.ws_url == "ws://192.168.43.10:8000/ws/mesh"
     assert info.mdns_service == MDNS_SERVICE_TYPE
     assert info.mdns_active is False
     assert "http://192.168.43.10:8000" in info.field_pwa_hint
     assert "ws://192.168.43.10:8000/ws/mesh" in info.watch_companion_hint
+
+    # Loopback-only host yields preferred_url=None instead of advertising 127.0.0.1 as LAN.
+    monkeypatch.setattr(discovery, "detect_lan_ipv4", lambda: "127.0.0.1")
+    resp_loopback = client.get("/api/v1/discovery/connect-info")
+    assert resp_loopback.status_code == 200
+    loopback_info = ConnectInfo.model_validate(resp_loopback.json())
+    assert loopback_info.lan_ip == "127.0.0.1"
+    assert loopback_info.preferred_url is None
+
+
+def test_detect_lan_ipv4_offline_interface_enumeration_filters_virtual_and_down(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import fcntl
+    import struct
+
+    ifreq_size = 40 if struct.calcsize("P") == 8 else 32
+    entries = [
+        ("lo", "127.0.0.1", 0x49),           # UP | LOOPBACK | RUNNING -> ignored
+        ("docker0", "172.17.0.1", 0x1043),   # docker* + 172.17.* -> ignored
+        ("virbr0", "192.168.122.1", 0x1043), # virbr* -> ignored
+        ("eth0", "10.0.0.5", 0x0),           # DOWN -> ignored
+        ("wlan0", "192.168.43.1", 0x1043),   # UP | RUNNING -> selected
+    ]
+    raw_buf = bytearray()
+    flag_map: dict[str, int] = {}
+    for name, ip_str, flags in entries:
+        rec = bytearray(ifreq_size)
+        name_bytes = name.encode("utf-8")[:15]
+        rec[: len(name_bytes)] = name_bytes
+        rec[20:24] = socket.inet_aton(ip_str)
+        raw_buf.extend(rec)
+        flag_map[name] = flags
+
+    class _FakeIoctlSocket:
+        def __init__(self, *_args: Any, **_kwargs: Any) -> None:
+            pass
+
+        def __enter__(self) -> _FakeIoctlSocket:
+            return self
+
+        def __exit__(self, *_exc: Any) -> None:
+            return None
+
+        def fileno(self) -> int:
+            return 99
+
+        def settimeout(self, _timeout: float) -> None:
+            return None
+
+        def connect(self, _addr: tuple[str, int]) -> None:
+            raise OSError("Network is unreachable")
+
+    def _fake_ioctl(_fd: int, req: int, arg: bytes) -> bytes:
+        if req == discovery._SIOCGIFCONF:
+            _buf_len, addr_ptr = struct.unpack("iL", arg)
+            import ctypes
+
+            ctypes.memmove(addr_ptr, bytes(raw_buf), len(raw_buf))
+            return struct.pack("iL", len(raw_buf), addr_ptr)
+        if req == discovery._SIOCGIFFLAGS:
+            iface_name = arg[:16].split(b"\0", 1)[0].decode("utf-8")
+            flags = flag_map.get(iface_name, 0)
+            out = bytearray(256)
+            out[16:18] = struct.pack("H", flags)
+            return bytes(out)
+        raise OSError("Unsupported ioctl")
+
+    monkeypatch.setattr(sys := discovery.sys, "platform", "linux")
+    monkeypatch.setattr(socket, "socket", _FakeIoctlSocket)
+    monkeypatch.setattr(fcntl, "ioctl", _fake_ioctl)
+    assert sys.platform == "linux"
+    assert detect_lan_ipv4() == "192.168.43.1"

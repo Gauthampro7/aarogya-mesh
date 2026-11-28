@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, Response
 from pydantic import BaseModel
 
 from aarogya_contracts import (
@@ -18,6 +18,8 @@ from aarogya_contracts import (
     TriageSeverity,
 )
 from aarogya_crdt_sync import EventStore, ProjectedState, project_state
+from aarogya_phc_hub.discovery import detect_lan_ipv4
+from aarogya_phc_hub.qr_svg import render_qr_svg
 
 STATIC_DIR: Path = Path(__file__).resolve().parent / "static"
 
@@ -259,6 +261,8 @@ def create_dashboard_router(
     store: EventStore,
     manifest: HardwareCapabilityManifest,
     get_peers: Callable[[], list[dict[str, Any]]] | None = None,
+    *,
+    hub_port: int = 8000,
 ) -> APIRouter:
     """Create the offline PHC Command Center UI and dashboard API router."""
     router = APIRouter(tags=["dashboard"])
@@ -266,12 +270,18 @@ def create_dashboard_router(
     @router.get("/", response_class=HTMLResponse)
     def serve_dashboard_index() -> HTMLResponse:
         index_path = _resolve_static_file(STATIC_DIR, "index.html")
-        return HTMLResponse(content=index_path.read_text(encoding="utf-8"))
+        return HTMLResponse(
+            content=index_path.read_text(encoding="utf-8"),
+            headers={"Cache-Control": "no-cache"},
+        )
 
     @router.get("/showcase", response_class=HTMLResponse)
     def serve_showcase_stage() -> HTMLResponse:
         showcase_path = _resolve_static_file(STATIC_DIR, "showcase.html")
-        return HTMLResponse(content=showcase_path.read_text(encoding="utf-8"))
+        return HTMLResponse(
+            content=showcase_path.read_text(encoding="utf-8"),
+            headers={"Cache-Control": "no-cache"},
+        )
 
     @router.get("/static/{filename:path}")
     def serve_static_asset(filename: str) -> FileResponse:
@@ -279,7 +289,11 @@ def create_dashboard_router(
         media_type = _STATIC_MEDIA_TYPES.get(
             asset_path.suffix.lower(), "application/octet-stream"
         )
-        return FileResponse(path=asset_path, media_type=media_type)
+        return FileResponse(
+            path=asset_path,
+            media_type=media_type,
+            headers={"Cache-Control": "no-cache"},
+        )
 
     @router.get("/api/v1/dashboard/summary")
     def dashboard_summary() -> dict[str, Any]:
@@ -318,6 +332,7 @@ def create_dashboard_router(
 
         return {
             "manifest": manifest.model_dump(mode="json"),
+            "hub_lan_url": f"http://{detect_lan_ipv4()}:{hub_port}",
             "peers": peers,
             "patient_count": len(projected.patients),
             "patients": [
@@ -375,5 +390,26 @@ def create_dashboard_router(
             reverse=True,
         )
         return events[:limit]
+
+    @router.get("/api/v1/hub-info")
+    def hub_info() -> dict[str, Any]:
+        lan_ip = detect_lan_ipv4()
+        return {
+            "node_id": manifest.node_id,
+            "lan_ip": lan_ip,
+            "port": hub_port,
+            "hub_lan_url": f"http://{lan_ip}:{hub_port}",
+        }
+
+    @router.get("/api/v1/hub-qr.svg")
+    def hub_qr_svg(
+        text: Annotated[str | None, Query(min_length=1, max_length=106)] = None,
+    ) -> Response:
+        payload = text.strip() if text and text.strip() else f"http://{detect_lan_ipv4()}:{hub_port}"
+        try:
+            svg = render_qr_svg(payload)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        return Response(content=svg, media_type="image/svg+xml")
 
     return router

@@ -31,6 +31,10 @@ export const kn: Record<Key, string> = {
   "danger.anon": "ನೋಂದಣಿ ಇಲ್ಲದ ರೋಗಿ",
   "danger.submit": "ಈಗ ತಪಾಸಿಸಿ",
   "danger.noneBtn": "ಅಪಾಯದ ಲಕ್ಷಣಗಳಿಲ್ಲ",
+  "danger.otherPlaceholder": "ಇತರೆ ಅಪಾಯದ ಲಕ್ಷಣ ಬರೆಯಿರಿ...",
+  "danger.otherSubmit": "ಇತರೆ ಲಕ್ಷಣ ಕಳುಹಿಸಿ",
+  "danger.otherRequired": "ದಯವಿಟ್ಟು ಮೊದಲು ಇತರೆ ಲಕ್ಷಣ ಬರೆಯಿರಿ.",
+  "danger.optionalSummary": "+ ರೋಗಿ ಸಂಖ್ಯೆ / ಇತರೆ",
   "danger.confirmPrompt": "ಕೆಂಪು ತುರ್ತು ಖಚಿತಪಡಿಸಿ?",
   "danger.confirmBtn": "ಕೆಂಪು ಖಚಿತ",
   "danger.cancelBtn": "ರದ್ದು",
@@ -83,6 +87,7 @@ export const kn: Record<Key, string> = {
 
   "sync.title": "ಆರೋಗ್ಯ ಕೇಂದ್ರ ಸಿಂಕ್",
   "sync.hubLabel": "ಆರೋಗ್ಯ ಕೇಂದ್ರದ ವಿಳಾಸ",
+  "sync.hubSummary": "ಕೇಂದ್ರ ವಿಳಾಸ",
   "sync.hubHint": "http://127.0.0.1:8000",
   "sync.now": "ಈಗ ಸಿಂಕ್ ಮಾಡಿ",
   "sync.syncing": "ಸಿಂಕ್ ಆಗುತ್ತಿದೆ...",

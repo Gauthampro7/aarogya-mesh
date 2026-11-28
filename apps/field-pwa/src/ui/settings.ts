@@ -51,11 +51,23 @@ function hostnameOf(url: string): string | null {
   }
 }
 
+/** Normalize a user-entered Hub URL: trim spaces, strip trailing slashes, default missing scheme to http://. */
+export function normalizeHubUrl(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return "";
+  if (/^[a-zA-Z][a-zA-Z\d+\-.]*:\/\/$/i.test(trimmed)) return trimmed;
+  const s = trimmed.replace(/\/+$/, "");
+  if (/^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//i.test(s) || /^(javascript|data|vbscript|file):/i.test(s)) {
+    return s;
+  }
+  return `http://${s}`;
+}
+
 /** Saved override wins, except a loopback value saved while served from a non-loopback hub origin (stale). */
 export function resolveHubUrl(saved: string | null, loc: LocLike | null | undefined): string {
   const auto = hubOriginFrom(loc);
-  const s = saved?.trim() || null;
-  if (s) {
+  const s = normalizeHubUrl(saved ?? "");
+  if (s && isValidHubUrl(s)) {
     const sh = hostnameOf(s);
     const stale = auto !== null && loc != null && !isLoopbackHost(loc.hostname) && sh !== null && isLoopbackHost(sh);
     if (!stale) return s;
@@ -68,7 +80,11 @@ const curLoc = (): LocLike | null => (typeof location === "undefined" ? null : l
 export const getAutoHubOrigin = (): string | null => hubOriginFrom(curLoc());
 export const getHubUrl = (): string => resolveHubUrl(lsGet("aarogya.hubUrl"), curLoc());
 export const clearHubUrl = (): void => lsRemove("aarogya.hubUrl");
-export const setHubUrl = (url: string): void => lsSet("aarogya.hubUrl", url.trim().replace(/\/+$/, ""));
+export const setHubUrl = (url: string): void => {
+  const norm = normalizeHubUrl(url);
+  if (norm) lsSet("aarogya.hubUrl", norm);
+  else lsRemove("aarogya.hubUrl");
+};
 
 /** Stable per-device node id. */
 export function getNodeId(): string {
@@ -90,11 +106,15 @@ export function getLastSync(): { at: number; ok: boolean; detail: string } | nul
 export const setLastSync = (v: { at: number; ok: boolean; detail: string }): void =>
   lsSet("aarogya.lastSync", JSON.stringify(v));
 
-/** Valid http(s) URL check for the hub setting. */
+/** Valid http(s) URL check for the hub setting (accepts bare host:port by normalizing to http://). */
 export function isValidHubUrl(s: string): boolean {
+  const norm = normalizeHubUrl(s);
+  if (!norm || /\s/.test(norm)) return false;
   try {
-    const u = new URL(s.trim());
-    return u.protocol === "http:" || u.protocol === "https:";
+    const u = new URL(norm);
+    if (u.protocol !== "http:" && u.protocol !== "https:") return false;
+    const h = u.hostname.toLowerCase();
+    return h === "localhost" || h.includes(".") || h.includes(":");
   } catch {
     return false;
   }

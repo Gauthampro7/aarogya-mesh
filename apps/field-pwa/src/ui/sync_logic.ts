@@ -71,3 +71,26 @@ export function bindLiveCount(
   for (const s of sources) offs.push(s(listener));
   return off;
 }
+
+/** Classify a failed sync into a structured detail token so the UI can show actionable feedback. */
+export function classifySyncFailure(kind: SyncState, rawError: string | null | undefined, isOnline: boolean): string {
+  if (!isOnline) return "offline:device";
+  if (kind === "offline") return "offline:unreachable";
+  const httpMatch = rawError?.match(/HTTP (\d{3})/);
+  if (httpMatch) return `http:${httpMatch[1]}`;
+  return rawError ? rawError.slice(0, 120) : kind;
+}
+
+export type ParsedSyncFailure =
+  | { kind: "device_offline" }
+  | { kind: "unreachable" }
+  | { kind: "http"; code: string }
+  | { kind: "other"; detail: string };
+
+/** Parse a stored `lastSync.detail` failure token into a typed classification. */
+export function parseSyncFailureDetail(detail: string): ParsedSyncFailure {
+  if (detail === "offline:device" || detail === "offline") return { kind: "device_offline" };
+  if (detail === "offline:unreachable") return { kind: "unreachable" };
+  if (detail.startsWith("http:")) return { kind: "http", code: detail.slice(5) };
+  return { kind: "other", detail };
+}

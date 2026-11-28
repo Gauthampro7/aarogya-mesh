@@ -380,3 +380,11 @@ def test_untranscribed_stub_and_unrelated_transcripts_never_fabricate_fever_coug
     routine = structurer.structure_note("Routine immunization and growth monitoring visit.", language="en")
     assert "fever" not in routine.extracted_symptoms
     assert "cough" not in routine.extracted_symptoms
+
+    spoken_resp = structurer.structure_note("Patient has shortness of breath and chills.", language="en")
+    assert "fast_breathing" in spoken_resp.extracted_symptoms
+    assert "fever" in spoken_resp.extracted_symptoms
+
+    spoken_hi = structurer.structure_note("रोगी को सांस फूलना और ठंड लगना है।", language="hi")
+    assert "fast_breathing" in spoken_hi.extracted_symptoms
+    assert "fever" in spoken_hi.extracted_symptoms

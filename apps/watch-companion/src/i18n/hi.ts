@@ -31,6 +31,10 @@ export const hi: Record<Key, string> = {
   "danger.anon": "अपंजीकृत रोगी",
   "danger.submit": "संकट परीक्षण करें",
   "danger.noneBtn": "कोई संकट लक्षण नहीं",
+  "danger.otherPlaceholder": "अन्य संकट लक्षण लिखें...",
+  "danger.otherSubmit": "अन्य लक्षण भेजें",
+  "danger.otherRequired": "कृपया पहले अन्य लक्षण लिखें।",
+  "danger.optionalSummary": "+ रोगी क्रमांक / अन्य",
   "danger.confirmPrompt": "लाल आपातकाल की पुष्टि करें?",
   "danger.confirmBtn": "लाल आपातकाल पुष्टि",
   "danger.cancelBtn": "निरस्त करें",
@@ -83,6 +87,7 @@ export const hi: Record<Key, string> = {
 
   "sync.title": "केन्द्र समन्वय",
   "sync.hubLabel": "प्राथमिक स्वास्थ्य केन्द्र पता",
+  "sync.hubSummary": "स्वास्थ्य केन्द्र पता",
   "sync.hubHint": "http://127.0.0.1:8000",
   "sync.now": "समन्वय करें",
   "sync.syncing": "समन्वय प्रगति पर...",

@@ -13,9 +13,12 @@ Provides:
 
 from __future__ import annotations
 
+import array
 import importlib
 import ipaddress
 import socket
+import struct
+import sys
 import threading
 import time
 from typing import Any, Literal
@@ -60,6 +63,7 @@ class ConnectInfo(BaseModel):
     tier: NodeTier
     lan_ip: str = Field(..., min_length=7, max_length=45)
     port: int = Field(..., ge=1, le=65535)
+    preferred_url: str | None = None
     http_url: str
     ws_url: str
     mdns_service: str
@@ -119,6 +123,25 @@ class PeerRegistry:
             return len(self._peers)
 
 
+_IGNORED_IFACE_PREFIXES: tuple[str, ...] = (
+    "lo",
+    "docker",
+    "virbr",
+    "br-",
+    "veth",
+    "podman",
+    "lxc",
+    "cni",
+    "flannel",
+)
+_DOCKER_DEFAULT_NET = ipaddress.IPv4Network("172.17.0.0/16")
+_SIOCGIFCONF = 0x8912
+_SIOCGIFFLAGS = 0x8913
+_IFF_UP = 0x1
+_IFF_LOOPBACK = 0x8
+_IFF_RUNNING = 0x40
+
+
 def _is_usable_lan_ipv4(candidate: str) -> bool:
     """Return True if candidate is a routable local IPv4 (not loopback/unspecified/link-local)."""
     try:
@@ -128,19 +151,88 @@ def _is_usable_lan_ipv4(candidate: str) -> bool:
     return not (addr.is_loopback or addr.is_unspecified or addr.is_link_local)
 
 
+def _is_ignored_interface(name: str) -> bool:
+    """Return True for loopback, docker, libvirt, and container bridge interfaces."""
+    lowered = name.strip().lower()
+    return any(lowered.startswith(prefix) for prefix in _IGNORED_IFACE_PREFIXES)
+
+
+def _is_docker_default_ip(candidate: str) -> bool:
+    """Return True if candidate falls inside the default Docker bridge subnet 172.17.0.0/16."""
+    try:
+        return ipaddress.IPv4Address(candidate) in _DOCKER_DEFAULT_NET
+    except ValueError:
+        return False
+
+
+def _enumerate_linux_lan_ipv4s() -> list[str]:
+    """Enumerate active non-virtual IPv4 addresses on Linux via SIOCGIFCONF + SIOCGIFFLAGS."""
+    if not sys.platform.startswith("linux"):
+        return []
+    try:
+        import fcntl
+    except ImportError:
+        return []
+
+    ifreq_size = 40 if struct.calcsize("P") == 8 else 32
+    max_bytes = 8192
+    candidates: list[tuple[bool, bool, str]] = []
+
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+            buf = array.array("B", b"\0" * max_bytes)
+            addr_ptr, _buf_len = buf.buffer_info()
+            ifconf = struct.pack("iL", max_bytes, addr_ptr)
+            res = fcntl.ioctl(sock.fileno(), _SIOCGIFCONF, ifconf)
+            out_bytes = struct.unpack("iL", res)[0]
+            raw = buf.tobytes()[:out_bytes]
+
+            for offset in range(0, len(raw), ifreq_size):
+                if offset + 24 > len(raw):
+                    break
+                iface_name = raw[offset : offset + 16].split(b"\0", 1)[0].decode(
+                    "utf-8", errors="ignore"
+                )
+                if not iface_name or _is_ignored_interface(iface_name):
+                    continue
+                ip_str = socket.inet_ntoa(raw[offset + 20 : offset + 24])
+                if not _is_usable_lan_ipv4(ip_str) or _is_docker_default_ip(ip_str):
+                    continue
+
+                flags_req = struct.pack("256s", iface_name.encode("utf-8"))
+                flags_res = fcntl.ioctl(sock.fileno(), _SIOCGIFFLAGS, flags_req)
+                flags = struct.unpack("H", flags_res[16:18])[0]
+                if not (flags & _IFF_UP) or (flags & _IFF_LOOPBACK):
+                    continue
+
+                is_running = bool(flags & _IFF_RUNNING)
+                is_private = ipaddress.IPv4Address(ip_str).is_private
+                candidates.append((is_running, is_private, ip_str))
+    except (OSError, AttributeError, ValueError):
+        return []
+
+    candidates.sort(key=lambda item: (item[0], item[1]), reverse=True)
+    return [ip_str for _run, _priv, ip_str in candidates]
+
+
 def detect_lan_ipv4() -> str:
     """Best-effort pure-stdlib LAN/Hotspot IPv4 detection with zero external requests.
 
-    Uses local RFC1918 UDP routing-table probes (no packets are sent on the wire)
-    followed by hostname resolution, falling back cleanly to ``127.0.0.1``.
+    Enumerates active local interfaces first (ignoring loopback, DOWN, docker0,
+    and virbr* interfaces), then falls back to RFC1918 UDP routing-table probes
+    and hostname resolution, and finally ``127.0.0.1``.
     """
+    iface_ips = _enumerate_linux_lan_ipv4s()
+    if iface_ips:
+        return iface_ips[0]
+
     for probe_ip, probe_port in _RFC1918_ROUTE_PROBES:
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
                 sock.settimeout(0.0)
                 sock.connect((probe_ip, probe_port))
                 local_ip = sock.getsockname()[0]
-            if _is_usable_lan_ipv4(local_ip):
+            if _is_usable_lan_ipv4(local_ip) and not _is_docker_default_ip(local_ip):
                 return local_ip
         except OSError:
             continue
@@ -148,7 +240,7 @@ def detect_lan_ipv4() -> str:
     try:
         for info in socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET):
             candidate = str(info[4][0])
-            if _is_usable_lan_ipv4(candidate):
+            if _is_usable_lan_ipv4(candidate) and not _is_docker_default_ip(candidate):
                 return candidate
     except OSError:
         pass
@@ -282,6 +374,7 @@ def create_discovery_router(
     def get_connect_info() -> ConnectInfo:
         lan_ip = detect_lan_ipv4()
         http_url = f"http://{lan_ip}:{port}"
+        preferred_url = http_url if _is_usable_lan_ipv4(lan_ip) else None
         ws_url = f"ws://{lan_ip}:{port}/ws/mesh"
         service_type = (
             mdns_advertiser.service_type if mdns_advertiser is not None else MDNS_SERVICE_TYPE
@@ -292,6 +385,7 @@ def create_discovery_router(
             tier=manifest.tier,
             lan_ip=lan_ip,
             port=port,
+            preferred_url=preferred_url,
             http_url=http_url,
             ws_url=ws_url,
             mdns_service=service_type,

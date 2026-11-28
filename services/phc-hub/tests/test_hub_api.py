@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
+from aarogya_clinical_engine import PatientCategory, TriageInput, evaluate_triage
 from aarogya_contracts import (
     ActionCard,
     ActionCardPriority,
@@ -402,3 +403,148 @@ def test_hub_showcase_mounts_and_demo_router_integration(
     after_reset = client.get("/api/v1/dashboard/summary").json()
     assert after_reset["event_count"] == 0
     assert after_reset["peers"] == []
+
+
+def test_triage_sync_auto_enriches_and_returns_ml_insights_in_same_roundtrip(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Phone registers patient + runs PENDING triage -> single /api/v1/sync runs Hub GBDT + TreeSHAP
+    and returns ENRICHMENT_COMPLETED (risk_score, top_features, recommended_follow_up, severity)
+    and ACTION_CARD_ISSUED in the same sync round-trip.
+    """
+    monkeypatch.setattr(sys.modules["aarogya_phc_hub.app"], "_detect_ram_mb", lambda: 16384)
+    hub_app = create_app(
+        db_path=tmp_path / "hub_triage_ml.db",
+        blob_dir=tmp_path / "blobs_triage_ml",
+        node_id="hub-ml-01",
+    )
+    client = TestClient(hub_app)
+
+    phone_manifest = HardwareCapabilityManifest(
+        node_id="phone-asha-ml-01",
+        tier=NodeTier.TIER_1_PHONE,
+        ram_mb=4096,
+        cpu_cores=8,
+    )
+    patient_evt = CrdtEvent(
+        event_id="evt-ml-pat-01",
+        hlc=HlcTimestamp(wall_ms=1_700_000_050_000, logical=0, node_id="phone-asha-ml-01"),
+        origin_node_id="phone-asha-ml-01",
+        patient_id="pat-lakshmi-01",
+        event_type=EventType.PATIENT_REGISTERED,
+        payload={
+            "patient_id": "pat-lakshmi-01",
+            "full_name": "Lakshmi Devi",
+            "village_id": "rampur-01",
+            "sex": "F",
+            "is_pregnant": True,
+            "gestational_weeks": 28,
+            "preferred_language": "en",
+        },
+    )
+
+    local_triage = evaluate_triage(
+        TriageInput(
+            patient_id="pat-lakshmi-01",
+            patient_category=PatientCategory.MATERNAL,
+            is_pregnant=True,
+            gestational_weeks=28,
+            systolic_bp=156,
+            diastolic_bp=102,
+            danger_signs=["severe_headache_or_blurred_vision"],
+            assessed_at_ms=1_700_000_051_000,
+        )
+    )
+    assert local_triage.severity == TriageSeverity.RED_EMERGENCY
+
+    triage_evt = CrdtEvent(
+        event_id="evt-ml-triage-01",
+        hlc=HlcTimestamp(wall_ms=1_700_000_051_000, logical=0, node_id="phone-asha-ml-01"),
+        origin_node_id="phone-asha-ml-01",
+        patient_id="pat-lakshmi-01",
+        event_type=EventType.TRIAGE_COMPLETED,
+        enrichment_state=EnrichmentState.PENDING,
+        payload=local_triage.model_dump(mode="json"),
+    )
+
+    sync_resp = client.post(
+        "/api/v1/sync",
+        json=SyncEnvelope(
+            sender_manifest=phone_manifest,
+            sender_hlc=HlcTimestamp(wall_ms=1_700_000_052_000, logical=0, node_id="phone-asha-ml-01"),
+            events=[patient_evt, triage_evt],
+        ).model_dump(mode="json"),
+    )
+    assert sync_resp.status_code == 200
+    delta = SyncEnvelope.model_validate(sync_resp.json())
+    assert set(delta.ack_event_ids) == {"evt-ml-pat-01", "evt-ml-triage-01"}
+
+    # Same sync round-trip must return ENRICHMENT_COMPLETED + ACTION_CARD_ISSUED
+    enrichment_events = [
+        evt for evt in delta.events if evt.event_type == EventType.ENRICHMENT_COMPLETED
+    ]
+    action_card_events = [
+        evt for evt in delta.events if evt.event_type == EventType.ACTION_CARD_ISSUED
+    ]
+    assert len(enrichment_events) == 1
+    assert len(action_card_events) == 1
+
+    enr = enrichment_events[0]
+    assert enr.ref_event_id == "evt-ml-triage-01"
+    assert enr.patient_id == "pat-lakshmi-01"
+    assert enr.enrichment_state == EnrichmentState.COMPLETED
+    assert enr.hlc > triage_evt.hlc
+    assert enr.payload["source_type"] == "triage"
+    assert enr.payload["severity"] == TriageSeverity.RED_EMERGENCY.value
+
+    risk_score_obj = enr.payload["risk_score"]
+    assert isinstance(risk_score_obj["risk_score"], float)
+    assert 0.0 <= risk_score_obj["risk_score"] <= 1.0
+    assert risk_score_obj["risk_band"] in ("LOW", "MODERATE", "HIGH")
+    assert len(risk_score_obj["shap_attributions"]) > 0
+
+    top_features = enr.payload["top_features"]
+    assert isinstance(top_features, list) and len(top_features) > 0
+    for feat in top_features:
+        assert isinstance(feat["feature"], str) and feat["feature"]
+        assert isinstance(feat["contribution"], float)
+        assert feat["direction"] in ("risk", "protective")
+
+    assert isinstance(enr.payload["recommended_follow_up"], str)
+    assert len(enr.payload["recommended_follow_up"]) > 0
+
+    provenance = enr.payload["reasoning_provenance"]
+    assert provenance["stage"] == "HOST_LAPTOP_ML_ANALYTICS"
+    assert provenance["clinical_protocol"] == "NHM ASHA Maternal (NHM_ASHA_MATERNAL_ANC_PNC_2024)"
+    assert isinstance(provenance["matched_rule_ids"], list)
+    assert len(provenance["matched_rule_ids"]) > 0
+    assert isinstance(provenance["clinical_parameters"], str)
+    assert len(provenance["clinical_parameters"]) > 0
+    assert "28-Tree Monotone GBDT + Exact TreeSHAP" in provenance["ml_engine"]
+    assert "AUROC 0.8318" in provenance["ml_engine"]
+    assert "Laptop GBDT combined 13 vitals & flags" in provenance["ml_summary"]
+    assert "RED_EMERGENCY" in provenance["ml_summary"]
+
+    triage_out = TriageAssessment.model_validate(enr.payload["triage_assessment"])
+    assert triage_out.severity == TriageSeverity.RED_EMERGENCY
+    assert triage_out.referral_required is True
+    assert triage_out.execution_target == ExecutionTarget.LOCAL_DETERMINISTIC
+
+    card_evt = action_card_events[0]
+    assert card_evt.ref_event_id == "evt-ml-triage-01"
+    card = ActionCard.model_validate(card_evt.payload)
+    assert card.patient_id == "pat-lakshmi-01"
+    assert card.source_event_id == enr.event_id
+    assert card.severity == TriageSeverity.RED_EMERGENCY
+    assert card.priority == ActionCardPriority.CRITICAL
+
+    # Pending queue must be drained immediately
+    assert client.get("/api/v1/enrichment/pending").json() == []
+
+    # Dashboard summary reflects the completed enrichment with risk score and SHAP bars
+    summary = client.get("/api/v1/dashboard/summary").json()
+    assert summary["completed_enrichments"] == 1
+    assert summary["pending_enrichments"] == 0
+    assert isinstance(summary["enrichments"][0]["risk_score"], float)
+    assert len(summary["enrichments"][0]["shap_attributions"]) > 0

@@ -20,28 +20,30 @@
       scReset: "Reset",
       runEnrichment: "Run AI",
       runningEnrichment: "Running...",
-      badgeOffline: "OFFLINE SAFE",
+      badgeOffline: "Offline Safe",
       themeLight: "Light",
       themeDark: "Dark",
       langToggle: "हिन्दी",
       backToHub: "← Hub",
-      syncIdle: "LIVE SYNC READY",
-      syncPulse: "CRDT SYNC PULSE",
+      syncIdle: "Live Sync Ready",
+      syncPulse: "CRDT Sync Pulse",
+      reconnecting: "Reconnecting...",
       defaultNarrative:
         "Tap a danger sign on Watch, register a patient on Phone, or run a 1-click clinical scenario above.",
       scenarioRunning: "Executing live clinical scenario through Hub CRDT engine...",
       scenarioDonePrefix: "Active:",
+      resetting: "Resetting Hub state...",
       resetDone: "Hub state cleared. Ready for live Watch/Phone interaction or scenario playback.",
       enrichmentDone: "Hub AI enrichment completed — SHAP scores & Action Cards updated.",
       endpointUnavailable: "Endpoint unavailable.",
-      tier0Eyebrow: "TIER 0 · 256 MB",
-      tier1Eyebrow: "TIER 1 · 4 GB",
-      tier2Eyebrow: "TIER 2 · PHC HUB BRAIN",
-      tier2EyebrowRam: "TIER 2 · {ram} GB PHC HUB BRAIN",
+      tier0Eyebrow: "Tier 0 · Watch (256 MB)",
+      tier1Eyebrow: "Tier 1 · ASHA Phone (4 GB)",
+      tier2Eyebrow: "Tier 2 · PHC Hub Brain",
+      tier2EyebrowRam: "Tier 2 · {ram} GB PHC Hub Brain",
       reloadWatchTitle: "Reload Watch",
       reloadPhoneTitle: "Reload Phone",
       colWatchTitle: "Watch Companion",
-      colWatchSub: "Patient-Family & CHW",
+      colWatchSub: "Patient / Family & ASHA Companion",
       colPhoneTitle: "ASHA Field Phone",
       colPhoneSub: "WHO IMNCI + Offline IndexedDB",
       colHubTitle: "PHC Clinical Intelligence",
@@ -53,9 +55,9 @@
       phoneCap2: "Voice Queue",
       phoneCap3: "HLC Sync",
       kpiPatients: "Patients",
-      kpiRed: "RED",
-      kpiYellow: "YELLOW",
-      kpiGreen: "GREEN",
+      kpiRed: "Red",
+      kpiYellow: "Yellow",
+      kpiGreen: "Green",
       kpiPending: "Pending AI",
       hubPeersTitle: "Peers",
       tabAlerts: "Alerts & Cards",
@@ -75,32 +77,40 @@
       outbreakPrefix: "EWMA OUTBREAK",
       villagePrefix: "Village:",
       riskLabel: "Risk",
-      riskHigh: "HIGH",
-      riskModerate: "MODERATE",
-      riskLow: "LOW",
-      riskEnriched: "ENRICHED",
+      riskHigh: "High Risk",
+      riskModerate: "Moderate Risk",
+      riskLow: "Low Risk",
+      riskEnriched: "AI Enriched",
       eventsUnit: "events",
       moreItems: "+{n} more",
-      peerWatchFamily: "Watch · Family",
-      peerWatchChw: "Watch · CHW",
-      peerPhoneAsha: "Phone · ASHA",
-      peerHub: "PHC Hub",
-      targetWatch: "Watch",
-      targetPhone: "Phone",
-      targetMesh: "Mesh",
-      sevRed: "RED EMERGENCY",
-      sevYellow: "YELLOW PHC",
-      sevGreen: "GREEN HOME",
-      prioCritical: "CRITICAL",
-      prioHigh: "HIGH",
-      prioMedium: "MEDIUM",
-      prioLow: "LOW",
+      peerWatchFamily: "Watch · Patient / Family",
+      peerWatchChw: "Watch · ASHA Companion",
+      peerPhoneAsha: "ASHA Phone (Tier 1)",
+      peerHub: "PHC Hub (Tier 2)",
+      targetWatch: "Watch (Tier 0)",
+      targetPhone: "ASHA Phone (Tier 1)",
+      targetHub: "PHC Hub (Tier 2)",
+      targetMesh: "All Mesh Devices",
+      sevRed: "Red · Emergency",
+      sevYellow: "Yellow · PHC Review",
+      sevGreen: "Green · Home Care",
+      prioCritical: "Critical",
+      prioHigh: "High",
+      prioMedium: "Medium",
+      prioLow: "Low",
+      statusOpen: "Open",
+      statusAcked: "Acknowledged",
+      statusResolved: "Resolved",
+      statusPending: "Pending",
+      watchModeFamily: "Patient / Family",
+      watchModeChw: "ASHA Companion",
+      evVoiceNote: "Voice Note",
       evPatientRegistered: "Patient Registered",
       evTriageCompleted: "Triage Completed",
       evChecklistRecorded: "Checklist Recorded",
       evVaccinationLogged: "Vaccination Logged",
-      evVoiceNoteRecorded: "Voice Note Recorded",
-      evEnrichmentCompleted: "Enrichment Completed",
+      evVoiceNoteRecorded: "Voice Note",
+      evEnrichmentCompleted: "AI Enrichment Completed",
       evActionCardIssued: "Action Card Issued",
       evOutbreakAlertRaised: "Outbreak Alert Raised",
       synFebrile: "Febrile Illness",
@@ -148,10 +158,12 @@
       backToHub: "← केन्द्र",
       syncIdle: "जीवन्त समन्वय तत्पर",
       syncPulse: "नवीन समन्वय स्पन्दन",
+      reconnecting: "पुनः संयोजन हो रहा है...",
       defaultNarrative:
         "घटिका पर आपात लक्षण चुनें, दूरभाष में रोगी पंजीकृत करें अथवा ऊपर से परिदृश्य प्रारम्भ करें।",
       scenarioRunning: "वास्तविक चिकित्सकीय परिदृश्य प्रारम्भ हो रहा है...",
       scenarioDonePrefix: "सक्रिय परिदृश्य:",
+      resetting: "मुख्य केन्द्र पुनःस्थापित हो रहा है...",
       resetDone: "मुख्य केन्द्र स्वच्छ हुआ। जीवन्त प्रदर्शन हेतु तत्पर।",
       enrichmentDone: "मुख्य केन्द्र संवर्धन पूर्ण — संकट सूचकांक एवं कार्य पत्रक अद्यतन।",
       endpointUnavailable: "सेवा अभी संयोजित नहीं है।",
@@ -162,7 +174,7 @@
       reloadWatchTitle: "घटिका पुनःभारित करें",
       reloadPhoneTitle: "दूरभाष पुनःभारित करें",
       colWatchTitle: "घटिका सहचर",
-      colWatchSub: "परिवार एवं स्वास्थ्य कर्मी",
+      colWatchSub: "रोगी एवं परिवार · आशा सहचर",
       colPhoneTitle: "आशा क्षेत्र दूरभाष",
       colPhoneSub: "निश्चित वर्गीकरण एवं स्थानीय संग्रहण",
       colHubTitle: "प्राथमिक स्वास्थ्य केन्द्र प्रज्ञा",
@@ -202,13 +214,14 @@
       riskEnriched: "संवर्धित",
       eventsUnit: "घटनाएँ",
       moreItems: "+{n} अतिरिक्त",
-      peerWatchFamily: "घटिका · परिवार",
-      peerWatchChw: "घटिका · स्वास्थ्य कर्मी",
-      peerPhoneAsha: "दूरभाष · आशा",
-      peerHub: "मुख्य केन्द्र",
-      targetWatch: "घटिका",
-      targetPhone: "दूरभाष",
-      targetMesh: "संजाल",
+      peerWatchFamily: "घटिका · रोगी एवं परिवार",
+      peerWatchChw: "घटिका · आशा सहचर",
+      peerPhoneAsha: "आशा दूरभाष (स्तर १)",
+      peerHub: "मुख्य केन्द्र (स्तर २)",
+      targetWatch: "घटिका (स्तर ०)",
+      targetPhone: "आशा दूरभाष (स्तर १)",
+      targetHub: "मुख्य केन्द्र (स्तर २)",
+      targetMesh: "समस्त संजाल उपकरण",
       sevRed: "रक्त · आपातकाल",
       sevYellow: "पीत · स्वास्थ्य केन्द्र",
       sevGreen: "हरित · गृह देखभाल",
@@ -216,6 +229,13 @@
       prioHigh: "उच्च",
       prioMedium: "मध्यम",
       prioLow: "न्यून",
+      statusOpen: "सक्रिय",
+      statusAcked: "स्वीकृत",
+      statusResolved: "समाधानित",
+      statusPending: "प्रतीक्षारत",
+      watchModeFamily: "रोगी एवं परिवार",
+      watchModeChw: "आशा सहचर",
+      evVoiceNote: "स्वर टिप्पणी",
       evPatientRegistered: "रोगी पंजीकरण",
       evTriageCompleted: "वर्गीकरण पूर्ण",
       evChecklistRecorded: "परीक्षण सूची अभिलेख",
@@ -269,10 +289,12 @@
       backToHub: "← ಕೇಂದ್ರ",
       syncIdle: "ನೇರ ಸಿಂಕ್ ಸಿದ್ಧ",
       syncPulse: "CRDT ಸಿಂಕ್ ಸ್ಪಂದನ",
+      reconnecting: "ಮರುಸಂಪರ್ಕಿಸಲಾಗುತ್ತಿದೆ...",
       defaultNarrative:
         "ವಾಚ್‌ನಲ್ಲಿ ಅಪಾಯದ ಲಕ್ಷಣ ಒತ್ತಿ, ಫೋನ್‌ನಲ್ಲಿ ರೋಗಿ ನೋಂದಾಯಿಸಿ ಅಥವಾ ಮೇಲಿನ ಸನ್ನಿವೇಶ ಆಯ್ಕೆಮಾಡಿ.",
       scenarioRunning: "ಕೇಂದ್ರದ CRDT ಎಂಜಿನ್ ಮೂಲಕ ನೇರ ವೈದ್ಯಕೀಯ ಸನ್ನಿವೇಶ ಚಾಲನೆಯಲ್ಲಿದೆ...",
       scenarioDonePrefix: "ಸಕ್ರಿಯ ಸನ್ನಿವೇಶ:",
+      resetting: "ಮುಖ್ಯ ಕೇಂದ್ರವನ್ನು ಮರುಹೊಂದಿಸಲಾಗುತ್ತಿದೆ...",
       resetDone: "ಕೇಂದ್ರದ ದಾಖಲೆ ತೆರವುಗೊಳಿಸಲಾಗಿದೆ. ವಾಚ್/ಫೋನ್ ನೇರ ಪ್ರದರ್ಶನಕ್ಕೆ ಸಿದ್ಧ.",
       enrichmentDone: "ಕೇಂದ್ರದ AI ವಿಶ್ಲೇಷಣೆ ಪೂರ್ಣ — SHAP ಅಂಕಗಳು ಮತ್ತು ಕ್ರಿಯಾ ಕಾರ್ಡ್‌ಗಳು ನವೀಕರಣಗೊಂಡಿವೆ.",
       endpointUnavailable: "ಸೇವೆ ಸದ್ಯ ಲಭ್ಯವಿಲ್ಲ.",
@@ -283,7 +305,7 @@
       reloadWatchTitle: "ವಾಚ್ ಮರುಲೋಡ್ ಮಾಡಿ",
       reloadPhoneTitle: "ಫೋನ್ ಮರುಲೋಡ್ ಮಾಡಿ",
       colWatchTitle: "ವಾಚ್ ಸಹಾಯಕ",
-      colWatchSub: "ರೋಗಿ ಕುಟುಂಬ ಮತ್ತು ಆರೋಗ್ಯ ಕಾರ್ಯಕರ್ತೆ",
+      colWatchSub: "ರೋಗಿ / ಕುಟುಂಬ ಮತ್ತು ಆಶಾ ಸಹಾಯಕ",
       colPhoneTitle: "ಆಶಾ ಕ್ಷೇತ್ರ ಫೋನ್",
       colPhoneSub: "WHO IMNCI + ಆಫ್‌ಲೈನ್ ಸಂಗ್ರಹಣೆ",
       colHubTitle: "PHC ವೈದ್ಯಕೀಯ ಬುದ್ಧಿಮತ್ತೆ",
@@ -323,13 +345,14 @@
       riskEnriched: "ವಿಶ್ಲೇಷಿತ",
       eventsUnit: "ಘಟನೆಗಳು",
       moreItems: "+{n} ಇನ್ನಷ್ಟು",
-      peerWatchFamily: "ವಾಚ್ · ಕುಟುಂಬ",
-      peerWatchChw: "ವಾಚ್ · ಕಾರ್ಯಕರ್ತೆ",
-      peerPhoneAsha: "ಫೋನ್ · ಆಶಾ",
-      peerHub: "PHC ಕೇಂದ್ರ",
-      targetWatch: "ವಾಚ್",
-      targetPhone: "ಫೋನ್",
-      targetMesh: "ಜಾಲ",
+      peerWatchFamily: "ವಾಚ್ · ರೋಗಿ / ಕುಟುಂಬ",
+      peerWatchChw: "ವಾಚ್ · ಆಶಾ ಸಹಾಯಕ",
+      peerPhoneAsha: "ಆಶಾ ಫೋನ್ (ಹಂತ ೧)",
+      peerHub: "PHC ಕೇಂದ್ರ (ಹಂತ ೨)",
+      targetWatch: "ವಾಚ್ (ಹಂತ ೦)",
+      targetPhone: "ಆಶಾ ಫೋನ್ (ಹಂತ ೧)",
+      targetHub: "PHC ಕೇಂದ್ರ (ಹಂತ ೨)",
+      targetMesh: "ಎಲ್ಲಾ ಮೆಶ್ ಸಾಧನಗಳು",
       sevRed: "ಕೆಂಪು · ತುರ್ತು ಚಿಕಿತ್ಸೆ",
       sevYellow: "ಹಳದಿ · PHC ತಪಾಸಣೆ",
       sevGreen: "ಹಸಿರು · ಮನೆ ಆರೈಕೆ",
@@ -337,6 +360,13 @@
       prioHigh: "ಹೆಚ್ಚು",
       prioMedium: "ಮಧ್ಯಮ",
       prioLow: "ಕಡಿಮೆ",
+      statusOpen: "ತೆರೆದಿದೆ",
+      statusAcked: "ದೃಢೀಕರಿಸಲಾಗಿದೆ",
+      statusResolved: "ಪರಿಹರಿಸಲಾಗಿದೆ",
+      statusPending: "ಬಾಕಿ ಇದೆ",
+      watchModeFamily: "ರೋಗಿ / ಕುಟುಂಬ",
+      watchModeChw: "ಆಶಾ ಸಹಾಯಕ",
+      evVoiceNote: "ಧ್ವನಿ ಟಿಪ್ಪಣಿ",
       evPatientRegistered: "ರೋಗಿ ನೋಂದಣಿ",
       evTriageCompleted: "ವರ್ಗೀಕರಣ ಪೂರ್ಣ",
       evChecklistRecorded: "ತಪಾಸಣಾ ಪಟ್ಟಿ ದಾಖಲೆ",
@@ -390,10 +420,12 @@
       backToHub: "← மையம்",
       syncIdle: "நேரடி ஒத்திசைவு தயார்",
       syncPulse: "CRDT ஒத்திசைவு துடிப்பு",
+      reconnecting: "மீண்டும் இணைக்கப்படுகிறது...",
       defaultNarrative:
         "கடிகாரத்தில் அபாய அறிகுறியைத் தொடவும், தொலைபேசியில் நோயாளியைப் பதிவு செய்யவும் அல்லது மேலே உள்ள காட்சியைத் தேர்ந்தெடுக்கவும்.",
       scenarioRunning: "மைய CRDT இயந்திரம் மூலம் நேரடி மருத்துவ செயல்முறை இயங்குகிறது...",
       scenarioDonePrefix: "செயலில் உள்ள காட்சி:",
+      resetting: "தலைமை மையம் மீட்டமைக்கப்படுகிறது...",
       resetDone: "மைய நிலை சுத்தம் செய்யப்பட்டது. நேரடி கடிகாரம்/தொலைபேசி செயல்முறைக்குத் தயார்.",
       enrichmentDone: "மைய AI பகுப்பாய்வு முடிந்தது — SHAP மதிப்பீடுகள் & நடவடிக்கை அட்டைகள் புதுப்பிக்கப்பட்டன.",
       endpointUnavailable: "சேவை தற்போது கிடைக்கவில்லை.",
@@ -404,7 +436,7 @@
       reloadWatchTitle: "கடிகாரத்தை மீள ஏற்று",
       reloadPhoneTitle: "தொலைபேசியை மீள ஏற்று",
       colWatchTitle: "கடிகாரத் துணை",
-      colWatchSub: "நோயாளி குடும்பம் & சுகாதாரப் பணியாளர்",
+      colWatchSub: "நோயாளி / குடும்பம் & ஆஷா துணை",
       colPhoneTitle: "ஆஷா களத் தொலைபேசி",
       colPhoneSub: "WHO IMNCI + இணையமில்லா சேமிப்பு",
       colHubTitle: "PHC மருத்துவ நுண்ணறிவு",
@@ -444,13 +476,14 @@
       riskEnriched: "பகுப்பாய்வு செய்யப்பட்டது",
       eventsUnit: "நிகழ்வுகள்",
       moreItems: "+{n} மேலும்",
-      peerWatchFamily: "கடிகாரம் · குடும்பம்",
-      peerWatchChw: "கடிகாரம் · பணியாளர்",
-      peerPhoneAsha: "தொலைபேசி · ஆஷா",
-      peerHub: "PHC மையம்",
-      targetWatch: "கடிகாரம்",
-      targetPhone: "தொலைபேசி",
-      targetMesh: "வலையமைப்பு",
+      peerWatchFamily: "கடிகாரம் · நோயாளி / குடும்பம்",
+      peerWatchChw: "கடிகாரம் · ஆஷா துணை",
+      peerPhoneAsha: "ஆஷா தொலைபேசி (நிலை 1)",
+      peerHub: "PHC மையம் (நிலை 2)",
+      targetWatch: "கடிகாரம் (நிலை 0)",
+      targetPhone: "ஆஷா தொலைபேசி (நிலை 1)",
+      targetHub: "PHC மையம் (நிலை 2)",
+      targetMesh: "அனைத்து வலையமைப்பு சாதனங்கள்",
       sevRed: "சிவப்பு · அவசர சிகிச்சை",
       sevYellow: "மஞ்சள் · PHC பரிசோதனை",
       sevGreen: "பச்சை · வீட்டுப் பராமரிப்பு",
@@ -458,6 +491,13 @@
       prioHigh: "அதிகம்",
       prioMedium: "நடுத்தரம்",
       prioLow: "குறைவு",
+      statusOpen: "திறந்த நிலை",
+      statusAcked: "ஏற்கப்பட்டது",
+      statusResolved: "தீர்க்கப்பட்டது",
+      statusPending: "நிலுவையில்",
+      watchModeFamily: "நோயாளி / குடும்பம்",
+      watchModeChw: "ஆஷா துணை",
+      evVoiceNote: "குரல் குறிப்பு",
       evPatientRegistered: "நோயாளி பதிவு",
       evTriageCompleted: "பரிசோதனை வகைப்பாடு முடிவு",
       evChecklistRecorded: "சரிபார்ப்புப் பட்டியல் பதிவு",
@@ -542,6 +582,9 @@
     lastHlcKey: "",
     pulseTimer: null,
     polling: false,
+    reconnecting: false,
+    enriching: false,
+    demoBusy: false,
     lastSummary: null,
     lastPeers: [],
     lastEvents: [],
@@ -603,7 +646,76 @@
   function targetTierLabel(tier) {
     if (tier === "TIER_0_WATCH") return t("targetWatch");
     if (tier === "TIER_1_PHONE") return t("targetPhone");
+    if (tier === "TIER_2_HUB") return t("targetHub");
     return t("targetMesh");
+  }
+
+  function humanizeCode(raw) {
+    const str = String(raw || "").trim();
+    if (!str) return "--";
+    return str
+      .replace(/[_-]+/g, " ")
+      .replace(/\s+/g, " ")
+      .replace(/\b\w/g, (ch) => ch.toUpperCase());
+  }
+
+  function humanizeEnumToken(token) {
+    const keyMap = {
+      TIER_0_WATCH: "targetWatch",
+      TIER_1_PHONE: "targetPhone",
+      TIER_2_HUB: "targetHub",
+      PATIENT_FAMILY: "watchModeFamily",
+      CHW_COMPANION: "watchModeChw",
+      VOICE_NOTE: "evVoiceNote",
+      VOICE_NOTE_RECORDED: "evVoiceNoteRecorded",
+      TRIAGE_COMPLETED: "evTriageCompleted",
+      PATIENT_REGISTERED: "evPatientRegistered",
+      CHECKLIST_RECORDED: "evChecklistRecorded",
+      VACCINATION_LOGGED: "evVaccinationLogged",
+      ENRICHMENT_COMPLETED: "evEnrichmentCompleted",
+      ACTION_CARD_ISSUED: "evActionCardIssued",
+      OUTBREAK_ALERT_RAISED: "evOutbreakAlertRaised",
+      RED_EMERGENCY: "sevRed",
+      YELLOW_PHC: "sevYellow",
+      GREEN_HOME: "sevGreen",
+      CRITICAL: "prioCritical",
+      HIGH: "prioHigh",
+      MEDIUM: "prioMedium",
+      LOW: "prioLow",
+      OPEN: "statusOpen",
+      ACKNOWLEDGED: "statusAcked",
+      ACKED: "statusAcked",
+      RESOLVED: "statusResolved",
+      PENDING: "statusPending",
+    };
+    const key = keyMap[token];
+    return key ? t(key) : null;
+  }
+
+  const INLINE_ENUM_RE =
+    /\b(TIER_0_WATCH|TIER_1_PHONE|TIER_2_HUB|PATIENT_FAMILY|CHW_COMPANION|VOICE_NOTE_RECORDED|VOICE_NOTE|TRIAGE_COMPLETED|PATIENT_REGISTERED|CHECKLIST_RECORDED|VACCINATION_LOGGED|ENRICHMENT_COMPLETED|ACTION_CARD_ISSUED|OUTBREAK_ALERT_RAISED|RED_EMERGENCY|YELLOW_PHC|GREEN_HOME)\b/g;
+
+  function humanizeInlineText(text) {
+    if (text === null || text === undefined) return "";
+    return String(text).replace(INLINE_ENUM_RE, (match) => humanizeEnumToken(match) || match);
+  }
+
+  function humanizeOriginNode(nodeId) {
+    const id = String(nodeId || "").trim();
+    if (!id) return "--";
+    const peers = Array.isArray(state.lastPeers) ? state.lastPeers : [];
+    for (const p of peers) {
+      const m = p.manifest || p;
+      const pid = m.node_id || p.node_id;
+      if (pid === id) return humanizePeer(p);
+    }
+    const lower = id.toLowerCase();
+    if (lower.includes("watch")) {
+      return lower.includes("family") ? t("peerWatchFamily") : t("peerWatchChw");
+    }
+    if (lower.includes("phone") || lower.includes("asha")) return t("peerPhoneAsha");
+    if (lower.includes("hub") || lower.includes("phc")) return t("peerHub");
+    return id;
   }
 
   function humanizePeer(peer) {
@@ -657,6 +769,10 @@
       setText("narrative-text", `${t("scenarioDonePrefix")} ${localizedTitle}${suffix}`);
       return;
     }
+    if (ns.kind === "resetting") {
+      setText("narrative-text", t("resetting"));
+      return;
+    }
     if (ns.kind === "reset") {
       setText("narrative-text", t("resetDone"));
       return;
@@ -684,7 +800,7 @@
     if (band === "HIGH") return t("riskHigh");
     if (band === "MODERATE" || band === "MEDIUM") return t("riskModerate");
     if (band === "LOW") return t("riskLow");
-    return band || t("riskEnriched");
+    return band ? humanizeCode(band) : t("riskEnriched");
   }
 
   function translateEventType(eventType) {
@@ -693,13 +809,14 @@
       TRIAGE_COMPLETED: "evTriageCompleted",
       CHECKLIST_RECORDED: "evChecklistRecorded",
       VACCINATION_LOGGED: "evVaccinationLogged",
+      VOICE_NOTE: "evVoiceNote",
       VOICE_NOTE_RECORDED: "evVoiceNoteRecorded",
       ENRICHMENT_COMPLETED: "evEnrichmentCompleted",
       ACTION_CARD_ISSUED: "evActionCardIssued",
       OUTBREAK_ALERT_RAISED: "evOutbreakAlertRaised",
     };
     const key = map[eventType];
-    return key ? t(key) : eventType || "--";
+    return key ? t(key) : eventType ? humanizeCode(eventType) : "--";
   }
 
   function translateSyndrome(syndrome) {
@@ -790,6 +907,12 @@
       const key = node.getAttribute("data-i18n");
       if (key) node.textContent = t(key);
     }
+    if (state.enriching) {
+      setText("btn-stage-enrich", t("runningEnrichment"));
+    }
+    if (state.reconnecting) {
+      setText("sync-pulse-label", t("reconnecting"));
+    }
 
     const evCount = state.lastSummary ? state.lastSummary.event_count ?? 0 : 0;
     setText("stage-metric-events", `${evCount} ${t("eventsUnit")}`);
@@ -855,9 +978,10 @@
   }
 
   function formatCompactFieldValue(val) {
-    if (Array.isArray(val)) return val.join(", ");
+    if (Array.isArray(val)) return val.map((v) => formatCompactFieldValue(v)).join(", ");
     if (typeof val === "boolean") return val ? "true" : "false";
-    return String(val);
+    const str = String(val);
+    return humanizeEnumToken(str) || str;
   }
 
   function buildCrdtMergeProofCard(proof) {
@@ -890,7 +1014,7 @@
           el(
             "div",
             { className: "crdt-contrib-head" },
-            el("span", { className: "mono" }, edit.origin_node_id),
+            el("span", { className: "mono", title: edit.origin_node_id || "" }, humanizeOriginNode(edit.origin_node_id)),
             el("span", { className: "badge badge-accent mono" }, `HLC ${shortHlc}`)
           ),
           fieldChips.length > 0 ? el("div", { className: "crdt-kv-row" }, ...fieldChips) : null
@@ -1063,10 +1187,10 @@
               el(
                 "div",
                 { className: "hub-card-head" },
-                el("span", { className: "hub-card-title" }, card.title || card.card_id),
+                el("span", { className: "hub-card-title" }, humanizeInlineText(card.title || card.card_id)),
                 el("span", { className: badgeCls }, priorityLabel(prio))
               ),
-              card.summary ? el("div", { className: "hub-card-meta" }, card.summary) : null,
+              card.summary ? el("div", { className: "hub-card-meta" }, humanizeInlineText(card.summary)) : null,
               el("div", { className: "hub-card-meta" }, `${patName} → ${targetText}`)
             );
           });
@@ -1130,10 +1254,10 @@
             const dangerFlags = Array.isArray(item.candidate_danger_flags) ? item.candidate_danger_flags : [];
             const tagChips = [
               ...dangerFlags.slice(0, 3).map((flag) =>
-                el("span", { className: "badge badge-red mono" }, `${t("dangerFlagsLabel")}: ${flag}`)
+                el("span", { className: "badge badge-red mono" }, `${t("dangerFlagsLabel")}: ${humanizeCode(flag)}`)
               ),
               ...symptoms.slice(0, 3).map((sym) =>
-                el("span", { className: "crdt-kv-chip mono" }, `${t("symptomsLabel")}: ${sym}`)
+                el("span", { className: "crdt-kv-chip mono" }, `${t("symptomsLabel")}: ${humanizeCode(sym)}`)
               ),
             ];
 
@@ -1145,7 +1269,7 @@
               return el(
                 "div",
                 { className: "shap-row" },
-                el("span", { className: "mono shap-name", title: entry.name }, entry.name),
+                el("span", { className: "mono shap-name", title: entry.name }, humanizeCode(entry.name)),
                 el("div", { className: "shap-track" }, fill),
                 el(
                   "span",
@@ -1169,7 +1293,7 @@
                 ? el("div", { className: "transcript-snippet" }, `"${String(item.transcript).slice(0, 120)}"`)
                 : null,
               tagChips.length > 0 ? el("div", { className: "crdt-kv-row" }, ...tagChips) : null,
-              item.summary ? el("div", { className: "hub-card-meta" }, item.summary) : null,
+              item.summary ? el("div", { className: "hub-card-meta" }, humanizeInlineText(item.summary)) : null,
               rows.length > 0
                 ? el(
                     "div",
@@ -1227,7 +1351,7 @@
                 el("span", { className: "hub-card-title", title: item.patient_id || "" }, patName),
                 el("span", { className: badgeCls }, severityLabel(sev))
               ),
-              item.rationale ? el("div", { className: "hub-card-meta" }, item.rationale) : null
+              item.rationale ? el("div", { className: "hub-card-meta" }, humanizeInlineText(item.rationale)) : null
             );
           });
           if (triages.length > 4) {
@@ -1293,7 +1417,7 @@
             el(
               "div",
               { className: "stream-left" },
-              el("span", { className: "stream-origin mono" }, evt.origin_node_id || "--"),
+              el("span", { className: "stream-origin mono", title: evt.origin_node_id || "" }, humanizeOriginNode(evt.origin_node_id)),
               el("span", { className: "stream-meta" }, `${patName} · ${formatHlc(evt.hlc)}`)
             ),
             el("span", { className: "badge badge-accent", title: evt.event_type || "" }, translateEventType(evt.event_type))
@@ -1339,6 +1463,8 @@
       ]);
 
       if (summary) {
+        const wasReconnecting = state.reconnecting;
+        state.reconnecting = false;
         const nextCount = summary.event_count ?? 0;
         const nextHlc = summary.latest_hlc ? formatHlc(summary.latest_hlc) : "";
         if (
@@ -1346,10 +1472,19 @@
           (nextCount !== state.lastEventCount || nextHlc !== state.lastHlcKey)
         ) {
           triggerSyncPulse();
+        } else if (wasReconnecting && state.pulseTimer === null) {
+          setText("sync-pulse-label", t("syncIdle"));
+        }
+        if (wasReconnecting && state.narrativeState.kind === "error") {
+          state.narrativeState = { kind: "default" };
+          renderNarrative();
         }
         state.lastEventCount = nextCount;
         state.lastHlcKey = nextHlc;
         state.lastSummary = summary;
+      } else {
+        state.reconnecting = true;
+        setText("sync-pulse-label", t("reconnecting"));
       }
 
       if (peersResp !== null) {
@@ -1363,7 +1498,7 @@
       }
 
       renderHubBrain();
-      setText("hub-last-tick", new Date().toLocaleTimeString());
+      setText("hub-last-tick", state.reconnecting ? t("reconnecting") : new Date().toLocaleTimeString());
     } finally {
       state.polling = false;
     }
@@ -1377,6 +1512,8 @@
   }
 
   async function runScenario(scenarioId) {
+    if (state.demoBusy) return;
+    state.demoBusy = true;
     const controls = document.querySelectorAll("[data-scenario], #btn-stage-reset");
     for (const c of controls) c.disabled = true;
     state.narrativeState = { kind: "scenario_loading", scenarioId };
@@ -1407,13 +1544,18 @@
       state.narrativeState = { kind: "error" };
       renderNarrative();
     } finally {
+      state.demoBusy = false;
       for (const c of controls) c.disabled = false;
     }
   }
 
   async function resetStage() {
+    if (state.demoBusy) return;
+    state.demoBusy = true;
     const controls = document.querySelectorAll("[data-scenario], #btn-stage-reset");
     for (const c of controls) c.disabled = true;
+    state.narrativeState = { kind: "resetting" };
+    renderNarrative();
     try {
       const res = await fetch("/api/v1/demo/reset", { method: "POST" });
       if (!res.ok) {
@@ -1430,11 +1572,14 @@
       state.narrativeState = { kind: "error" };
       renderNarrative();
     } finally {
+      state.demoBusy = false;
       for (const c of controls) c.disabled = false;
     }
   }
 
   async function runEnrichment() {
+    if (state.enriching) return;
+    state.enriching = true;
     const btn = document.getElementById("btn-stage-enrich");
     if (btn) {
       btn.disabled = true;
@@ -1453,6 +1598,7 @@
       state.narrativeState = { kind: "error" };
       renderNarrative();
     } finally {
+      state.enriching = false;
       if (btn) {
         btn.disabled = false;
         btn.textContent = t("runEnrichment");

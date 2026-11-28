@@ -10,6 +10,8 @@ import {
   DEFAULT_HUB_URL,
   MemoryWatchBlobQueue,
   WatchSyncClient,
+  isValidHubUrl,
+  normalizeHubUrl,
   resolveDefaultHubUrl,
   uploadWatchBlobIfMissing,
 } from "../../src/sync";
@@ -602,6 +604,69 @@ describe("resolveDefaultHubUrl (T3-05)", () => {
       );
     } finally {
       delete g.AarogyaNativeBridge;
+    }
+  });
+
+  it("normalizes bare IP:port, trims whitespace, strips trailing slashes, and validates Hub URLs", () => {
+    expect(normalizeHubUrl("  192.168.36.182:8000/  ")).toBe("http://192.168.36.182:8000");
+    expect(normalizeHubUrl("http://192.168.1.5:8000///")).toBe("http://192.168.1.5:8000");
+    expect(normalizeHubUrl("https://hub.example.org/")).toBe("https://hub.example.org");
+    expect(normalizeHubUrl("   ")).toBe(DEFAULT_HUB_URL);
+
+    expect(isValidHubUrl("192.168.36.182:8000/")).toBe(true);
+    expect(isValidHubUrl("https://hub.local:8443")).toBe(true);
+    expect(isValidHubUrl("")).toBe(false);
+    expect(isValidHubUrl("not a valid url")).toBe(false);
+    expect(isValidHubUrl("ftp://192.168.1.5:21")).toBe(false);
+
+    expect(
+      resolveDefaultHubUrl(
+        { protocol: "http:", origin: "http://192.168.36.182:8000", hostname: "192.168.36.182" },
+        "  192.168.36.182:8000/ ",
+      ),
+    ).toBe("http://192.168.36.182:8000");
+  });
+
+  it("replaces cryptic Failed to fetch and AbortError messages with human-readable retry guidance", async () => {
+    const store = new WatchStore({
+      nodeId: "watch-err-01",
+      initialMode: "CHW_COMPANION",
+      storage: new MemoryStorage(),
+      nowMs: () => 1_750_000_050_000,
+    });
+
+    const netFailClient = new WatchSyncClient(
+      store,
+      " 192.168.36.182:8000/ ",
+      async () => {
+        throw new TypeError("Failed to fetch");
+      },
+    );
+    expect(netFailClient.getHubUrl()).toBe("http://192.168.36.182:8000");
+    const offlineRes = await netFailClient.syncNow();
+    expect(offlineRes.ok).toBe(false);
+    if (!offlineRes.ok) {
+      expect(offlineRes.status).toBe("offline");
+      expect(offlineRes.reason).not.toBe("Failed to fetch");
+      expect(offlineRes.reason).toContain("http://192.168.36.182:8000");
+      expect(offlineRes.reason).toContain("Sync Now");
+    }
+
+    const abortClient = new WatchSyncClient(
+      store,
+      "http://192.168.36.182:8000",
+      async () => {
+        const err = new Error("The user aborted a request.");
+        err.name = "AbortError";
+        throw err;
+      },
+    );
+    const timeoutRes = await abortClient.syncNow();
+    expect(timeoutRes.ok).toBe(false);
+    if (!timeoutRes.ok) {
+      expect(timeoutRes.status).toBe("offline");
+      expect(timeoutRes.reason).toContain("timed out");
+      expect(timeoutRes.reason).toContain("Sync Now");
     }
   });
 });

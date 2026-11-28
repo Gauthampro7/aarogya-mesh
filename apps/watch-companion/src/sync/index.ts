@@ -18,6 +18,8 @@ export {
 export {
   DEFAULT_HUB_URL,
   WatchSyncClient,
+  isValidHubUrl,
+  normalizeHubUrl,
   resolveDefaultHubUrl,
   type BrowserLocationLike,
   type VoiceSosInput,

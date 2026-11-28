@@ -17,6 +17,8 @@
       autoOn: "Auto-Refresh: ON",
       autoOff: "Auto-Refresh: OFF",
       refresh: "Refresh",
+      refreshing: "Refreshing...",
+      reconnecting: "Reconnecting...",
       demoBarLabel: "Live Scenarios",
       scenarioMaternal: "Maternal Watch SOS",
       scenarioVoice: "Offline Voice → AI",
@@ -36,13 +38,13 @@
       scenarioStepsLabel: "Clinical Flow",
       dismiss: "Dismiss",
       archTitle: "Compute-Proportional 3-Tier Autonomous Mesh",
-      tier0Label: "Tier-0 Watch",
+      tier0Label: "Watch (Tier 0)",
       tier0Desc: "Standalone SOS & Reminders for Normal Public & CHW",
       tier0CapTag: "1-Tap SOS · BLE/LAN",
-      tier1Label: "Tier-1 Phone",
+      tier1Label: "ASHA Phone (Tier 1)",
       tier1Desc: "WHO IMNCI Deterministic Triage + Offline IndexedDB",
       tier1CapTag: "Voice Queue · Delta Sync",
-      tier2Label: "Tier-2 Hub",
+      tier2Label: "PHC Hub (Tier 2)",
       tier2Desc: "Whisper + SLM + LightGBM SHAP + EWMA Outbreak",
       activePeersShort: "active",
       hubOnlineShort: "online",
@@ -116,27 +118,27 @@
       peersUnit: "peers",
       moreCount: "+{n} more",
       villagePrefix: "Village:",
-      sevRed: "RED_EMERGENCY",
-      sevYellow: "YELLOW_PHC",
-      sevGreen: "GREEN_HOME",
-      prioCritical: "CRITICAL",
-      prioHigh: "HIGH",
-      prioMedium: "MEDIUM",
-      prioLow: "LOW",
-      statusOpen: "OPEN",
-      statusAcknowledged: "ACKNOWLEDGED",
-      statusCompleted: "COMPLETED",
-      statusDismissed: "DISMISSED",
-      riskHigh: "HIGH",
-      riskModerate: "MODERATE",
-      riskLow: "LOW",
-      riskEnriched: "ENRICHED",
-      enrPending: "PENDING",
-      enrCompleted: "COMPLETED",
-      enrNotNeeded: "NOT_NEEDED",
-      enrFailed: "FAILED",
-      watchModeChw: "CHW_COMPANION",
-      watchModeFamily: "PATIENT_FAMILY",
+      sevRed: "RED Emergency",
+      sevYellow: "YELLOW PHC",
+      sevGreen: "GREEN Home",
+      prioCritical: "Critical",
+      prioHigh: "High",
+      prioMedium: "Medium",
+      prioLow: "Low",
+      statusOpen: "Open",
+      statusAcknowledged: "Acknowledged",
+      statusCompleted: "Completed",
+      statusDismissed: "Dismissed",
+      riskHigh: "High Risk",
+      riskModerate: "Moderate Risk",
+      riskLow: "Low Risk",
+      riskEnriched: "Enriched",
+      enrPending: "Pending",
+      enrCompleted: "Completed",
+      enrNotNeeded: "Not Needed",
+      enrFailed: "Failed",
+      watchModeChw: "ASHA Companion",
+      watchModeFamily: "Patient / Family",
       expandPayload: "Click to expand JSON payload",
       collapsePayload: "Click to collapse JSON payload",
       proofCloudRpcs: "0 Cloud RPCs",
@@ -156,6 +158,37 @@
       dangerFlagsLabel: "Danger Flags",
       shapPosLegend: "+ Risk-driving",
       shapNegLegend: "- Protective",
+      connectCardTitle: "Connect Mobile / Watch to This Hub",
+      connectCardDesc: "Make sure your phone or watch is on the same Wi-Fi/hotspot, then enter this address or scan the QR code.",
+      copyAddress: "Copy Address",
+      copiedAddress: "Copied!",
+      copyFailed: "Copy failed",
+      showQrCode: "Show QR Code",
+      hideQrCode: "Hide QR Code",
+      qrScanTitle: "Scan from Field PWA or Android App",
+      qrScanHint: "Open Sync → Set Hub Address → Scan QR to fill this address automatically.",
+      clinicalPanelDesc: "Urgent cases, ASHA follow-up cards, AI voice-note risk scores, and village outbreak alerts.",
+      patientsRosterDesc: "Patients synced from field phones, connected mesh devices, and Hub hardware status.",
+      kpiMlAnalytics: "ML Analytics & Sync",
+      pendingShort: "pending:",
+      syncedFeedTitle: "Immediately Synced Feed",
+      syncedFeedDesc: "Newest registrations, triage checks, voice notes, checklists & vaccines from field devices.",
+      justSynced: "Just Synced",
+      noSyncedEvents: "No clinical events synced yet. Launch a scenario or sync a field device.",
+      originPhone: "Phone",
+      originWatch: "Watch",
+      originHub: "Hub",
+      mlAnalyticsTitle: "Recent ML Analytics (GBDT + TreeSHAP)",
+      mlAnalyticsDesc: "WHO Clinical Safety Floor + 28-Tree GBDT risk scoring & SHAP feature attributions.",
+      clinicalOpsTitle: "Clinical Triage, Action Cards & Outbreaks",
+      sysDetailsTitle: "System Architecture & Hardware Details",
+      showDetails: "Show Details",
+      hideDetails: "Hide Details",
+      whoFloorLabel: "WHO Clinical Floor",
+      laptopMlLabel: "Laptop ML",
+      laptopMlModel: "28-Tree GBDT + TreeSHAP",
+      recommendedFollowUpLabel: "Recommended Follow-up",
+      matchedRulesLabel: "Rules",
     },
     hi: {
       appTitle: "आरोग्य संजाल — प्राथमिक स्वास्थ्य केन्द्र नियन्त्रण कक्ष",
@@ -168,6 +201,8 @@
       autoOn: "स्वतः अद्यतन: सक्रिय",
       autoOff: "स्वतः अद्यतन: निष्क्रिय",
       refresh: "अद्यतन करें",
+      refreshing: "अद्यतन हो रहा है...",
+      reconnecting: "पुनः संयोजन हो रहा है...",
       demoBarLabel: "प्रदर्शन परिदृश्य",
       scenarioMaternal: "मातृ घटिका आपात संकेत",
       scenarioVoice: "अन्तर्जाल-रहित स्वर → प्रज्ञा",
@@ -307,6 +342,37 @@
       dangerFlagsLabel: "संकट संकेत",
       shapPosLegend: "+ संकट वर्धक",
       shapNegLegend: "- संरक्षक कारक",
+      connectCardTitle: "दूरभाष एवं घटिका को मुख्य केन्द्र से संयोजित करें",
+      connectCardDesc: "सुनिश्चित करें कि आपका दूरभाष इसी स्थानीय संजाल पर है, फिर यह पता भरें अथवा द्वि-आयामी कूट (QR) क्रमवीक्षण करें।",
+      copyAddress: "पता प्रतिलिपि करें",
+      copiedAddress: "प्रतिलिपि पूर्ण!",
+      copyFailed: "प्रतिलिपि विफल",
+      showQrCode: "QR कूट दिखाएँ",
+      hideQrCode: "QR कूट छिपाएँ",
+      qrScanTitle: "क्षेत्रीय दूरभाष अनुप्रयोग से क्रमवीक्षण करें",
+      qrScanHint: "समन्वय पृष्ठ पर जाकर मुख्य केन्द्र पता में QR क्रमवीक्षण चुनें; यह पता स्वतः भर जाएगा।",
+      clinicalPanelDesc: "आपातकालीन प्रकरण, आशा कार्यकर्ता कार्य पत्रक, स्वर टिप्पणी संकट मूल्यांकन एवं ग्राम प्रकोप चेतावनी।",
+      patientsRosterDesc: "क्षेत्रीय दूरभाष से समन्वित रोगी, सक्रिय संजाल उपकरण एवं मुख्य केन्द्र स्थिति।",
+      kpiMlAnalytics: "प्रज्ञा विश्लेषण एवं समन्वय",
+      pendingShort: "प्रतीक्षारत:",
+      syncedFeedTitle: "तत्काल समन्वित घटनाएँ",
+      syncedFeedDesc: "क्षेत्रीय उपकरणों से नवीनतम पंजीकरण, वर्गीकरण, स्वर टिप्पणी, परीक्षण सूची एवं टीकाकरण।",
+      justSynced: "अभी समन्वित",
+      noSyncedEvents: "अभी तक कोई चिकित्सकीय घटना समन्वित नहीं हुई है।",
+      originPhone: "दूरभाष",
+      originWatch: "घटिका",
+      originHub: "मुख्य केन्द्र",
+      mlAnalyticsTitle: "नवीनतम प्रज्ञा विश्लेषण (GBDT + TreeSHAP)",
+      mlAnalyticsDesc: "विश्व स्वास्थ्य सुरक्षा स्तर + २८-वृक्ष GBDT संकट मूल्यांकन एवं SHAP कारण विश्लेषण।",
+      clinicalOpsTitle: "चिकित्सकीय वर्गीकरण, कार्य पत्रक एवं प्रकोप",
+      sysDetailsTitle: "तन्त्र संरचना एवं उपकरण विवरण",
+      showDetails: "विवरण दिखाएँ",
+      hideDetails: "विवरण छिपाएँ",
+      whoFloorLabel: "WHO सुरक्षा स्तर",
+      laptopMlLabel: "मुख्य केन्द्र प्रज्ञा",
+      laptopMlModel: "२८-वृक्ष GBDT + TreeSHAP",
+      recommendedFollowUpLabel: "अनुशंसित अनुवर्ती क्रिया",
+      matchedRulesLabel: "नियम",
     },
     kn: {
       appTitle: "ಆರೋಗ್ಯ ಮೆಶ್ — ಪ್ರಾಥಮಿಕ ಆರೋಗ್ಯ ಕೇಂದ್ರ (PHC) ನಿಯಂತ್ರಣ ಕೇಂದ್ರ",
@@ -319,6 +385,8 @@
       autoOn: "ಸ್ವಯಂ ನವೀಕರಣ: ಚಾಲೂ",
       autoOff: "ಸ್ವಯಂ ನವೀಕರಣ: ಬಂದ್",
       refresh: "ನವೀಕರಿಸಿ",
+      refreshing: "ನವೀಕರಿಸಲಾಗುತ್ತಿದೆ...",
+      reconnecting: "ಮರುಸಂಪರ್ಕಿಸಲಾಗುತ್ತಿದೆ...",
       demoBarLabel: "ನೇರ ಪ್ರದರ್ಶನ ಸನ್ನಿವೇಶಗಳು",
       scenarioMaternal: "ಗರ್ಭಿಣಿ ವಾಚ್ ತುರ್ತು ಕರೆ",
       scenarioVoice: "ಆಫ್‌ಲೈನ್ ಧ್ವನಿ → AI",
@@ -458,6 +526,37 @@
       dangerFlagsLabel: "ಅಪಾಯದ ಸೂಚನೆಗಳು",
       shapPosLegend: "+ ಅಪಾಯ ಹೆಚ್ಚಿಸುವ",
       shapNegLegend: "- ರಕ್ಷಣಾತ್ಮಕ",
+      connectCardTitle: "ಮೊಬೈಲ್ / ವಾಚ್ ಅನ್ನು ಈ ಕೇಂದ್ರಕ್ಕೆ ಸಂಪರ್ಕಿಸಿ",
+      connectCardDesc: "ನಿಮ್ಮ ಫೋನ್ ಅಥವಾ ವಾಚ್ ಒಂದೇ Wi-Fi/ಹಾಟ್‌ಸ್ಪಾಟ್‌ನಲ್ಲಿರುವುದನ್ನು ಖಚಿತಪಡಿಸಿ, ನಂತರ ಈ ವಿಳಾಸವನ್ನು ನಮೂದಿಸಿ ಅಥವಾ QR ಸ್ಕ್ಯಾನ್ ಮಾಡಿ.",
+      copyAddress: "ವಿಳಾಸ ನಕಲಿಸಿ",
+      copiedAddress: "ನಕಲಿಸಲಾಗಿದೆ!",
+      copyFailed: "ನಕಲು ವಿಫಲವಾಗಿದೆ",
+      showQrCode: "QR ಕೋಡ್ ತೋರಿಸಿ",
+      hideQrCode: "QR ಕೋಡ್ ಮರೆಮಾಡಿ",
+      qrScanTitle: "ಫೀಲ್ಡ್ PWA ಅಥವಾ Android ಆ್ಯಪ್‌ನಿಂದ ಸ್ಕ್ಯಾನ್ ಮಾಡಿ",
+      qrScanHint: "Sync → Hub ವಿಳಾಸ ಹೊಂದಿಸಿ → QR ಸ್ಕ್ಯಾನ್ ತೆರೆಯಿರಿ; ವಿಳಾಸ ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಭರ್ತಿಯಾಗುತ್ತದೆ.",
+      clinicalPanelDesc: "ತುರ್ತು ಪ್ರಕರಣಗಳು, ಆಶಾ ಕಾರ್ಯ ಕಾರ್ಡ್‌ಗಳು, ಧ್ವನಿ ಟಿಪ್ಪಣಿ ಅಪಾಯ ಅಂಕಗಳು ಮತ್ತು ಗ್ರಾಮ ಪ್ರಕೋಪ ಎಚ್ಚರಿಕೆಗಳು.",
+      patientsRosterDesc: "ಫೀಲ್ಡ್ ಫೋನ್‌ಗಳಿಂದ ಸಿಂಕ್ ಆದ ರೋಗಿಗಳು, ಸಂಪರ್ಕಿತ ಸಾಧನಗಳು ಮತ್ತು ಕೇಂದ್ರದ ಯಂತ್ರಾಂಶ ಸ್ಥಿತಿ.",
+      kpiMlAnalytics: "ML ವಿಶ್ಲೇಷಣೆ ಮತ್ತು ಸಿಂಕ್",
+      pendingShort: "ಬಾಕಿ:",
+      syncedFeedTitle: "ತಕ್ಷಣ ಸಿಂಕ್ ಆದ ದಾಖಲೆಗಳು",
+      syncedFeedDesc: "ಫೀಲ್ಡ್ ಸಾಧನಗಳಿಂದ ಇತ್ತೀಚಿನ ನೋಂದಣಿ, ವರ್ಗೀಕರಣ, ಧ್ವನಿ ಟಿಪ್ಪಣಿ, ತಪಾಸಣೆ ಮತ್ತು ಲಸಿಕೆಗಳು.",
+      justSynced: "ಇದೀಗ ಸಿಂಕ್ ಆಗಿದೆ",
+      noSyncedEvents: "ಇನ್ನೂ ಯಾವುದೇ ವೈದ್ಯಕೀಯ ಘಟನೆಗಳು ಸಿಂಕ್ ಆಗಿಲ್ಲ.",
+      originPhone: "ಫೋನ್",
+      originWatch: "ವಾಚ್",
+      originHub: "ಮುಖ್ಯ ಕೇಂದ್ರ",
+      mlAnalyticsTitle: "ಇತ್ತೀಚಿನ ML ವಿಶ್ಲೇಷಣೆ (GBDT + TreeSHAP)",
+      mlAnalyticsDesc: "WHO ಸುರಕ್ಷತಾ ಮಾನದಂಡ + 28-Tree GBDT ಅಪಾಯ ಅಂಕ ಮತ್ತು SHAP ಕಾರಣಗಳು.",
+      clinicalOpsTitle: "ವೈದ್ಯಕೀಯ ವರ್ಗೀಕರಣ, ಕ್ರಿಯಾ ಕಾರ್ಡ್‌ಗಳು ಮತ್ತು ಪ್ರಕೋಪ",
+      sysDetailsTitle: "ವ್ಯವಸ್ಥೆಯ ವಿನ್ಯಾಸ ಮತ್ತು ಹಾರ್ಡ್‌ವೇರ್ ವಿವರಗಳು",
+      showDetails: "ವಿವರ ತೋರಿಸಿ",
+      hideDetails: "ವಿವರ ಮರೆಮಾಡಿ",
+      whoFloorLabel: "WHO ಸುರಕ್ಷತಾ ಮಾನದಂಡ",
+      laptopMlLabel: "ಲ್ಯಾಪ್‌ಟಾಪ್ ML",
+      laptopMlModel: "28-Tree GBDT + TreeSHAP",
+      recommendedFollowUpLabel: "ಶಿಫಾರಸು ಮಾಡಿದ ಮುಂದಿನ ಕ್ರಮ",
+      matchedRulesLabel: "ನಿಯಮಗಳು",
     },
     ta: {
       appTitle: "ஆரோக்கிய வலையமைப்பு — ஆரம்ப சுகாதார நிலைய (PHC) கட்டுப்பாட்டு மையம்",
@@ -470,6 +569,8 @@
       autoOn: "தானியங்கி புதுப்பிப்பு: இயக்கம்",
       autoOff: "தானியங்கி புதுப்பிப்பு: நிறுத்தம்",
       refresh: "புதுப்பி",
+      refreshing: "புதுப்பிக்கப்படுகிறது...",
+      reconnecting: "மீண்டும் இணைக்கப்படுகிறது...",
       demoBarLabel: "நேரடி செயல்முறை காட்சிகள்",
       scenarioMaternal: "கர்ப்பிணி கடிகார அவசர அழைப்பு",
       scenarioVoice: "இணையமில்லா குரல் → AI",
@@ -609,6 +710,37 @@
       dangerFlagsLabel: "அபாயக் குறிகள்",
       shapPosLegend: "+ அபாயத்தை உயர்த்தும்",
       shapNegLegend: "- பாதுகாக்கும்",
+      connectCardTitle: "மொபைல் / கடிகாரத்தை இந்த மையத்துடன் இணைக்கவும்",
+      connectCardDesc: "உங்கள் தொலைபேசி ஒரே Wi-Fi/ஹாட்ஸ்பாட்டில் உள்ளதா என்பதை உறுதிசெய்து, இந்த முகவரியை உள்ளிடவும் அல்லது QR குறியீட்டை ஸ்கேன் செய்யவும்.",
+      copyAddress: "முகவரியை நகலெடு",
+      copiedAddress: "நகலெடுக்கப்பட்டது!",
+      copyFailed: "நகலெடுப்பு தோல்வி",
+      showQrCode: "QR குறியீட்டைக் காட்டு",
+      hideQrCode: "QR குறியீட்டை மறை",
+      qrScanTitle: "Field PWA அல்லது Android செயலியில் ஸ்கேன் செய்யவும்",
+      qrScanHint: "Sync → Hub முகவரி → QR ஸ்கேன் என்பதைத் திறக்கவும்; முகவரி தானாக நிரப்பப்படும்.",
+      clinicalPanelDesc: "அவசர நோயாளிகள், ஆஷா செயல் அட்டைகள், குரல் குறிப்பு அபாய மதிப்பெண் மற்றும் கிராம நோய் எச்சரிக்கைகள்.",
+      patientsRosterDesc: "தொலைபேசிகளில் இருந்து ஒத்திசைக்கப்பட்ட நோயாளிகள், இணைந்த சாதனங்கள் மற்றும் மைய நிலை.",
+      kpiMlAnalytics: "ML பகுப்பாய்வு & ஒத்திசைவு",
+      pendingShort: "நிலுவை:",
+      syncedFeedTitle: "உடனடியாக ஒத்திசைக்கப்பட்டவை",
+      syncedFeedDesc: "களச் சாதனங்களிலிருந்து புதிய பதிவுகள், வகைப்பாடு, குரல் குறிப்பு, சரிபார்ப்பு & தடுப்பூசிகள்.",
+      justSynced: "இப்போது ஒத்திசைக்கப்பட்டது",
+      noSyncedEvents: "இன்னும் மருத்துவ நிகழ்வுகள் எதுவும் ஒத்திசைக்கப்படவில்லை.",
+      originPhone: "தொலைபேசி",
+      originWatch: "கடிகாரம்",
+      originHub: "தலைமை மையம்",
+      mlAnalyticsTitle: "சமீபத்திய ML பகுப்பாய்வு (GBDT + TreeSHAP)",
+      mlAnalyticsDesc: "WHO பாதுகாப்புத் தளம் + 28-Tree GBDT அபாய மதிப்பீடு & SHAP காரணிகள்.",
+      clinicalOpsTitle: "மருத்துவ வகைப்பாடு, நடவடிக்கை அட்டைகள் & பரவல்",
+      sysDetailsTitle: "அமைப்பு வடிவமைப்பு & வன்பொருள் விவரங்கள்",
+      showDetails: "விவரங்களைக் காட்டு",
+      hideDetails: "விவரங்களை மறை",
+      whoFloorLabel: "WHO பாதுகாப்புத் தளம்",
+      laptopMlLabel: "மைய ML",
+      laptopMlModel: "28-Tree GBDT + TreeSHAP",
+      recommendedFollowUpLabel: "பரிந்துரைக்கப்பட்ட தொடர் நடவடிக்கை",
+      matchedRulesLabel: "விதிகள்",
     },
   };
 
@@ -753,8 +885,18 @@
     theme: "dark",
     autoRefresh: true,
     timerId: null,
+    refreshing: false,
+    reconnecting: false,
+    enriching: false,
+    demoBusy: false,
+    copyFeedbackKey: null,
+    copyTimerId: null,
     selectedEventType: "",
     eventsExpanded: false,
+    sysDetailsExpanded: false,
+    crdtExpanded: false,
+    qrExpanded: false,
+    hubLanUrl: "",
     activeScenario: null,
     scenarioCatalog: {},
     narrativeDismissed: false,
@@ -861,6 +1003,17 @@
       );
     }
     return el("span", { className: "item-card-title mono" }, idStr || fallbackId || "--");
+  }
+
+  function humanizeToken(raw) {
+    return String(raw || "")
+      .replace(/[_-]+/g, " ")
+      .replace(/\b\w/g, (ch) => ch.toUpperCase())
+      .replace(/\bBp\b/g, "BP")
+      .replace(/\bSpo2\b/g, "SpO2")
+      .replace(/\bPhc\b/g, "PHC")
+      .replace(/\bWho\b/g, "WHO")
+      .trim();
   }
 
   function formatMoreCounter(remaining) {
@@ -980,19 +1133,31 @@
     setText("app-title", t("appTitle"));
     setText("app-subtitle", t("appSubtitle"));
     setText("badge-tier", t("badgeTier"));
-    setText("badge-offline-text", t("badgeOffline"));
+    setText("badge-offline-text", state.reconnecting ? t("reconnecting") : t("badgeOffline"));
     syncLangSwitcher();
     setText("btn-theme", state.theme === "dark" ? t("themeLight") : t("themeDark"));
     setText("btn-autorefresh", state.autoRefresh ? t("autoOn") : t("autoOff"));
-    setText("btn-refresh", t("refresh"));
+    setText("btn-refresh", state.refreshing ? t("refreshing") : t("refresh"));
     setText("btn-toggle-events", state.eventsExpanded ? t("hideEventLog") : t("showEventLog"));
+    setText("btn-toggle-sys-details", state.sysDetailsExpanded ? t("hideDetails") : t("showDetails"));
+    setText("btn-toggle-crdt", state.crdtExpanded ? t("hideDetails") : t("showDetails"));
+    setText("btn-toggle-qr", state.qrExpanded ? t("hideQrCode") : t("showQrCode"));
 
     const nodes = document.querySelectorAll("[data-i18n]");
     for (const node of nodes) {
       const key = node.getAttribute("data-i18n");
       if (key) node.textContent = t(key);
     }
+    if (state.enriching) {
+      setText("btn-run-enrichment", t("runningEnrichment"));
+    }
+    if (state.copyFeedbackKey) {
+      setText("btn-copy-hub-url", t(state.copyFeedbackKey));
+    }
     setText("btn-toggle-events", state.eventsExpanded ? t("hideEventLog") : t("showEventLog"));
+    setText("btn-toggle-sys-details", state.sysDetailsExpanded ? t("hideDetails") : t("showDetails"));
+    setText("btn-toggle-crdt", state.crdtExpanded ? t("hideDetails") : t("showDetails"));
+    setText("btn-toggle-qr", state.qrExpanded ? t("hideQrCode") : t("showQrCode"));
 
     if (state.enrichmentStatusKey) {
       const status = document.getElementById("enrichment-status");
@@ -1023,13 +1188,29 @@
     }
 
     const httpUrl =
-      (connectInfo && (connectInfo.http_url || connectInfo.base_url || connectInfo.lan_url)) ||
+      (connectInfo &&
+        (connectInfo.preferred_url ||
+          connectInfo.http_url ||
+          connectInfo.base_url ||
+          connectInfo.lan_url)) ||
+      (summary && summary.hub_lan_url) ||
       window.location.origin;
     const wsUrl =
       (connectInfo && (connectInfo.ws_url || connectInfo.websocket_url)) ||
       `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/ws/mesh`;
+    state.hubLanUrl = httpUrl;
     setText("connect-url", httpUrl);
     setText("connect-ws", wsUrl);
+    setText("hub-lan-url", httpUrl);
+    setText("hub-qr-url-caption", httpUrl);
+    const qrImg = document.getElementById("hub-qr-img");
+    if (qrImg) {
+      const nextSrc = `/api/v1/hub-qr.svg?text=${encodeURIComponent(httpUrl)}`;
+      if (qrImg.getAttribute("data-qr-url") !== httpUrl) {
+        qrImg.setAttribute("data-qr-url", httpUrl);
+        qrImg.src = nextSrc;
+      }
+    }
   }
 
   function renderKpis(summary) {
@@ -1112,7 +1293,7 @@
     const limit = 6;
     const cards = combined.slice(0, limit).map((item) => {
       const style = severityStyle(item.severity);
-      const rules = Array.isArray(item.matched_rules) ? item.matched_rules.join(", ") : "";
+      const rules = Array.isArray(item.matched_rules) ? item.matched_rules.map(humanizeToken).join(", ") : "";
       return el(
         "div",
         { className: style.card },
@@ -1289,12 +1470,127 @@
     setText("dash-proof-bloat", t("proofZeroBloat"));
   }
 
+  function classifyOriginTier(originNodeId) {
+    const id = String(originNodeId || "").toLowerCase();
+    if (id.includes("watch")) return t("originWatch");
+    if (id.includes("phone") || id.includes("asha") || id.includes("mobile")) return t("originPhone");
+    return t("originHub");
+  }
+
+  function formatEventTimestamp(hlc) {
+    if (!hlc || !hlc.wall_ms) return "--";
+    try {
+      return new Date(Number(hlc.wall_ms)).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+    } catch (_err) {
+      return String(hlc.wall_ms);
+    }
+  }
+
+  function summarizeSyncedEvent(evt) {
+    const p = evt.payload || {};
+    if (evt.event_type === "PATIENT_REGISTERED") {
+      const parts = [];
+      if (p.village_id) parts.push(`${t("villagePrefix")} ${p.village_id}`);
+      if (p.is_pregnant) {
+        parts.push(
+          p.gestational_weeks
+            ? `${t("pregnantWeeks")} · ${p.gestational_weeks} ${t("weeksShort")}`
+            : t("pregnantWeeks")
+        );
+      }
+      return parts.join(" · ");
+    }
+    if (evt.event_type === "TRIAGE_COMPLETED") {
+      const sev = p.severity ? translateSeverity(p.severity) : "";
+      const rat = p.rationale ? String(p.rationale) : "";
+      return [sev, rat].filter(Boolean).join(" — ");
+    }
+    if (evt.event_type === "VOICE_NOTE_RECORDED") {
+      const lang = p.language ? `lang=${p.language}` : "";
+      const enr = evt.enrichment_state ? translateEnrichmentState(evt.enrichment_state) : "";
+      return [lang, enr].filter(Boolean).join(" · ");
+    }
+    if (evt.event_type === "CHECKLIST_RECORDED") {
+      return p.checklist_type || p.summary || p.notes || "";
+    }
+    if (evt.event_type === "VACCINATION_LOGGED") {
+      return p.vaccine_name || p.vaccine || p.dose || "";
+    }
+    return "";
+  }
+
+  function renderSyncedFeed(events, nameMap) {
+    const container = document.getElementById("synced-feed-list");
+    if (!container) return;
+
+    const clinicalTypes = new Set([
+      "PATIENT_REGISTERED",
+      "TRIAGE_COMPLETED",
+      "VOICE_NOTE_RECORDED",
+      "CHECKLIST_RECORDED",
+      "VACCINATION_LOGGED",
+    ]);
+    const list = (Array.isArray(events) ? events : []).filter((evt) =>
+      clinicalTypes.has(evt.event_type)
+    );
+    setText("synced-feed-count", list.length);
+
+    if (list.length === 0) {
+      container.replaceChildren(el("p", { className: "empty-state" }, t("noSyncedEvents")));
+      return;
+    }
+
+    const limit = 7;
+    const cards = list.slice(0, limit).map((evt, idx) => {
+      const summaryLine = summarizeSyncedEvent(evt);
+      const originTier = classifyOriginTier(evt.origin_node_id);
+      const tsText = formatEventTimestamp(evt.hlc);
+
+      return el(
+        "div",
+        { className: "item-card synced-card" },
+        el(
+          "div",
+          { className: "item-card-head" },
+          buildPatientHeadingNode(evt.patient_id, nameMap, evt.event_id),
+          el(
+            "div",
+            { className: "synced-badges" },
+            idx < 3 ? el("span", { className: "badge just-synced-badge" }, t("justSynced")) : null,
+            el("span", { className: "badge badge-accent" }, translateEventType(evt.event_type))
+          )
+        ),
+        summaryLine ? el("div", { className: "item-card-meta" }, summaryLine) : null,
+        el(
+          "div",
+          { className: "synced-foot" },
+          el(
+            "span",
+            { className: "badge origin-pill mono" },
+            `${originTier} · ${evt.origin_node_id || "--"}`
+          ),
+          el("span", { className: "synced-time mono" }, tsText)
+        )
+      );
+    });
+    if (list.length > limit) {
+      cards.push(el("span", { className: "more-counter" }, formatMoreCounter(list.length - limit)));
+    }
+    container.replaceChildren(...cards);
+  }
+
   function renderCrdtMergeProofs(proofs) {
     const section = document.getElementById("crdt-merge-proof-section");
     const container = document.getElementById("crdt-merge-proof-list");
+    const collapsible = document.getElementById("crdt-collapsible");
     if (!section || !container) return;
 
     const list = Array.isArray(proofs) ? proofs : [];
+    setText("crdt-proof-count-badge", list.length);
     if (list.length === 0) {
       section.classList.add("hidden");
       container.replaceChildren();
@@ -1302,6 +1598,9 @@
     }
 
     section.classList.remove("hidden");
+    if (collapsible) {
+      collapsible.classList.toggle("hidden", !state.crdtExpanded);
+    }
     const cards = list.slice(0, 3).map((proof) => {
       const latestByOrigin = new Map();
       for (const c of proof.contributions || []) {
@@ -1371,11 +1670,26 @@
     container.replaceChildren(...cards);
   }
 
-  function renderShap(enrichments, nameMap) {
+  function renderShap(enrichments, nameMap, pendingCount) {
     const container = document.getElementById("shap-list");
+    const enrichBtn = document.getElementById("btn-run-enrichment");
+    if (enrichBtn && !enrichBtn.disabled) {
+      const pending = Number(pendingCount || 0);
+      enrichBtn.classList.toggle("btn-highlight", pending > 0);
+      enrichBtn.textContent =
+        pending > 0 ? `${t("runEnrichment")} (${pending})` : t("runEnrichment");
+    }
     if (!container) return;
 
-    const list = Array.isArray(enrichments) ? enrichments : [];
+    const rawList = Array.isArray(enrichments) ? enrichments : [];
+    const list = [...rawList].sort((a, b) => {
+      const aw = a && a.hlc ? Number(a.hlc.wall_ms || 0) : 0;
+      const bw = b && b.hlc ? Number(b.hlc.wall_ms || 0) : 0;
+      if (bw !== aw) return bw - aw;
+      const al = a && a.hlc ? Number(a.hlc.logical || 0) : 0;
+      const bl = b && b.hlc ? Number(b.hlc.logical || 0) : 0;
+      return bl - al;
+    });
     setText("shap-count-badge", list.length);
     if (list.length === 0) {
       container.replaceChildren(el("p", { className: "empty-state" }, t("noShap")));
@@ -1388,44 +1702,54 @@
         (a, b) => Math.abs(b.value) - Math.abs(a.value)
       );
       const maxAbs = Math.max(0.01, ...entries.map((entry) => Math.abs(entry.value)));
-      const scoreText =
-        item.risk_score !== null && item.risk_score !== undefined
-          ? `${t("riskScore")}: ${Number(item.risk_score).toFixed(2)}`
-          : translateRiskBand(item.risk_band);
+      const hasScore = item.risk_score !== null && item.risk_score !== undefined;
+      const pctScore = hasScore ? `${Math.round(Number(item.risk_score) * 100)}%` : "--";
+      const bandText = translateRiskBand(item.risk_band);
 
-      const stageLabels = [
-        item.audio_source === "blob" ? t("stageAudio") : t("stageAsr"),
-        t("stageSlm"),
-        item.triage_severity ? t("stageTriage") : null,
-        t("stageShap"),
-      ].filter(Boolean);
-      const pipelineNodes = [];
-      stageLabels.forEach((lbl, idx) => {
-        if (idx > 0) pipelineNodes.push(el("span", { className: "pipeline-arrow" }, "→"));
-        pipelineNodes.push(el("span", { className: "pipeline-stage mono" }, lbl));
-      });
+      const payload = (item && item.payload) || {};
+      const provenance =
+        payload.reasoning_provenance && typeof payload.reasoning_provenance === "object"
+          ? payload.reasoning_provenance
+          : {};
+      const triageObj =
+        payload.triage_assessment && typeof payload.triage_assessment === "object"
+          ? payload.triage_assessment
+          : {};
+      const structuredObj =
+        payload.structured_note && typeof payload.structured_note === "object"
+          ? payload.structured_note
+          : {};
+      const matchedRules = Array.isArray(triageObj.matched_rules)
+        ? triageObj.matched_rules.map(humanizeToken).join(", ")
+        : "";
+      const whoProtocol = provenance.clinical_protocol || matchedRules || "WHO IMNCI";
+      const whoChipText = matchedRules && provenance.clinical_protocol
+        ? `${t("whoFloorLabel")}: ${provenance.clinical_protocol} (${matchedRules})`
+        : `${t("whoFloorLabel")}: ${whoProtocol}`;
+      const mlModelText = `${t("laptopMlLabel")}: ${item.risk_backend || t("laptopMlModel")}`;
 
       const symptoms = Array.isArray(item.extracted_symptoms) ? item.extracted_symptoms : [];
       const dangerFlags = Array.isArray(item.candidate_danger_flags) ? item.candidate_danger_flags : [];
       const tagChips = [
         ...dangerFlags.slice(0, 4).map((flag) =>
-          el("span", { className: "badge badge-red mono" }, `${t("dangerFlagsLabel")}: ${flag}`)
+          el("span", { className: "badge badge-red" }, `${t("dangerFlagsLabel")}: ${humanizeToken(flag)}`)
         ),
         ...symptoms.slice(0, 4).map((sym) =>
-          el("span", { className: "meta-chip mono" }, `${t("symptomsLabel")}: ${sym}`)
+          el("span", { className: "meta-chip" }, `${t("symptomsLabel")}: ${humanizeToken(sym)}`)
         ),
       ];
 
-      const barNodes = entries.slice(0, 6).map((entry) => {
+      const barNodes = entries.slice(0, 5).map((entry) => {
         const pct = Math.min(100, Math.round((Math.abs(entry.value) / maxAbs) * 100));
         const isPos = entry.value >= 0;
         const fillClass = isPos ? "shap-fill-pos" : "shap-fill-neg";
         const fill = el("div", { className: fillClass });
         fill.style.width = `${pct}%`;
+        const label = humanizeToken(entry.name);
         return el(
           "div",
           { className: "shap-bar-row" },
-          el("span", { className: "mono shap-feature", title: entry.name }, entry.name),
+          el("span", { className: "shap-feature", title: entry.name }, label),
           el("div", { className: "shap-track" }, fill),
           el(
             "span",
@@ -1435,26 +1759,41 @@
         );
       });
 
-      const badgeClass =
-        item.risk_band === "RED_EMERGENCY" || item.risk_band === "HIGH"
-          ? "badge badge-red"
+      const isHighRisk =
+        item.risk_band === "RED_EMERGENCY" ||
+        item.risk_band === "HIGH" ||
+        (hasScore && Number(item.risk_score) >= 0.7);
+      const badgeClass = isHighRisk
+        ? "badge badge-red"
+        : item.risk_band === "LOW" || item.risk_band === "GREEN_HOME"
+          ? "badge badge-green"
           : "badge badge-yellow";
+      const followUp = structuredObj.recommended_follow_up || item.summary || "";
 
       return el(
         "div",
-        { className: "item-card" },
+        { className: isHighRisk ? "item-card ml-card ml-card-high" : "item-card ml-card" },
         el(
           "div",
           { className: "item-card-head" },
           buildPatientHeadingNode(item.patient_id, nameMap, item.ref_event_id || item.event_id),
-          el("span", { className: badgeClass }, scoreText)
+          el(
+            "div",
+            { className: "ml-score-hero" },
+            hasScore ? el("span", { className: "ml-score-pct mono" }, pctScore) : null,
+            el("span", { className: badgeClass }, bandText)
+          )
         ),
-        el("div", { className: "pipeline-trace" }, ...pipelineNodes),
+        el(
+          "div",
+          { className: "ml-provenance-row" },
+          el("span", { className: "ml-source-chip ml-source-who" }, whoChipText),
+          el("span", { className: "ml-source-chip ml-source-gbdt" }, mlModelText)
+        ),
         item.transcript
           ? el("div", { className: "transcript-snippet" }, `"${String(item.transcript).slice(0, 140)}"`)
           : null,
         tagChips.length > 0 ? el("div", { className: "meta-chips" }, ...tagChips) : null,
-        item.summary ? el("div", { className: "item-card-meta" }, item.summary) : null,
         barNodes.length > 0
           ? el(
               "div",
@@ -1463,7 +1802,15 @@
               el("span", { className: "shap-legend-neg" }, t("shapNegLegend"))
             )
           : null,
-        ...barNodes
+        ...barNodes,
+        followUp
+          ? el(
+              "div",
+              { className: "ml-followup-box" },
+              el("strong", null, `${t("recommendedFollowUpLabel")}: `),
+              followUp
+            )
+          : null
       );
     });
     if (list.length > limit) {
@@ -1672,7 +2019,16 @@
     const banner = document.getElementById("demo-status-banner");
     if (!banner) return;
     const ds = state.demoStatus;
-    if (!ds) return;
+    if (!ds) {
+      if (state.reconnecting) {
+        banner.classList.remove("hidden");
+        banner.replaceChildren(el("span", null, t("reconnecting")));
+      } else {
+        banner.classList.add("hidden");
+        banner.replaceChildren();
+      }
+      return;
+    }
     let message = "";
     let meta = null;
     if (ds.kind === "loading") {
@@ -1706,6 +2062,8 @@
   }
 
   async function runScenario(scenarioId) {
+    if (state.demoBusy) return;
+    state.demoBusy = true;
     const buttons = document.querySelectorAll("[data-scenario], #btn-demo-reset");
     for (const b of buttons) b.disabled = true;
     state.demoStatus = { kind: "loading", scenarioId };
@@ -1736,11 +2094,14 @@
       state.demoStatus = { kind: "unavailable", code: null };
       renderDemoStatus();
     } finally {
+      state.demoBusy = false;
       for (const b of buttons) b.disabled = false;
     }
   }
 
   async function resetDemo() {
+    if (state.demoBusy) return;
+    state.demoBusy = true;
     const buttons = document.querySelectorAll("[data-scenario], #btn-demo-reset");
     for (const b of buttons) b.disabled = true;
     state.demoStatus = { kind: "resetting" };
@@ -1764,6 +2125,7 @@
       state.demoStatus = { kind: "unavailable", code: null };
       renderDemoStatus();
     } finally {
+      state.demoBusy = false;
       for (const b of buttons) b.disabled = false;
     }
   }
@@ -1778,29 +2140,55 @@
     }
   }
 
-  async function refreshAll() {
-    const eventsQuery = state.selectedEventType
-      ? `/api/v1/events?limit=50&event_type=${encodeURIComponent(state.selectedEventType)}`
-      : "/api/v1/events?limit=50";
-
-    const [summary, peersResp, connectInfo, events] = await Promise.all([
-      fetchJsonSafe("/api/v1/dashboard/summary"),
-      fetchJsonSafe("/api/v1/peers"),
-      fetchJsonSafe("/api/v1/discovery/connect-info"),
-      fetchJsonSafe(eventsQuery),
-    ]);
-
-    if (summary) state.lastSummary = summary;
-    if (peersResp !== null) {
-      state.lastPeers = Array.isArray(peersResp) ? peersResp : peersResp.peers || [];
-    } else if (summary && Array.isArray(summary.peers)) {
-      state.lastPeers = summary.peers;
+  async function refreshAll(opts) {
+    if (state.refreshing) return;
+    const manual = Boolean(opts && opts.manual);
+    state.refreshing = true;
+    const refreshBtn = document.getElementById("btn-refresh");
+    if (manual && refreshBtn) {
+      refreshBtn.disabled = true;
+      refreshBtn.textContent = t("refreshing");
     }
-    if (connectInfo) state.lastConnectInfo = connectInfo;
-    if (Array.isArray(events)) state.lastEvents = events;
 
-    renderAll();
-    setText("last-updated", new Date().toLocaleTimeString());
+    try {
+      const eventsQuery = state.selectedEventType
+        ? `/api/v1/events?limit=50&event_type=${encodeURIComponent(state.selectedEventType)}`
+        : "/api/v1/events?limit=50";
+
+      const [summary, peersResp, connectInfo, events] = await Promise.all([
+        fetchJsonSafe("/api/v1/dashboard/summary"),
+        fetchJsonSafe("/api/v1/peers"),
+        fetchJsonSafe("/api/v1/discovery/connect-info"),
+        fetchJsonSafe(eventsQuery),
+      ]);
+
+      if (summary) {
+        state.reconnecting = false;
+        state.lastSummary = summary;
+        if (state.demoStatus && state.demoStatus.kind === "unavailable") {
+          state.demoStatus = null;
+        }
+      } else {
+        state.reconnecting = true;
+      }
+
+      if (peersResp !== null) {
+        state.lastPeers = Array.isArray(peersResp) ? peersResp : peersResp.peers || [];
+      } else if (summary && Array.isArray(summary.peers)) {
+        state.lastPeers = summary.peers;
+      }
+      if (connectInfo) state.lastConnectInfo = connectInfo;
+      if (Array.isArray(events)) state.lastEvents = events;
+
+      renderAll();
+      setText("last-updated", state.reconnecting ? t("reconnecting") : new Date().toLocaleTimeString());
+    } finally {
+      state.refreshing = false;
+      if (refreshBtn) {
+        refreshBtn.disabled = false;
+        refreshBtn.textContent = t("refresh");
+      }
+    }
   }
 
   function renderAll() {
@@ -1811,17 +2199,24 @@
     renderScenarioNarrative();
     renderManifest(state.lastSummary, state.lastConnectInfo);
     renderKpis(state.lastSummary);
+    renderSyncedFeed(state.lastEvents, nameMap);
     renderPatients(patients);
     renderCrdtMergeProofs(state.lastSummary ? state.lastSummary.crdt_merge_proofs : []);
     renderTriageHistory(state.lastSummary, nameMap);
     renderPeers(state.lastPeers);
     renderOutbreaks(state.lastSummary ? state.lastSummary.outbreak_alerts : []);
-    renderShap(state.lastSummary ? state.lastSummary.enrichments : [], nameMap);
+    renderShap(
+      state.lastSummary ? state.lastSummary.enrichments : [],
+      nameMap,
+      state.lastSummary ? state.lastSummary.pending_enrichments : 0
+    );
     renderActionCards(state.lastSummary ? state.lastSummary.action_cards : [], nameMap);
     renderEvents(state.lastEvents, nameMap);
   }
 
   async function triggerEnrichment() {
+    if (state.enriching) return;
+    state.enriching = true;
     const btn = document.getElementById("btn-run-enrichment");
     const status = document.getElementById("enrichment-status");
     if (btn) {
@@ -1846,6 +2241,7 @@
         status.textContent = t(state.enrichmentStatusKey);
       }
     } finally {
+      state.enriching = false;
       if (btn) {
         btn.disabled = false;
         btn.textContent = t("runEnrichment");
@@ -1915,7 +2311,7 @@
     const refreshBtn = document.getElementById("btn-refresh");
     if (refreshBtn) {
       refreshBtn.addEventListener("click", () => {
-        refreshAll();
+        refreshAll({ manual: true });
       });
     }
 
@@ -1954,6 +2350,28 @@
       });
     }
 
+    const toggleSysBtn = document.getElementById("btn-toggle-sys-details");
+    const sysCollapsible = document.getElementById("sys-details-collapsible");
+    if (toggleSysBtn && sysCollapsible) {
+      toggleSysBtn.addEventListener("click", () => {
+        state.sysDetailsExpanded = !state.sysDetailsExpanded;
+        sysCollapsible.classList.toggle("hidden", !state.sysDetailsExpanded);
+        toggleSysBtn.setAttribute("aria-expanded", String(state.sysDetailsExpanded));
+        toggleSysBtn.textContent = state.sysDetailsExpanded ? t("hideDetails") : t("showDetails");
+      });
+    }
+
+    const toggleCrdtBtn = document.getElementById("btn-toggle-crdt");
+    const crdtCollapsible = document.getElementById("crdt-collapsible");
+    if (toggleCrdtBtn && crdtCollapsible) {
+      toggleCrdtBtn.addEventListener("click", () => {
+        state.crdtExpanded = !state.crdtExpanded;
+        crdtCollapsible.classList.toggle("hidden", !state.crdtExpanded);
+        toggleCrdtBtn.setAttribute("aria-expanded", String(state.crdtExpanded));
+        toggleCrdtBtn.textContent = state.crdtExpanded ? t("hideDetails") : t("showDetails");
+      });
+    }
+
     const scenarioBtns = document.querySelectorAll("[data-scenario]");
     for (const btn of scenarioBtns) {
       btn.addEventListener("click", () => {
@@ -1966,6 +2384,69 @@
     if (resetBtn) {
       resetBtn.addEventListener("click", () => {
         resetDemo();
+      });
+    }
+
+    const copyUrlBtn = document.getElementById("btn-copy-hub-url");
+    if (copyUrlBtn) {
+      copyUrlBtn.addEventListener("click", async () => {
+        const urlText = state.hubLanUrl || (document.getElementById("hub-lan-url")?.textContent || "");
+        if (!urlText || urlText === "--") return;
+        let copied = false;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          try {
+            await navigator.clipboard.writeText(urlText);
+            copied = true;
+          } catch (_err) {
+            copied = false;
+          }
+        }
+        if (!copied) {
+          const ta = document.createElement("textarea");
+          ta.value = urlText;
+          ta.setAttribute("readonly", "readonly");
+          ta.style.position = "fixed";
+          ta.style.left = "-9999px";
+          ta.style.top = "0";
+          document.body.appendChild(ta);
+          ta.focus();
+          ta.select();
+          ta.setSelectionRange(0, urlText.length);
+          try {
+            copied = document.execCommand("copy");
+          } catch (_err) {
+            copied = false;
+          }
+          document.body.removeChild(ta);
+        }
+        const feedbackKey = copied ? "copiedAddress" : "copyFailed";
+        state.copyFeedbackKey = feedbackKey;
+        copyUrlBtn.textContent = t(feedbackKey);
+        if (state.copyTimerId !== null) {
+          window.clearTimeout(state.copyTimerId);
+        }
+        state.copyTimerId = window.setTimeout(() => {
+          state.copyFeedbackKey = null;
+          state.copyTimerId = null;
+          copyUrlBtn.textContent = t("copyAddress");
+        }, 1800);
+      });
+    }
+
+    const toggleQrBtn = document.getElementById("btn-toggle-qr");
+    const qrPanel = document.getElementById("hub-qr-panel");
+    const qrImg = document.getElementById("hub-qr-img");
+    if (toggleQrBtn && qrPanel) {
+      toggleQrBtn.addEventListener("click", () => {
+        state.qrExpanded = !state.qrExpanded;
+        qrPanel.classList.toggle("hidden", !state.qrExpanded);
+        qrPanel.style.display = state.qrExpanded ? "flex" : "none";
+        toggleQrBtn.setAttribute("aria-expanded", String(state.qrExpanded));
+        toggleQrBtn.textContent = state.qrExpanded ? t("hideQrCode") : t("showQrCode");
+        if (state.qrExpanded && qrImg) {
+          const urlText = state.hubLanUrl || window.location.origin;
+          qrImg.src = `/api/v1/hub-qr.svg?text=${encodeURIComponent(urlText)}`;
+        }
       });
     }
   }

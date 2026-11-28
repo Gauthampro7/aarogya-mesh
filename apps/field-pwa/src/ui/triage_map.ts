@@ -58,6 +58,20 @@ export const VITAL_SPECS = {
   diarrhea_days: { min: 0, max: 365, integer: true, step: 1 },
 } as const;
 export type NumField = keyof typeof VITAL_SPECS;
+export type TempUnit = "F" | "C";
+export const TEMP_F_BOUNDS = { min: 86, max: 113, step: 0.1 } as const;
+
+export const fahrenheitToCelsius = (f: number): number => Math.round((((f - 32) * 5) / 9) * 100) / 100;
+export const celsiusToFahrenheit = (c: number): number => Math.round(((c * 9) / 5 + 32) * 10) / 10;
+
+/** Convert a displayed temperature string when toggling between °F and °C. */
+export function convertTempDisplay(raw: string, toUnit: TempUnit): string {
+  const s = raw.trim();
+  if (s === "") return "";
+  const n = Number(s);
+  if (!Number.isFinite(n)) return raw;
+  return toUnit === "C" ? String(Math.round((((n - 32) * 5) / 9) * 10) / 10) : String(celsiusToFahrenheit(n));
+}
 
 export interface TriageFormState {
   /** null until the CHW (or a selected registered patient) chooses one: no silent default. */
@@ -65,6 +79,10 @@ export interface TriageFormState {
   patientId: string | null;
   /** Raw text of numeric inputs ("" = not measured). */
   nums: Partial<Record<NumField, string>>;
+  /** Unit of `nums.temperature_c` when entered in the UI (defaults to "C" for legacy callers). */
+  tempUnit?: TempUnit;
+  /** Optional comma/newline-separated unlisted symptoms entered by the CHW. */
+  additionalSymptoms?: string;
   isPregnant: boolean;
   isPostpartum: boolean;
   dangerFlags: string[];
@@ -141,26 +159,53 @@ export function parseNum(field: NumField, raw: string | undefined): number | und
   return n;
 }
 
+/** Parse temperature text in `unit` (°F or °C), returning Celsius for `TriageInput`. */
+export function parseTemp(raw: string | undefined, unit: TempUnit = "C"): number | undefined | NumError {
+  if (unit === "C") return parseNum("temperature_c", raw);
+  const s = (raw ?? "").trim();
+  if (s === "") return undefined;
+  const n = Number(s);
+  if (!Number.isFinite(n)) return { field: "temperature_c", reason: "NaN" };
+  if (n < TEMP_F_BOUNDS.min || n > TEMP_F_BOUNDS.max) return { field: "temperature_c", reason: "range" };
+  return fahrenheitToCelsius(n);
+}
+
+/** Split comma/semicolon/newline-separated additional symptoms into unique trimmed entries. */
+export function parseAdditionalSymptoms(raw: string | undefined): string[] {
+  if (!raw) return [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const part of raw.split(/[,;\n]+/)) {
+    const t = part.trim();
+    if (t && !seen.has(t)) {
+      seen.add(t);
+      out.push(t);
+    }
+  }
+  return out;
+}
+
 export function buildTriageInput(s: TriageFormState, nowMs: number = Date.now()): BuildResult {
   if (s.category === null) return { ok: false, errors: [], needsCategory: true };
   const hidden = hiddenTickedFlags(s);
   if (hidden.length) return { ok: false, errors: [], hiddenFlags: hidden };
   const errors: NumError[] = [];
   const num = (f: NumField) => {
-    const v = parseNum(f, s.nums[f]);
+    const v = f === "temperature_c" ? parseTemp(s.nums[f], s.tempUnit ?? "C") : parseNum(f, s.nums[f]);
     if (v !== undefined && typeof v === "object") {
       errors.push(v);
       return undefined;
     }
     return v;
   };
+  const mergedSymptoms = [...new Set([...s.symptomFlags, ...parseAdditionalSymptoms(s.additionalSymptoms)])];
   const input: TriageInput = {
     patient_id: s.patientId,
     mode: "FULL_ASSESSMENT",
     patient_category: s.category,
     assessed_at_ms: nowMs,
     danger_signs: [...s.dangerFlags],
-    symptoms: [...s.symptomFlags],
+    symptoms: mergedSymptoms,
   };
   const set = <K extends keyof TriageInput>(k: K, v: TriageInput[K] | undefined) => {
     if (v !== undefined) input[k] = v;

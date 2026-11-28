@@ -1,6 +1,7 @@
 /** Glue: periodic / opportunistic sync scheduling (best effort, never awaited by user actions). */
 import type { SyncEngine } from "../sync";
 import { setLastSync } from "./settings";
+import { classifySyncFailure } from "./sync_logic";
 
 export const SYNC_INTERVAL_MS = 30_000;
 
@@ -11,14 +12,17 @@ const HELD_PREFIX = "heldClips:";
 export const heldClipsFromDetail = (detail: string): number =>
   detail.startsWith(HELD_PREFIX) ? Number(detail.slice(HELD_PREFIX.length)) || 0 : 0;
 
-export function runSync(engine: SyncEngine): Promise<void> {
+export function runSync(
+  engine: SyncEngine,
+  isOnline: () => boolean = () => (typeof navigator === "undefined" ? true : navigator.onLine),
+): Promise<void> {
   return engine.syncNow().then((res) => {
     const st = engine.status;
     const held = engine.heldClips;
     setLastSync({
       at: Date.now(),
       ok: res !== null && held === 0, // clips still waiting is not plain success
-      detail: res === null ? st : held ? `${HELD_PREFIX}${held}` : "ok",
+      detail: res === null ? classifySyncFailure(st, engine.lastError, isOnline()) : held ? `${HELD_PREFIX}${held}` : "ok",
     });
   }, () => undefined);
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPatient, type RegisterForm } from "../../src/ui/register_logic";
+import { ageFromDob, buildPatient, type RegisterForm } from "../../src/ui/register_logic";
 
 const form = (o: Partial<RegisterForm> = {}): RegisterForm => ({
   full_name: "Asha Devi", sex: "F", dob: "", age_months: "14", village_id: "V1", household_id: "", is_pregnant: false,
@@ -33,5 +33,40 @@ describe("buildPatient age_unit", () => {
     }
     const edge = build({ age_months: "1500", age_unit: "months" });
     expect(edge.ok && edge.patient.age_months).toBe(1500);
+  });
+});
+
+describe("ageFromDob", () => {
+  it("returns months when age is under 24 months", () => {
+    expect(ageFromDob("2025-11-23", now)).toEqual({ value: 12, unit: "months" });
+    expect(ageFromDob("2026-11-23", now)).toEqual({ value: 0, unit: "months" });
+    expect(ageFromDob("2024-12-23", now)).toEqual({ value: 23, unit: "months" });
+  });
+  it("returns years when age is 24 months or more", () => {
+    expect(ageFromDob("2024-11-23", now)).toEqual({ value: 2, unit: "years" });
+    expect(ageFromDob("2000-01-01", now)).toEqual({ value: 26, unit: "years" });
+  });
+  it("returns null for empty, invalid, or future dates", () => {
+    expect(ageFromDob("", now)).toBeNull();
+    expect(ageFromDob("not-a-date", now)).toBeNull();
+    expect(ageFromDob("2026-11-24", now)).toBeNull();
+  });
+});
+
+describe("buildPatient initial_symptoms & clinical_notes", () => {
+  it("merges quick-select tags and comma-separated other symptoms into metadata", () => {
+    const r = build({
+      initial_symptoms: ["fever", "cough"],
+      other_symptoms: "rash, cough, joint pain ",
+      clinical_notes: "  mild chills since yesterday  ",
+    });
+    expect(r.ok && r.patient.metadata).toEqual({
+      initial_symptoms: ["fever", "cough", "rash", "joint pain"],
+      clinical_notes: "mild chills since yesterday",
+    });
+  });
+  it("keeps metadata empty when optional notes and symptoms are blank", () => {
+    const r = build({ initial_symptoms: [], other_symptoms: " , ", clinical_notes: "   " });
+    expect(r.ok && r.patient.metadata).toEqual({});
   });
 });

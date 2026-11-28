@@ -16,6 +16,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
@@ -24,6 +25,7 @@ import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.os.VibratorManager;
 import android.text.InputType;
+import android.text.TextUtils;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -43,6 +45,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -50,7 +53,12 @@ import android.window.OnBackInvokedCallback;
 import android.window.OnBackInvokedDispatcher;
 
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.URI;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
 
@@ -64,7 +72,11 @@ import java.util.Locale;
  */
 public class MainActivity extends Activity {
     private static final String TAG = "AarogyaMainActivity";
+    private static final String PREFS_NAME = "aarogya_prefs";
+    private static final String PREF_HUB_URL = "hub_url";
     private static final int REQ_RECORD_AUDIO = 1001;
+    private static final int REQ_CAMERA = 1002;
+    private static final int REQ_QR_SCAN = 1003;
 
     private static final int COLOR_BG_SLATE = 0xFF0F172A;
     private static final int COLOR_DIVIDER = 0xFF1E293B;
@@ -80,6 +92,10 @@ public class MainActivity extends Activity {
     private boolean watchLoaded = false;
     private AarogyaNativeBridge nativeBridge;
     private PermissionRequest pendingWebPermissionRequest;
+    private AlertDialog qrScannerDialog;
+    private WebView qrScannerWebView;
+    private String pendingQrLang;
+    private EditText pendingQrTargetInput;
 
     private TextView tabPhone;
     private TextView tabWatch;
@@ -205,13 +221,23 @@ public class MainActivity extends Activity {
         ));
 
         // Slim native mode switcher bar (ASHA Field <-> Watch / SOS + Lang + Set Hub URL pill)
+        // Wrapped in HorizontalScrollView with fillViewport=true so long Indic labels never clip or overlap on narrow screens.
+        HorizontalScrollView topBarScroll = new HorizontalScrollView(this);
+        topBarScroll.setFillViewport(true);
+        topBarScroll.setHorizontalScrollBarEnabled(false);
+        topBarScroll.setBackgroundColor(COLOR_BG_SLATE);
+        topBarScroll.setLayoutParams(new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+
         LinearLayout topBar = new LinearLayout(this);
         topBar.setOrientation(LinearLayout.HORIZONTAL);
         topBar.setGravity(Gravity.CENTER_VERTICAL);
         topBar.setBackgroundColor(COLOR_BG_SLATE);
         topBar.setPadding(dp(8), dp(4), dp(8), dp(4));
-        topBar.setLayoutParams(new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
+        topBar.setLayoutParams(new HorizontalScrollView.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         ));
 
@@ -242,13 +268,15 @@ public class MainActivity extends Activity {
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
+        watchLp.setMarginEnd(dp(5));
         topBar.addView(tabWatch, watchLp);
 
         View spacer = new View(this);
-        topBar.addView(spacer, new LinearLayout.LayoutParams(0, 1, 1.0f));
+        LinearLayout.LayoutParams spacerLp = new LinearLayout.LayoutParams(0, 1, 1.0f);
+        topBar.addView(spacer, spacerLp);
 
         langToggle = createPillButton();
-        langToggle.setPadding(dp(8), dp(3), dp(8), dp(3));
+        langToggle.setPadding(dp(8), dp(4), dp(8), dp(4));
         langToggle.setBackground(pillDrawable(COLOR_TAB_INACTIVE, 0xFF475569));
         langToggle.setTextColor(0xFFF8FAFC);
         langToggle.setOnClickListener(new View.OnClickListener() {
@@ -268,7 +296,11 @@ public class MainActivity extends Activity {
         hubTelemetryPill.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10.5f);
         hubTelemetryPill.setTypeface(Typeface.DEFAULT_BOLD);
         hubTelemetryPill.setTextColor(COLOR_BADGE_TEXT);
-        hubTelemetryPill.setPadding(dp(8), dp(3), dp(8), dp(3));
+        hubTelemetryPill.setSingleLine(true);
+        hubTelemetryPill.setMaxLines(1);
+        hubTelemetryPill.setEllipsize(TextUtils.TruncateAt.END);
+        hubTelemetryPill.setGravity(Gravity.CENTER);
+        hubTelemetryPill.setPadding(dp(8), dp(4), dp(8), dp(4));
         hubTelemetryPill.setClickable(true);
         hubTelemetryPill.setFocusable(true);
         hubTelemetryPill.setBackground(pillDrawable(0xFF042F2E, COLOR_TEAL_ACTIVE));
@@ -280,7 +312,8 @@ public class MainActivity extends Activity {
         });
         topBar.addView(hubTelemetryPill);
 
-        root.addView(topBar);
+        topBarScroll.addView(topBar);
+        root.addView(topBarScroll);
 
         View divider = new View(this);
         divider.setBackgroundColor(COLOR_DIVIDER);
@@ -315,10 +348,13 @@ public class MainActivity extends Activity {
 
     private TextView createPillButton() {
         TextView btn = new TextView(this);
-        btn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f);
+        btn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10.5f);
         btn.setTypeface(Typeface.DEFAULT_BOLD);
         btn.setGravity(Gravity.CENTER);
-        btn.setPadding(dp(10), dp(3), dp(10), dp(3));
+        btn.setSingleLine(true);
+        btn.setMaxLines(1);
+        btn.setEllipsize(TextUtils.TruncateAt.END);
+        btn.setPadding(dp(8), dp(4), dp(8), dp(4));
         btn.setClickable(true);
         btn.setFocusable(true);
         return btn;
@@ -553,6 +589,7 @@ public class MainActivity extends Activity {
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
                 syncLocaleFromWebView(view);
+                injectSavedHubUrl(view);
             }
         });
 
@@ -602,7 +639,11 @@ public class MainActivity extends Activity {
                 new ValueCallback<String>() {
                     @Override
                     public void onReceiveValue(String value) {
-                        showHubUrlAlertDialog(unquoteJsString(value));
+                        String current = unquoteJsString(value);
+                        if (current.isEmpty()) {
+                            current = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getString(PREF_HUB_URL, "");
+                        }
+                        showHubUrlAlertDialog(normalizeHubUrl(current));
                     }
                 }
         );
@@ -640,35 +681,51 @@ public class MainActivity extends Activity {
         }
         box.addView(input);
 
+        TextView scanQrBtn = createPillButton();
+        scanQrBtn.setText(tr(lang, "Scan QR Code", "QR कोड स्कैन करें", "QR ಕೋಡ್ ಸ್ಕ್ಯಾನ್ ಮಾಡಿ", "QR குறியீட்டை ஸ்கேன் செய்"));
+        scanQrBtn.setTextColor(0xFF5EEAD4);
+        scanQrBtn.setBackground(pillDrawable(0xFF042F2E, COLOR_TEAL_ACTIVE));
+        scanQrBtn.setPadding(dp(12), dp(8), dp(12), dp(8));
+        LinearLayout.LayoutParams scanLp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        scanLp.topMargin = dp(8);
+        scanQrBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startQrScanFlow(lang, input);
+            }
+        });
+        box.addView(scanQrBtn, scanLp);
+
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(tr(lang, "Set Hub URL", "स्वास्थ्य केन्द्र का संजाल पता", "ಕೇಂದ್ರದ ಜಾಲ ವಿಳಾಸ ಹೊಂದಿಸಿ", "நிலைய இணைய முகவரி அமைக்கவும்"));
         builder.setView(box);
         builder.setPositiveButton(tr(lang, "Save", "संचित करें", "ಉಳಿಸಿ", "சேமி"), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                String raw = input.getText() != null ? input.getText().toString().trim() : "";
-                while (raw.endsWith("/")) {
-                    raw = raw.substring(0, raw.length() - 1);
-                }
-                if (raw.isEmpty()) {
+                String raw = input.getText() != null ? input.getText().toString() : "";
+                String normalized = normalizeHubUrl(raw);
+                if (normalized.isEmpty()) {
                     clearSavedHubUrl(lang);
                     return;
                 }
-                if (!isValidHttpUrl(raw)) {
+                if (!isValidHttpUrl(normalized)) {
                     Toast.makeText(
                             MainActivity.this,
                             tr(
                                     lang,
-                                    "Enter a valid http:// or https:// URL",
-                                    "कृपया मान्य http:// अथवा https:// पता भरें",
-                                    "ದಯವಿಟ್ಟು ಮಾನ್ಯವಾದ http:// ಅಥವಾ https:// ವಿಳಾಸ ನಮೂದಿಸಿ",
-                                    "சரியான http:// அல்லது https:// முகவரியை உள்ளிடவும்"
+                                    "Enter a valid Hub URL (e.g. 192.168.1.14:8000)",
+                                    "कृपया मान्य संजाल पता भरें (जैसे 192.168.1.14:8000)",
+                                    "ದಯವಿಟ್ಟು ಮಾನ್ಯವಾದ ಕೇಂದ್ರ ವಿಳಾಸ ನಮೂದಿಸಿ (ಉದಾ. 192.168.1.14:8000)",
+                                    "சரியான நிலைய முகவரியை உள்ளிடவும் (எ.கா. 192.168.1.14:8000)"
                             ),
                             Toast.LENGTH_SHORT
                     ).show();
                     return;
                 }
-                applySavedHubUrl(raw, lang);
+                applySavedHubUrl(normalized, lang);
             }
         });
         builder.setNeutralButton(tr(lang, "Clear", "हटाएँ", "ತೆರವುಗೊಳಿಸಿ", "அழி"), new DialogInterface.OnClickListener() {
@@ -682,23 +739,54 @@ public class MainActivity extends Activity {
     }
 
     private void applySavedHubUrl(String url, String lang) {
-        String escaped = escapeJsSingleQuoted(url);
+        String normalized = normalizeHubUrl(url);
+        getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                .edit()
+                .putString(PREF_HUB_URL, normalized)
+                .apply();
+        String escaped = escapeJsSingleQuoted(normalized);
         String js = "(function(){try{"
                 + "localStorage.setItem('aarogya.hubUrl','" + escaped + "');"
                 + "localStorage.setItem('aarogya.watch.hubUrl','" + escaped + "');"
                 + "var el=document.querySelector('input[name=\"hub\"],input[data-hub-url]');"
                 + "if(el){el.value='" + escaped + "';el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));}"
+                + "window.dispatchEvent(new StorageEvent('storage',{key:'aarogya.hubUrl',newValue:'" + escaped + "'}));"
+                + "window.dispatchEvent(new StorageEvent('storage',{key:'aarogya.watch.hubUrl',newValue:'" + escaped + "'}));"
                 + "window.dispatchEvent(new Event('aarogya:hub-url-changed'));"
                 + "}catch(e){}})();";
         evalOnLoadedWebViews(js);
         Toast.makeText(
                 this,
-                tr(lang, "Hub URL saved: ", "संजाल पता संचित हुआ: ", "ಕೇಂದ್ರದ ವಿಳಾಸ ಉಳಿಸಲಾಗಿದೆ: ", "நிலைய முகவரி சேமிக்கப்பட்டது: ") + url,
+                tr(lang, "Hub URL saved: ", "संजाल पता संचित हुआ: ", "ಕೇಂದ್ರದ ವಿಳಾಸ ಉಳಿಸಲಾಗಿದೆ: ", "நிலைய முகவரி சேமிக்கப்பட்டது: ") + normalized,
                 Toast.LENGTH_SHORT
         ).show();
     }
 
+    private void injectSavedHubUrl(WebView view) {
+        if (view == null) {
+            return;
+        }
+        String saved = normalizeHubUrl(getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getString(PREF_HUB_URL, ""));
+        if (saved.isEmpty()) {
+            return;
+        }
+        String escaped = escapeJsSingleQuoted(saved);
+        String js = "(function(){try{"
+                + "var cur=localStorage.getItem('aarogya.hubUrl')||localStorage.getItem('aarogya.watch.hubUrl')||'';"
+                + "localStorage.setItem('aarogya.hubUrl','" + escaped + "');"
+                + "localStorage.setItem('aarogya.watch.hubUrl','" + escaped + "');"
+                + "var el=document.querySelector('input[name=\"hub\"],input[data-hub-url]');"
+                + "if(el&&el.value!=='" + escaped + "'){el.value='" + escaped + "';el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));}"
+                + "if(cur!=='" + escaped + "'){window.dispatchEvent(new Event('aarogya:hub-url-changed'));}"
+                + "}catch(e){}})();";
+        view.evaluateJavascript(js, null);
+    }
+
     private void clearSavedHubUrl(String lang) {
+        getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                .edit()
+                .remove(PREF_HUB_URL)
+                .apply();
         String js = "(function(){try{"
                 + "localStorage.removeItem('aarogya.hubUrl');"
                 + "localStorage.removeItem('aarogya.watch.hubUrl');"
@@ -723,15 +811,41 @@ public class MainActivity extends Activity {
         }
     }
 
+    private static String normalizeHubUrl(String raw) {
+        if (raw == null) {
+            return "";
+        }
+        String s = raw.trim();
+        if (s.isEmpty()) {
+            return "";
+        }
+        if (!s.contains("://")) {
+            s = "http://" + s;
+        }
+        while (s.endsWith("/")) {
+            s = s.substring(0, s.length() - 1);
+        }
+        int schemeEnd = s.indexOf("://");
+        if (schemeEnd > 0) {
+            s = s.substring(0, schemeEnd).toLowerCase(Locale.US) + s.substring(schemeEnd);
+        }
+        return s;
+    }
+
     private static boolean isValidHttpUrl(String raw) {
+        if (raw == null || raw.isEmpty()) {
+            return false;
+        }
         try {
-            Uri uri = Uri.parse(raw);
+            URI uri = new URI(raw);
             String scheme = uri.getScheme();
             String host = uri.getHost();
+            int port = uri.getPort();
             return scheme != null
                     && ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme))
                     && host != null
-                    && !host.isEmpty();
+                    && !host.isEmpty()
+                    && (port == -1 || (port >= 1 && port <= 65535));
         } catch (Exception e) {
             return false;
         }
@@ -756,6 +870,206 @@ public class MainActivity extends Activity {
         return s.replace("\\", "\\\\").replace("'", "\\'").replace("\n", "").replace("\r", "");
     }
 
+    private void startQrScanFlow(String lang, EditText targetInput) {
+        pendingQrLang = lang;
+        pendingQrTargetInput = targetInput;
+        if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            openQrScannerDialog(lang, targetInput);
+        } else {
+            requestPermissions(new String[]{Manifest.permission.CAMERA}, REQ_CAMERA);
+        }
+    }
+
+    private void openQrScannerDialog(final String lang, final EditText targetInput) {
+        closeQrScannerDialog();
+        if (assetServer == null) {
+            launchExternalQrIntent(lang);
+            return;
+        }
+
+        LinearLayout container = new LinearLayout(this);
+        container.setOrientation(LinearLayout.VERTICAL);
+        container.setPadding(dp(12), dp(8), dp(12), dp(8));
+        container.setBackgroundColor(COLOR_BG_SLATE);
+
+        WebView scannerWv = new WebView(this);
+        WebSettings settings = scannerWv.getSettings();
+        settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
+        settings.setMediaPlaybackRequiresUserGesture(false);
+        scannerWv.setBackgroundColor(0xFF020617);
+        scannerWv.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onPermissionRequest(final PermissionRequest request) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        handleWebPermissionRequest(request);
+                    }
+                });
+            }
+        });
+
+        scannerWv.addJavascriptInterface(new Object() {
+            @JavascriptInterface
+            public void onResult(final String raw) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        handleScannedQrText(raw, lang, targetInput);
+                    }
+                });
+            }
+
+            @JavascriptInterface
+            public void fallbackToIntent() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        closeQrScannerDialog();
+                        launchExternalQrIntent(lang);
+                    }
+                });
+            }
+        }, "QrBridge");
+
+        LinearLayout.LayoutParams wvLp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(290)
+        );
+        container.addView(scannerWv, wvLp);
+
+        String hintText = tr(
+                lang,
+                "Point camera at Hub QR code...",
+                "स्वास्थ्य केन्द्र के QR कोड पर कैमरा रखें...",
+                "ಕೇಂದ್ರದ QR ಕೋಡ್ ಮೇಲೆ ಕ್ಯಾಮೆರಾ ಹಿಡಿಯಿರಿ...",
+                "நிலைய QR குறியீட்டின் மீது கேமராவை காட்டவும்..."
+        );
+        String html = "<!doctype html><html><body style='margin:0;background:#0f172a;color:#f8fafc;font-family:sans-serif;text-align:center;'>"
+                + "<video id='v' autoplay playsinline muted style='width:100%;height:240px;object-fit:cover;background:#020617;border-radius:10px;'></video>"
+                + "<div id='st' style='padding:8px;font-size:13px;color:#5eead4;'>" + escapeHtml(hintText) + "</div>"
+                + "<script>(async function(){"
+                + "if(!('BarcodeDetector' in window)||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){QrBridge.fallbackToIntent();return;}"
+                + "try{"
+                + "const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});"
+                + "const v=document.getElementById('v');v.srcObject=stream;await v.play();"
+                + "const det=new BarcodeDetector({formats:['qr_code']});"
+                + "const stop=()=>{try{stream.getTracks().forEach(t=>t.stop());}catch(e){}};"
+                + "const timer=setInterval(async()=>{"
+                + "try{const codes=await det.detect(v);"
+                + "if(codes&&codes.length>0&&codes[0].rawValue){clearInterval(timer);stop();QrBridge.onResult(codes[0].rawValue);}"
+                + "}catch(e){}"
+                + "},220);"
+                + "window.addEventListener('pagehide',()=>{clearInterval(timer);stop();});"
+                + "}catch(e){QrBridge.fallbackToIntent();}"
+                + "})();</script></body></html>";
+
+        scannerWv.loadDataWithBaseURL(assetServer.getBaseUrl() + "/qr-scan", html, "text/html", "UTF-8", null);
+        qrScannerWebView = scannerWv;
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(tr(lang, "Scan Hub QR", "QR कोड स्कैन करें", "QR ಸ್ಕ್ಯಾನ್ ಮಾಡಿ", "QR ஸ்கேன் செய்"));
+        builder.setView(container);
+        builder.setNegativeButton(tr(lang, "Cancel", "निरस्त करें", "ರದ್ದುಮಾಡಿ", "ரத்து செய்"), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                closeQrScannerDialog();
+            }
+        });
+        builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                closeQrScannerDialog();
+            }
+        });
+        qrScannerDialog = builder.create();
+        qrScannerDialog.show();
+    }
+
+    private void closeQrScannerDialog() {
+        if (qrScannerWebView != null) {
+            try {
+                qrScannerWebView.evaluateJavascript(
+                        "(function(){var v=document.getElementById('v');if(v&&v.srcObject){v.srcObject.getTracks().forEach(function(t){t.stop();});}})();",
+                        null
+                );
+            } catch (Exception ignored) {
+            }
+            qrScannerWebView.removeJavascriptInterface("QrBridge");
+            qrScannerWebView.stopLoading();
+            qrScannerWebView.destroy();
+            qrScannerWebView = null;
+        }
+        if (qrScannerDialog != null) {
+            if (qrScannerDialog.isShowing()) {
+                qrScannerDialog.dismiss();
+            }
+            qrScannerDialog = null;
+        }
+    }
+
+    private void launchExternalQrIntent(String lang) {
+        Intent intent = new Intent("com.google.zxing.client.android.SCAN");
+        intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
+        try {
+            startActivityForResult(intent, REQ_QR_SCAN);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(
+                    this,
+                    tr(
+                            lang,
+                            "QR scanner unavailable on this device",
+                            "इस उपकरण पर QR स्कैनर उपलब्ध नहीं है",
+                            "ಈ ಸಾಧನದಲ್ಲಿ QR ಸ್ಕ್ಯಾನರ್ ಲಭ್ಯವಿಲ್ಲ",
+                            "இந்தச் சாதனத்தில் QR ஸ்கேனர் இல்லை"
+                    ),
+                    Toast.LENGTH_SHORT
+            ).show();
+        }
+    }
+
+    private void handleScannedQrText(String raw, String lang, EditText targetInput) {
+        closeQrScannerDialog();
+        String normalized = normalizeHubUrl(raw);
+        if (!isValidHttpUrl(normalized)) {
+            Toast.makeText(
+                    this,
+                    tr(
+                            lang,
+                            "Scanned QR is not a valid http:// or https:// URL",
+                            "स्कैन किया गया QR मान्य http:// या https:// पता नहीं है",
+                            "ಸ್ಕ್ಯಾನ್ ಮಾಡಿದ QR ಮಾನ್ಯವಾದ http:// ಅಥವಾ https:// ವಿಳಾಸವಲ್ಲ",
+                            "ஸ்கேன் செய்த QR சரியான http:// அல்லது https:// முகவரி அல்ல"
+                    ),
+                    Toast.LENGTH_SHORT
+            ).show();
+            return;
+        }
+        if (targetInput != null) {
+            targetInput.setText(normalized);
+            targetInput.setSelection(normalized.length());
+        }
+        applySavedHubUrl(normalized, lang);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQ_QR_SCAN && resultCode == RESULT_OK && data != null) {
+            String result = data.getStringExtra("SCAN_RESULT");
+            String lang = pendingQrLang != null ? pendingQrLang : uiLang;
+            handleScannedQrText(result, lang, pendingQrTargetInput);
+        }
+    }
+
+    private static String escapeHtml(String s) {
+        if (s == null) {
+            return "";
+        }
+        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+    }
+
     private void handleWebPermissionRequest(PermissionRequest request) {
         Uri origin = request.getOrigin();
         String host = origin != null && origin.getHost() != null ? origin.getHost().toLowerCase(Locale.US) : "";
@@ -766,28 +1080,43 @@ public class MainActivity extends Activity {
             return;
         }
 
-        List<String> audioResources = new ArrayList<>();
+        List<String> requestedResources = new ArrayList<>();
+        boolean wantsAudio = false;
+        boolean wantsVideo = false;
         String[] resources = request.getResources();
         if (resources != null) {
             for (String res : resources) {
                 if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(res)) {
-                    audioResources.add(res);
+                    requestedResources.add(res);
+                    wantsAudio = true;
+                } else if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(res)) {
+                    requestedResources.add(res);
+                    wantsVideo = true;
                 }
             }
         }
-        if (audioResources.isEmpty()) {
+        if (requestedResources.isEmpty()) {
             request.deny();
             return;
         }
 
-        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-            request.grant(audioResources.toArray(new String[0]));
+        List<String> missingAndroidPerms = new ArrayList<>();
+        if (wantsAudio && checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            missingAndroidPerms.add(Manifest.permission.RECORD_AUDIO);
+        }
+        if (wantsVideo && checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            missingAndroidPerms.add(Manifest.permission.CAMERA);
+        }
+
+        if (missingAndroidPerms.isEmpty()) {
+            request.grant(requestedResources.toArray(new String[0]));
         } else {
             if (pendingWebPermissionRequest != null) {
                 pendingWebPermissionRequest.deny();
             }
             pendingWebPermissionRequest = request;
-            requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQ_RECORD_AUDIO);
+            int reqCode = wantsVideo ? REQ_CAMERA : REQ_RECORD_AUDIO;
+            requestPermissions(missingAndroidPerms.toArray(new String[0]), reqCode);
         }
     }
 
@@ -797,19 +1126,88 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void showMicPermissionDeniedToast(String lang) {
+        Toast.makeText(
+                this,
+                tr(
+                        lang,
+                        "Microphone permission denied — enable Mic in App Settings to record voice",
+                        "माइक्रोफ़ोन अनुमति अस्वीकृत — ध्वनि अंकन हेतु ऐप सेटिंग में माइक्रोफ़ोन सक्षम करें",
+                        "ಮೈಕ್ರೋಫೋನ್ ಅನುಮತಿ ನಿರಾಕರಿಸಲಾಗಿದೆ — ಧ್ವನಿ ಮುದ್ರಣಕ್ಕಾಗಿ ಆ್ಯಪ್ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಮೈಕ್ ಸಕ್ರಿಯಗೊಳಿಸಿ",
+                        "மைக்ரோஃபோன் அனுமதி மறுக்கப்பட்டது — குரல் பதிவு செய்ய செயலி அமைப்புகளில் மைக்கை இயக்கவும்"
+                ),
+                Toast.LENGTH_LONG
+        ).show();
+    }
+
+    private void showCameraPermissionDeniedToast(String lang) {
+        Toast.makeText(
+                this,
+                tr(
+                        lang,
+                        "Camera permission is required to scan QR codes",
+                        "QR कोड स्कैन करने के लिए कैमरा अनुमति आवश्यक है",
+                        "QR ಕೋಡ್ ಸ್ಕ್ಯಾನ್ ಮಾಡಲು ಕ್ಯಾಮೆರಾ ಅನುಮತಿ ಅಗತ್ಯವಿದೆ",
+                        "QR குறியீட்டை ஸ்கேன் செய்ய கேமரா அனுமதி தேவை"
+                ),
+                Toast.LENGTH_SHORT
+        ).show();
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQ_RECORD_AUDIO && pendingWebPermissionRequest != null) {
+        if ((requestCode == REQ_RECORD_AUDIO || requestCode == REQ_CAMERA) && pendingWebPermissionRequest != null) {
             PermissionRequest req = pendingWebPermissionRequest;
             pendingWebPermissionRequest = null;
+            List<String> grantedResources = new ArrayList<>();
+            String[] resources = req.getResources();
+            if (resources != null) {
+                for (String res : resources) {
+                    if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(res)
+                            && checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                        grantedResources.add(res);
+                    } else if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(res)
+                            && checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                        grantedResources.add(res);
+                    }
+                }
+            }
+            if (!grantedResources.isEmpty()) {
+                req.grant(grantedResources.toArray(new String[0]));
+            } else {
+                req.deny();
+                if (requestCode == REQ_RECORD_AUDIO) {
+                    showMicPermissionDeniedToast(uiLang);
+                } else {
+                    showCameraPermissionDeniedToast(uiLang);
+                }
+            }
+            return;
+        }
+
+        if (requestCode == REQ_RECORD_AUDIO) {
+            boolean granted = grantResults != null
+                    && grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+            if (!granted && checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                showMicPermissionDeniedToast(uiLang);
+            }
+            return;
+        }
+
+        if (requestCode == REQ_CAMERA && pendingQrTargetInput != null) {
+            EditText target = pendingQrTargetInput;
+            String lang = pendingQrLang != null ? pendingQrLang : uiLang;
+            pendingQrTargetInput = null;
+            pendingQrLang = null;
             boolean granted = grantResults != null
                     && grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED;
             if (granted) {
-                req.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE});
+                openQrScannerDialog(lang, target);
             } else {
-                req.deny();
+                showCameraPermissionDeniedToast(lang);
             }
         }
     }
@@ -839,6 +1237,9 @@ public class MainActivity extends Activity {
     private static String localizedNetworkLabel(String netType, String lang) {
         if ("OFFLINE".equals(netType)) {
             return tr(lang, "OFFLINE", "संजाल-रहित", "ಆಫ್‌ಲೈನ್", "இணைப்பில்லை");
+        }
+        if ("HOTSPOT".equals(netType)) {
+            return tr(lang, "HOTSPOT", "हॉटस्पॉट", "ಹಾಟ್‌ಸ್ಪಾಟ್", "ஹாட்ஸ்பாட்");
         }
         if ("hi".equals(lang)) {
             return "संजाल";
@@ -908,7 +1309,7 @@ public class MainActivity extends Activity {
                     });
                 }
             };
-            cm.registerDefaultNetworkCallback(networkCallback);
+            cm.registerNetworkCallback(new NetworkRequest.Builder().build(), networkCallback);
             networkCallbackRegistered = true;
         } catch (Exception e) {
             Log.w(TAG, "Connectivity callback registration failed", e);
@@ -982,6 +1383,7 @@ public class MainActivity extends Activity {
             pendingWebPermissionRequest.deny();
             pendingWebPermissionRequest = null;
         }
+        closeQrScannerDialog();
         destroyWebView(phoneWebView);
         phoneWebView = null;
         destroyWebView(watchWebView);
@@ -1106,50 +1508,106 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public boolean isOnline() {
-            try {
-                ConnectivityManager cm = (ConnectivityManager) appContext.getSystemService(Context.CONNECTIVITY_SERVICE);
-                if (cm == null) {
-                    return false;
-                }
-                Network active = cm.getActiveNetwork();
-                if (active == null) {
-                    return false;
-                }
-                NetworkCapabilities caps = cm.getNetworkCapabilities(active);
-                return caps != null && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
-            } catch (Exception e) {
-                return false;
-            }
+            return isNetworkAvailable();
+        }
+
+        @JavascriptInterface
+        public boolean isNetworkAvailable() {
+            return !"OFFLINE".equals(getNetworkType());
         }
 
         @JavascriptInterface
         public String getNetworkType() {
             try {
                 ConnectivityManager cm = (ConnectivityManager) appContext.getSystemService(Context.CONNECTIVITY_SERVICE);
-                if (cm == null) {
-                    return "OFFLINE";
+                if (cm != null) {
+                    Network active = cm.getActiveNetwork();
+                    if (active != null) {
+                        String t = transportFromCaps(cm.getNetworkCapabilities(active));
+                        if (t != null) {
+                            return t;
+                        }
+                    }
+                    Network[] all = cm.getAllNetworks();
+                    if (all != null) {
+                        for (Network net : all) {
+                            String t = transportFromCaps(cm.getNetworkCapabilities(net));
+                            if (t != null) {
+                                return t;
+                            }
+                        }
+                    }
                 }
-                Network active = cm.getActiveNetwork();
-                if (active == null) {
-                    return "OFFLINE";
+                String localIfType = detectLocalInterfaceType();
+                if (localIfType != null) {
+                    return localIfType;
                 }
-                NetworkCapabilities caps = cm.getNetworkCapabilities(active);
-                if (caps == null || !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
-                    return "OFFLINE";
-                }
-                if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                    return "WIFI";
-                }
-                if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                    return "CELLULAR";
-                }
-                if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
-                    return "ETHERNET";
-                }
-                return "ONLINE";
             } catch (Exception e) {
-                return "OFFLINE";
+                Log.w(TAG, "Network type query failed", e);
             }
+            return "OFFLINE";
+        }
+
+        private String transportFromCaps(NetworkCapabilities caps) {
+            if (caps == null) {
+                return null;
+            }
+            if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                return "WIFI";
+            }
+            if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                return "ETHERNET";
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                    && caps.hasTransport(NetworkCapabilities.TRANSPORT_USB)) {
+                return "ETHERNET";
+            }
+            if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                return "CELLULAR";
+            }
+            if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
+                return "ONLINE";
+            }
+            return null;
+        }
+
+        private String detectLocalInterfaceType() {
+            try {
+                Enumeration<NetworkInterface> ifaces = NetworkInterface.getNetworkInterfaces();
+                if (ifaces == null) {
+                    return null;
+                }
+                while (ifaces.hasMoreElements()) {
+                    NetworkInterface iface = ifaces.nextElement();
+                    if (!iface.isUp() || iface.isLoopback()) {
+                        continue;
+                    }
+                    String name = iface.getName() != null ? iface.getName().toLowerCase(Locale.US) : "";
+                    boolean hasIpv4 = false;
+                    Enumeration<InetAddress> addrs = iface.getInetAddresses();
+                    while (addrs.hasMoreElements()) {
+                        InetAddress addr = addrs.nextElement();
+                        if (addr instanceof Inet4Address && !addr.isLoopbackAddress()) {
+                            hasIpv4 = true;
+                            break;
+                        }
+                    }
+                    if (!hasIpv4) {
+                        continue;
+                    }
+                    if (name.startsWith("ap") || name.startsWith("swlan") || name.startsWith("softap")) {
+                        return "HOTSPOT";
+                    }
+                    if (name.startsWith("wlan")) {
+                        return "WIFI";
+                    }
+                    if (name.startsWith("rndis") || name.startsWith("usb") || name.startsWith("eth")) {
+                        return "ETHERNET";
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+            return null;
         }
 
         @JavascriptInterface

@@ -3,6 +3,7 @@ import { field, h } from "../dom";
 import type { Ctx } from "../ctx";
 import { getAudio, putAudio } from "../audio_store";
 import { buildVoiceHistory, buildVoicePayload, deriveVoiceStage, formatDurationMmSs, recordingUnavailableReason, voiceNoteValid, type HubEnrichmentStatus, type VoiceHistoryItem, type VoiceStageInfo } from "../voice_logic";
+import { localizeRiskBand } from "../stage_tracker";
 import { uuid } from "../../core/uuid";
 
 async function fetchHubEnrichmentStatus(hubUrl: string): Promise<HubEnrichmentStatus | null> {
@@ -45,9 +46,15 @@ function stageLabelFor(item: VoiceHistoryItem, info: VoiceStageInfo): string {
   }
 }
 
-export async function voice(ctx: Ctx): Promise<HTMLElement> {
+export async function voice(ctx: Ctx, params: string[] = []): Promise<HTMLElement> {
   const [patients, allEvents] = await Promise.all([ctx.store.listPatients(), ctx.store.getAllEvents()]);
-  const pSel = h("select", { name: "patient" }, h("option", { value: "" }, t("triage.anon")), patients.map((p) => h("option", { value: p.patient_id }, p.full_name)));
+  const presetPid = params[0] ?? "";
+  const pSel = h(
+    "select",
+    { name: "patient" },
+    h("option", { value: "" }, t("triage.anon")),
+    patients.map((p) => h("option", { value: p.patient_id, selected: p.patient_id === presetPid }, p.full_name)),
+  );
   const hint = h("textarea", { name: "hint", rows: 4, maxlength: 2000 });
   const status = h("p", { role: "status", "aria-live": "polite" });
   const player = h("audio", { controls: true, hidden: true });
@@ -128,6 +135,7 @@ export async function voice(ctx: Ctx): Promise<HTMLElement> {
   }
 
   async function save() {
+    if (saveBtn.disabled) return;
     const key = blob ? `vn-${uuid()}` : null;
     const payload = buildVoicePayload({ hint: hint.value, language: getLang(), blobKey: key, mime: blob?.type ?? null, durationMs });
     if (!voiceNoteValid(payload)) {
@@ -135,6 +143,7 @@ export async function voice(ctx: Ctx): Promise<HTMLElement> {
       status.textContent = t("voice.empty");
       return;
     }
+    saveBtn.disabled = true;
     try {
       if (blob && key) await putAudio(key, blob); // local blob first, then the event
       await ctx.engine.enqueue({
@@ -143,17 +152,23 @@ export async function voice(ctx: Ctx): Promise<HTMLElement> {
         enrichment_state: "PENDING",
         payload: { ...payload },
       });
-      ctx.syncSoon();
+      if (navigator.onLine) void ctx.engine.syncNow();
+      else ctx.syncSoon();
       status.className = "ok";
       status.textContent = t("voice.saved");
       blob = null;
       hint.value = "";
       revokePreview();
       durationMs = 0;
-      await drawHistory();
+      await scheduleDraw();
+      historyBox.scrollIntoView?.({ behavior: "smooth", block: "nearest" });
+      const firstCard = historyBox.querySelector("li.card") as HTMLElement | null;
+      firstCard?.classList.add("voice-card-new");
     } catch (e) {
       status.className = "error";
       status.textContent = `${t("triage.saveFail")} ${String(e)}`;
+    } finally {
+      saveBtn.disabled = false;
     }
   }
 
@@ -181,7 +196,7 @@ export async function voice(ctx: Ctx): Promise<HTMLElement> {
       historyBox.replaceChildren(h("p", { class: "muted" }, t("voice.historyEmpty")));
       return;
     }
-    const loc = getLang() === "hi" ? "hi-IN" : getLang() === "kn" ? "kn-IN" : "en-IN";
+    const loc = getLang() === "hi" ? "hi-IN" : getLang() === "kn" ? "kn-IN" : getLang() === "ta" ? "ta-IN" : "en-IN";
     const isOnline = typeof navigator === "undefined" ? true : navigator.onLine;
     const listItems = await Promise.all(
       items.map(async (item) => {
@@ -246,7 +261,7 @@ export async function voice(ctx: Ctx): Promise<HTMLElement> {
           item.transcript ? h("p", {}, h("strong", {}, `${t("voice.transcript")}: `), item.transcript) : null,
           item.symptoms.length ? h("p", {}, h("strong", {}, `${t("voice.symptoms")}: `), item.symptoms.join(", ")) : null,
           item.riskBand !== null && item.riskScore !== null
-            ? h("p", { class: "muted" }, t("voice.riskScore", { band: item.riskBand, score: item.riskScore.toFixed(2) }))
+            ? h("p", { class: "muted" }, t("voice.riskScore", { band: localizeRiskBand(item.riskBand), score: item.riskScore.toFixed(2) }))
             : null,
           item.followUp ? h("p", {}, item.followUp) : null,
         );

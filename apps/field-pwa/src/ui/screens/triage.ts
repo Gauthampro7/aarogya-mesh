@@ -5,8 +5,10 @@ import { t, tx } from "../../i18n";
 import { checkbox, clear, field, h } from "../dom";
 import type { Ctx } from "../ctx";
 import {
+  TEMP_F_BOUNDS,
   VITAL_SPECS,
   applyCategory,
+  convertTempDisplay,
   dangerOptionsForCategory,
   fastEmergencyOptions,
   flagLabel,
@@ -19,10 +21,13 @@ import {
   type FlagOption,
   type NumField,
   type NumError,
+  type TempUnit,
   type TriageFormState,
 } from "../triage_map";
 import { renderTriageResult } from "./triage_result";
-import type { TriageAssessment } from "../../../../../packages/contracts/ts/index";
+import { extractClinicInsights, localizeRiskBand, renderStageTracker, type ClinicInsight } from "../stage_tracker";
+import { runSync } from "../app_state";
+import type { CrdtEvent, TriageAssessment } from "../../../../../packages/contracts/ts/index";
 
 const NUM_LABEL: Record<NumField, Parameters<typeof t>[0]> = {
   temperature_c: "v.temp",
@@ -45,6 +50,7 @@ export async function triage(ctx: Ctx, params: string[]): Promise<HTMLElement> {
     category: preset ? suggestCategory(preset) : null,
     patientId: preset?.patient_id ?? null,
     nums: {},
+    tempUnit: "F",
     isPregnant: preset?.is_pregnant ?? false,
     isPostpartum: false,
     dangerFlags: [],
@@ -106,7 +112,44 @@ export async function triage(ctx: Ctx, params: string[]): Promise<HTMLElement> {
     setCategory((catSel.value || null) as PatientCategory | null);
   });
 
+  const tempField = () => {
+    const unit = (): TempUnit => st.tempUnit ?? "F";
+    const bounds = () => (unit() === "F" ? TEMP_F_BOUNDS : VITAL_SPECS.temperature_c);
+    const b0 = bounds();
+    const i = h("input", {
+      type: "number",
+      name: "temperature_c",
+      min: b0.min,
+      max: b0.max,
+      step: b0.step,
+      inputmode: "decimal",
+      value: st.nums.temperature_c ?? "",
+    });
+    i.addEventListener("input", () => (st.nums.temperature_c = i.value));
+    const unitSel = h(
+      "select",
+      { name: "temp_unit", "aria-label": t("v.tempF") },
+      h("option", { value: "F", selected: unit() === "F" }, "°F"),
+      h("option", { value: "C", selected: unit() === "C" }, "°C"),
+    );
+    const wrap = field(t(unit() === "F" ? "v.tempF" : "v.temp"), h("div", { class: "agerow" }, i, unitSel), `${b0.min}–${b0.max} °${unit()}`);
+    unitSel.addEventListener("change", () => {
+      const nextUnit = unitSel.value as TempUnit;
+      st.tempUnit = nextUnit;
+      const converted = convertTempDisplay(i.value, nextUnit);
+      i.value = converted;
+      st.nums.temperature_c = converted;
+      const b = bounds();
+      i.min = String(b.min);
+      i.max = String(b.max);
+      wrap.querySelector("label")!.textContent = t(nextUnit === "F" ? "v.tempF" : "v.temp");
+      wrap.querySelector("small")!.textContent = `${b.min}–${b.max} °${nextUnit}`;
+    });
+    return wrap;
+  };
+
   const numField = (f: NumField) => {
+    if (f === "temperature_c") return tempField();
     const spec = VITAL_SPECS[f];
     const i = h("input", {
       type: "number",
@@ -143,58 +186,264 @@ export async function triage(ctx: Ctx, params: string[]): Promise<HTMLElement> {
     if (rb) rb.disabled = st.category === null;
     if (st.category === null) {
       formBox.append(h("p", { class: "error", role: "alert" }, t("triage.pickCategory")));
-    } else if (st.category === "PEDIATRIC") {
+      return;
+    }
+
+    const otherSymInput = h("input", {
+      type: "text",
+      name: "additional_symptoms",
+      maxlength: 500,
+      value: st.additionalSymptoms ?? "",
+    });
+    otherSymInput.addEventListener("input", () => (st.additionalSymptoms = otherSymInput.value));
+
+    const optionalVitals = h("div", { class: "grid2" }, numField("spo2_pct"), numField("respiratory_rate_bpm"));
+    const moreContent: HTMLElement[] = [field(t("triage.otherSymptoms"), otherSymInput, t("triage.otherSymptomsHint"))];
+
+    if (st.category === "PEDIATRIC") {
       formBox.append(
         flagGroup(t("triage.dangerSigns"), dangerOptionsForCategory(st.category), st.dangerFlags),
+        numField("temperature_c"),
+      );
+      optionalVitals.append(numField("age_months"), numField("fever_days"), numField("diarrhea_days"), numField("muac_cm"));
+      moreContent.unshift(
         h("fieldset", {}, h("legend", {}, t("triage.symptoms")), bool(t("s.cough"), "cough"), bool(t("s.indrawing"), "chestIndrawing"), bool(t("s.diarrhea"), "diarrhea"), bool(t("s.blood"), "bloodInStool"), bool(t("s.edema"), "edema"), bool(t("s.pallor"), "pallor"), bool(t("s.rdt"), "malariaRdt")),
         flagGroup(
           t("triage.dehydration"),
           dehydrationFlags().map((f) => ({ flag: f, label: tx(`dehy.${f}`, f) })),
           st.dehydrationFlags,
         ),
-        h("div", { class: "grid2" }, numField("age_months"), numField("fever_days"), numField("diarrhea_days"), numField("muac_cm")),
       );
     } else if (st.category === "MATERNAL") {
       formBox.append(
         h("fieldset", {}, h("legend", {}, t("triage.maternalStatus")), bool(t("reg.pregnant"), "isPregnant"), bool(t("triage.postpartum"), "isPostpartum")),
         flagGroup(t("triage.dangerSigns"), dangerOptionsForCategory(st.category), st.dangerFlags),
         flagGroup(t("triage.maternalDanger"), maternalRedOptions(), st.dangerFlags),
-        flagGroup(t("triage.watchSigns"), maternalYellowOptions(), st.symptomFlags),
-        h("div", { class: "grid2" }, numField("gestational_weeks"), numField("hemoglobin_g_dl")),
+        numField("temperature_c"),
       );
+      optionalVitals.append(numField("systolic_bp"), numField("diastolic_bp"), numField("gestational_weeks"), numField("hemoglobin_g_dl"));
+      moreContent.unshift(flagGroup(t("triage.watchSigns"), maternalYellowOptions(), st.symptomFlags));
     } else {
-      formBox.append(flagGroup(t("triage.dangerSigns"), dangerOptionsForCategory(st.category), st.dangerFlags), h("div", { class: "grid2" }, numField("age_months"), numField("fever_days")));
+      formBox.append(
+        flagGroup(t("triage.dangerSigns"), dangerOptionsForCategory(st.category), st.dangerFlags),
+        numField("temperature_c"),
+      );
+      optionalVitals.append(numField("systolic_bp"), numField("diastolic_bp"), numField("age_months"), numField("fever_days"));
     }
-    if (st.category !== null) formBox.append(
-      h("div", { class: "grid2" }, numField("temperature_c"), numField("spo2_pct"), numField("respiratory_rate_bpm"), st.category === "MATERNAL" || st.category === "GENERAL" ? numField("systolic_bp") : null, st.category === "MATERNAL" || st.category === "GENERAL" ? numField("diastolic_bp") : null),
+
+    formBox.append(
+      h("details", { class: "optional-group" }, h("summary", {}, t("triage.optionalVitals")), optionalVitals),
+      h("details", { class: "optional-group" }, h("summary", {}, t("triage.moreSymptoms")), moreContent),
     );
   }
   drawForm();
 
   const errText = (e: NumError) => {
+    if (e.field === "temperature_c" && (st.tempUnit ?? "F") === "F") {
+      return t(e.reason === "NaN" ? "err.nan" : e.reason === "integer" ? "err.int" : "err.range", {
+        f: t("v.tempF"),
+        min: TEMP_F_BOUNDS.min,
+        max: TEMP_F_BOUNDS.max,
+      });
+    }
     const s = VITAL_SPECS[e.field];
     return t(e.reason === "NaN" ? "err.nan" : e.reason === "integer" ? "err.int" : "err.range", { f: t(NUM_LABEL[e.field]), min: s.min, max: s.max });
   };
 
-  /** Show the engine's result immediately, then persist locally (log + outbox). */
+  let liveUnsubs: Array<() => void> = [];
+  const clearLiveUnsubs = () => {
+    while (liveUnsubs.length) liveUnsubs.pop()?.();
+  };
+
+  const renderMlInsightBox = (ins: ClinicInsight): HTMLElement => {
+    const riskCls = ins.riskPct >= 65 ? "risk-high" : ins.riskPct >= 35 ? "risk-mod" : "risk-low";
+    return h(
+      "div",
+      { class: `card insight-card ${riskCls}`, "data-provenance": "laptop-ml" },
+      h(
+        "div",
+        { class: "insight-head" },
+        h("span", { class: "stage-pill stage-ai" }, t("prov.stage3Badge")),
+        h("span", { class: `risk-pill ${riskCls}` }, `${t("insights.riskScore", { pct: ins.riskPct })}${ins.riskBand ? ` · ${localizeRiskBand(ins.riskBand)}` : ""}`),
+      ),
+      h(
+        "div",
+        { class: "provenance-box provenance-ml" },
+        h("p", { class: "prov-line" }, h("strong", {}, `${t("prov.mlSourceTitle")}: `), h("span", { lang: "en" }, ins.mlEngine)),
+        ins.mlSummary ? h("p", { class: "prov-line" }, ins.mlSummary) : null,
+      ),
+      ins.topFeatures.length
+        ? h(
+            "ul",
+            { class: "shap-list" },
+            ins.topFeatures.map((f) =>
+              h(
+                "li",
+                { class: f.isRisk ? "shap-item shap-pos" : "shap-item shap-neg" },
+                h("span", { class: "shap-tag" }, t(f.isRisk ? "insights.riskDriver" : "insights.protectiveDriver")),
+                " ",
+                h("span", {}, f.feature),
+                " ",
+                h("code", { lang: "en" }, `(${f.contribution >= 0 ? "+" : ""}${f.contribution.toFixed(2)})`),
+              ),
+            ),
+          )
+        : null,
+    );
+  };
+
+  /** Show the engine's result immediately, then persist locally and live-sync for Laptop ML Risk Score. */
   function show(a: TriageAssessment) {
+    clearLiveUnsubs();
     clear(errBox);
     clear(resultBox);
-    resultBox.append(renderTriageResult(a));
+    const stageSlot = h("div", { class: "triage-live-stage", "aria-live": "polite" });
+    resultBox.append(renderTriageResult(a, { stageSlot }));
     const saved = h("p", { class: "muted", role: "status" }, t("triage.saving"));
     resultBox.append(saved);
     const resEl = document.getElementById("triage-result") as HTMLElement | null;
     resEl?.scrollIntoView?.({ behavior: "smooth", block: "start" });
     resEl?.focus();
+    runBtn.disabled = true;
     ctx.engine
-      .enqueue({ event_type: "TRIAGE_COMPLETED", patient_id: a.patient_id, payload: { ...a } })
-      .then(() => {
+      .enqueue({ event_type: "TRIAGE_COMPLETED", patient_id: a.patient_id, enrichment_state: "PENDING", payload: { ...a } })
+      .then((triageEvent) => {
         saved.textContent = t("triage.saved");
-        ctx.syncSoon();
+        let syncInFlight = false;
+        let syncedOnce = false;
+        let lastOfflineHint: string | null = null;
+
+        const findMatchingInsight = async (): Promise<{ insight: ClinicInsight | null; stillOutbox: boolean }> => {
+          const [allEvents, pendingEvents] = await Promise.all([ctx.store.getAllEvents(), ctx.store.getPendingEvents()]);
+          const outboxIds = new Set(pendingEvents.map((e) => e.event_id));
+          const stillOutbox = outboxIds.has(triageEvent.event_id);
+          const matching: CrdtEvent[] = allEvents.filter(
+            (e) =>
+              e.event_type === "ENRICHMENT_COMPLETED" &&
+              (e.ref_event_id === triageEvent.event_id ||
+                (a.patient_id !== null && e.patient_id === a.patient_id && e.hlc.wall_ms >= triageEvent.hlc.wall_ms)),
+          );
+          const insights = extractClinicInsights(matching, patients);
+          return { insight: insights[0] ?? null, stillOutbox };
+        };
+
+        const syncBtn = h(
+          "button",
+          {
+            type: "button",
+            class: "primary",
+            onclick: () => void triggerSync(),
+          },
+          t("triage.syncAndAi"),
+        );
+
+        const refreshStage = async () => {
+          if (!stageSlot.isConnected) {
+            clearLiveUnsubs();
+            return;
+          }
+          const { insight, stillOutbox } = await findMatchingInsight();
+          if (insight) {
+            clearLiveUnsubs();
+            stageSlot.replaceChildren(
+              renderStageTracker({
+                completedSteps: 3,
+                activeStep: 3,
+                headline: t("triage.aiReadyHeadline"),
+                nextCue: insight.recommendedFollowUp ?? t("prov.nextLaptopMl"),
+                reasoningNode: renderMlInsightBox(insight),
+              }),
+            );
+            return;
+          }
+          if (syncInFlight) {
+            syncBtn.disabled = true;
+            syncBtn.textContent = t("sync.running");
+            stageSlot.replaceChildren(
+              renderStageTracker({
+                completedSteps: stillOutbox ? 1 : 2,
+                activeStep: stillOutbox ? 2 : 3,
+                headline: t("triage.syncingAi"),
+                nextCue: t("triage.stageNext"),
+                actions: [syncBtn],
+              }),
+            );
+            return;
+          }
+          syncBtn.disabled = false;
+          syncBtn.textContent = t("triage.syncAndAi");
+          if (!stillOutbox || (syncedOnce && ctx.engine.status === "idle" && !lastOfflineHint)) {
+            stageSlot.replaceChildren(
+              renderStageTracker({
+                completedSteps: 2,
+                activeStep: 3,
+                headline: t("triage.syncedWaitingAi"),
+                nextCue: t("triage.stageNext"),
+                actions: [syncBtn],
+              }),
+            );
+            return;
+          }
+          stageSlot.replaceChildren(
+            renderStageTracker({
+              completedSteps: 1,
+              activeStep: 2,
+              headline: t("triage.stageHeadline"),
+              nextCue: lastOfflineHint ?? t("triage.stageNext"),
+              actions: [syncBtn],
+            }),
+          );
+        };
+
+        const triggerSync = async () => {
+          if (syncInFlight) return;
+          const online = typeof navigator === "undefined" ? true : navigator.onLine;
+          if (!online) {
+            lastOfflineHint = t("triage.offlineAiHint");
+            await refreshStage();
+            return;
+          }
+          syncInFlight = true;
+          lastOfflineHint = null;
+          await refreshStage();
+          try {
+            await runSync(ctx.engine);
+            syncedOnce = true;
+            if (ctx.engine.status !== "idle") {
+              lastOfflineHint = t("triage.offlineAiHint");
+            } else {
+              const { insight } = await findMatchingInsight();
+              if (!insight) {
+                await new Promise((r) => setTimeout(r, 700));
+                if (stageSlot.isConnected) await runSync(ctx.engine);
+              }
+            }
+          } finally {
+            syncInFlight = false;
+            await refreshStage();
+          }
+        };
+
+        liveUnsubs = [
+          ctx.engine.events.on("enrichment", () => void refreshStage()),
+          ctx.engine.events.on("status", () => void refreshStage()),
+        ];
+
+        void refreshStage().then(() => {
+          const online = typeof navigator === "undefined" ? true : navigator.onLine;
+          if (online) void triggerSync();
+          else {
+            lastOfflineHint = t("triage.offlineAiHint");
+            void refreshStage();
+          }
+        });
       })
       .catch((e) => {
         saved.className = "error";
         saved.textContent = `${t("triage.saveFail")} ${String(e)}`;
+      })
+      .finally(() => {
+        runBtn.disabled = st.category === null;
       });
   }
 

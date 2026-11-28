@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_HUB_URL, hubOriginFrom, isLoopbackHost, resolveHubUrl, type LocLike } from "../../src/ui/settings";
+import { DEFAULT_HUB_URL, hubOriginFrom, isLoopbackHost, isValidHubUrl, normalizeHubUrl, resolveHubUrl, type LocLike } from "../../src/ui/settings";
 
 const loc = (href: string): LocLike => {
   const u = new URL(href);
@@ -78,5 +78,40 @@ describe("isLoopbackHost", () => {
   it("rejects LAN addresses", () => {
     expect(isLoopbackHost("192.168.1.5")).toBe(false);
     expect(isLoopbackHost("10.0.0.1")).toBe(false);
+  });
+});
+
+describe("normalizeHubUrl & isValidHubUrl", () => {
+  it("strips trailing slashes and accidental spaces", () => {
+    expect(normalizeHubUrl("  http://192.168.36.182:8000/  ")).toBe("http://192.168.36.182:8000");
+    expect(normalizeHubUrl("http://192.168.36.182:8000///")).toBe("http://192.168.36.182:8000");
+  });
+
+  it("prepends http:// when scheme is missing (including localhost:port)", () => {
+    expect(normalizeHubUrl("192.168.36.182:8000")).toBe("http://192.168.36.182:8000");
+    expect(normalizeHubUrl(" 192.168.36.182:8000/ ")).toBe("http://192.168.36.182:8000");
+    expect(normalizeHubUrl("localhost:8000/")).toBe("http://localhost:8000");
+  });
+
+  it("preserves https:// and returns empty string for blank input", () => {
+    expect(normalizeHubUrl("https://hub.example/")).toBe("https://hub.example");
+    expect(normalizeHubUrl("   ")).toBe("");
+  });
+
+  it("validates normalized http(s) URLs and rejects invalid ones", () => {
+    expect(isValidHubUrl("192.168.36.182:8000/")).toBe(true);
+    expect(isValidHubUrl("  http://192.168.36.182:8000  ")).toBe(true);
+    expect(isValidHubUrl("https://hub.example")).toBe(true);
+    expect(isValidHubUrl("")).toBe(false);
+    expect(isValidHubUrl("not a url")).toBe(false);
+    expect(isValidHubUrl("ftp://192.168.1.5")).toBe(false);
+    expect(isValidHubUrl("javascript:alert(1)")).toBe(false);
+    expect(isValidHubUrl("http://192.168.1.5:99999")).toBe(false);
+    expect(isValidHubUrl("http://")).toBe(false);
+  });
+
+  it("resolveHubUrl normalizes saved values and ignores invalid ones", () => {
+    expect(resolveHubUrl("192.168.36.182:8000/", DEV)).toBe("http://192.168.36.182:8000");
+    expect(resolveHubUrl("not a url", DEV)).toBe(DEFAULT_HUB_URL);
   });
 });

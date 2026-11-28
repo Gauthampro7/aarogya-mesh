@@ -51,6 +51,65 @@ function extractHostname(urlString: string): string {
 }
 
 /**
+ * Normalize a Hub URL: trim whitespace, strip trailing slashes, and prepend
+ * `http://` when given a bare `host:port` or `IP:port`.
+ */
+export function normalizeHubUrl(
+  rawUrl: string,
+  fallback: string = DEFAULT_HUB_URL,
+): string {
+  const trimmed = rawUrl.trim().replace(/\/+$/, "");
+  if (trimmed.length === 0) {
+    return fallback.trim().replace(/\/+$/, "") || DEFAULT_HUB_URL;
+  }
+  if (!trimmed.includes("://")) {
+    return `http://${trimmed}`;
+  }
+  return trimmed;
+}
+
+/**
+ * Validate that a Hub URL (after normalization) is a well-formed `http:` or `https:` URL.
+ */
+export function isValidHubUrl(rawUrl: string): boolean {
+  const trimmed = rawUrl.trim();
+  if (trimmed.length === 0) {
+    return false;
+  }
+  const normalized = normalizeHubUrl(trimmed, "");
+  if (normalized.length === 0) {
+    return false;
+  }
+  try {
+    const parsed = new URL(normalized);
+    return (
+      (parsed.protocol === "http:" || parsed.protocol === "https:") &&
+      parsed.hostname.length > 0
+    );
+  } catch {
+    return false;
+  }
+}
+
+function formatSyncNetworkError(
+  err: unknown,
+  timedOut: boolean,
+  hubUrl: string,
+): string {
+  if (timedOut || (err instanceof Error && err.name === "AbortError")) {
+    return `Hub timed out at ${hubUrl}. Check Wi-Fi/hotspot and tap Sync Now to retry.`;
+  }
+  const msg = err instanceof Error ? err.message : String(err);
+  if (
+    err instanceof TypeError ||
+    /failed to fetch|networkerror|load failed|fetch failed|econnrefused|enotfound/i.test(msg)
+  ) {
+    return `Hub unreachable at ${hubUrl}. Check Hub address & Wi-Fi, then tap Sync Now to retry.`;
+  }
+  return msg || `Hub unreachable at ${hubUrl}. Tap Sync Now to retry.`;
+}
+
+/**
  * Resolve the Hub URL for the current browser/WebView origin while guarding
  * against stale `localhost`/`127.*` overrides when opened from a LAN IP.
  */
@@ -69,25 +128,28 @@ export function resolveDefaultHubUrl(
     typeof globalThis !== "undefined" && "AarogyaNativeBridge" in globalThis;
   const autoOrigin =
     hasHttpOrigin && !isAndroidApk
-      ? loc.origin.trim().replace(/\/+$/, "")
+      ? normalizeHubUrl(loc.origin, DEFAULT_HUB_URL)
       : DEFAULT_HUB_URL;
   const locHostname =
     hasHttpOrigin && !isAndroidApk
       ? (loc.hostname?.trim() || extractHostname(autoOrigin))
       : "";
 
-  const trimmedSaved = savedHubUrl?.trim().replace(/\/+$/, "") ?? "";
+  const trimmedSaved = savedHubUrl?.trim() ?? "";
   if (trimmedSaved.length > 0) {
-    const savedHost = extractHostname(trimmedSaved);
-    if (
-      savedHost &&
-      isLoopbackHost(savedHost) &&
-      locHostname.length > 0 &&
-      !isLoopbackHost(locHostname)
-    ) {
-      return autoOrigin;
+    const normalizedSaved = normalizeHubUrl(trimmedSaved, "");
+    if (normalizedSaved.length > 0) {
+      const savedHost = extractHostname(normalizedSaved);
+      if (
+        savedHost &&
+        isLoopbackHost(savedHost) &&
+        locHostname.length > 0 &&
+        !isLoopbackHost(locHostname)
+      ) {
+        return autoOrigin;
+      }
+      return normalizedSaved;
     }
-    return trimmedSaved;
   }
 
   return autoOrigin;
@@ -205,7 +267,7 @@ export class WatchSyncClient {
     const fallbackHubUrl = resolveDefaultHubUrl(
       typeof window !== "undefined" ? window.location : null,
     );
-    this.hubUrl = (opts.hubUrl ?? fallbackHubUrl).replace(/\/+$/, "");
+    this.hubUrl = normalizeHubUrl(opts.hubUrl ?? fallbackHubUrl, fallbackHubUrl);
     const rawFetch = opts.fetchImpl ?? fetchImpl ?? globalThis.fetch;
     this.fetchImpl =
       rawFetch === globalThis.fetch && typeof globalThis.fetch === "function"
@@ -223,7 +285,7 @@ export class WatchSyncClient {
   }
 
   public setHubUrl(hubUrl: string): string {
-    this.hubUrl = hubUrl.trim().replace(/\/+$/, "") || DEFAULT_HUB_URL;
+    this.hubUrl = normalizeHubUrl(hubUrl, DEFAULT_HUB_URL);
     return this.hubUrl;
   }
 
@@ -377,11 +439,19 @@ export class WatchSyncClient {
   }
 
   private async performSync(): Promise<WatchSyncResult> {
+    if (!isValidHubUrl(this.hubUrl)) {
+      return {
+        ok: false,
+        status: "error",
+        reason: `Invalid Hub address "${this.hubUrl}". Use http://IP:port (e.g. http://192.168.1.10:8000).`,
+      };
+    }
+
     if (typeof this.fetchImpl !== "function") {
       return {
         ok: false,
         status: "offline",
-        reason: "Fetch implementation unavailable.",
+        reason: "Network fetch unavailable in this browser. Saved locally; tap Sync Now when online.",
       };
     }
 
@@ -426,7 +496,14 @@ export class WatchSyncClient {
         return {
           ok: false,
           status: uploadRes.status,
-          reason: uploadRes.reason,
+          reason:
+            uploadRes.status === "offline"
+              ? formatSyncNetworkError(
+                  new TypeError(uploadRes.reason),
+                  false,
+                  this.hubUrl,
+                )
+              : uploadRes.reason,
         };
       }
       if (uploadRes.status === "uploaded") {
@@ -438,8 +515,14 @@ export class WatchSyncClient {
     const sentEventIds = new Set(envelope.events.map((evt) => evt.event_id));
     const url = `${this.hubUrl}/api/v1/sync`;
 
+    let timedOut = false;
     const ctrl = typeof AbortController === "function" ? new AbortController() : undefined;
-    const timer = ctrl ? setTimeout(() => ctrl.abort(), this.timeoutMs) : undefined;
+    const timer = ctrl
+      ? setTimeout(() => {
+          timedOut = true;
+          ctrl.abort();
+        }, this.timeoutMs)
+      : undefined;
 
     let res: Response;
     try {
@@ -456,7 +539,7 @@ export class WatchSyncClient {
       return {
         ok: false,
         status: "offline",
-        reason: err instanceof Error ? err.message : String(err),
+        reason: formatSyncNetworkError(err, timedOut, this.hubUrl),
       };
     }
 
@@ -466,16 +549,20 @@ export class WatchSyncClient {
         return {
           ok: false,
           status: "error",
-          reason: `POST /api/v1/sync failed with HTTP ${res.status}.`,
+          reason: `Hub returned HTTP ${res.status} on /api/v1/sync. Tap Sync Now to retry.`,
         };
       }
       rawBody = await res.json();
     } catch (err) {
-      const aborted = ctrl?.signal.aborted === true;
+      const aborted = timedOut || ctrl?.signal.aborted === true;
       return {
         ok: false,
         status: aborted ? "offline" : "error",
-        reason: err instanceof Error ? err.message : "Failed to parse Hub sync JSON reply.",
+        reason: aborted
+          ? formatSyncNetworkError(err, true, this.hubUrl)
+          : err instanceof Error
+            ? `Invalid Hub sync response: ${err.message}`
+            : "Failed to parse Hub sync JSON reply.",
       };
     } finally {
       if (timer !== undefined) clearTimeout(timer);

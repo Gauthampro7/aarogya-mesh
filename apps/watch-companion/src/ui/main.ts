@@ -39,6 +39,9 @@ function bootstrap(): void {
   if (typeof window !== "undefined") {
     window.addEventListener("aarogya:hub-url-changed", () => {
       controller.refreshHubUrlFromStorage();
+      if (controller.getHubUrl().trim().length > 0 && !controller.getIsSyncing()) {
+        void controller.syncNow();
+      }
     });
 
     window.addEventListener("message", (event: MessageEvent) => {

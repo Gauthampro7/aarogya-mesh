@@ -275,4 +275,106 @@ describe("WatchUiController dual-mode state transitions", () => {
     expect(controller.getSosTextError()).toBe(false);
     expect(controller.getOutboxCount()).toBe(3);
   });
+
+  it("supports custom unlisted danger signs and rejects empty custom symptom input", () => {
+    const { controller } = makeController();
+    controller.setLanguage("en");
+
+    expect(controller.submitCustomDangerSign("   ")).toBeNull();
+    expect(controller.getCustomDangerError()).toBe(true);
+    expect(controller.getOutboxCount()).toBe(0);
+
+    controller.setCustomDangerDraft("high fever, stiff neck");
+    expect(controller.getCustomDangerError()).toBe(false);
+
+    const res = controller.submitCustomDangerSign(undefined, "pat-custom-1");
+    expect(res).not.toBeNull();
+    expect(res?.severity).toBe("RED_EMERGENCY");
+    expect(res?.assessment.referral_required).toBe(true);
+    expect(controller.getCustomDangerDraft()).toBe("");
+    expect(controller.getCustomDangerError()).toBe(false);
+    expect(controller.getOutboxCount()).toBe(2);
+  });
+
+  it("normalizes bare IP:port Hub URLs, rejects invalid URLs, and prevents double-tap races on Sync/SOS/Ack", async () => {
+    let syncCalls = 0;
+    let resolveSyncFetch!: (res: Response) => void;
+    const mockFetch: typeof fetch = (_input, init) => {
+      syncCalls += 1;
+      const reqBody = JSON.parse(String(init?.body)) as SyncEnvelope;
+      return new Promise<Response>((resolve) => {
+        resolveSyncFetch = resolve;
+        // Keep reference for test resolution; reply built below.
+        void reqBody;
+      });
+    };
+
+    const { controller } = makeController({ fetchImpl: mockFetch });
+    controller.setLanguage("en");
+
+    // 1. Bare IP:port normalization & invalid URL rejection
+    expect(controller.setHubUrl("  192.168.36.182:8000/  ")).toBe("http://192.168.36.182:8000");
+    expect(controller.getHubUrlError()).toBeNull();
+
+    expect(controller.setHubUrl("not a valid url")).toBe("http://192.168.36.182:8000");
+    expect(controller.getHubUrlError()).toContain("Invalid Hub address");
+    const blockedSync = await controller.syncNow();
+    expect(blockedSync.ok).toBe(false);
+    expect(syncCalls).toBe(0);
+
+    // Fix URL back to valid
+    expect(controller.setHubUrl("192.168.36.182:8000")).toBe("http://192.168.36.182:8000");
+    expect(controller.getHubUrlError()).toBeNull();
+
+    // 2. ActionCard double-tap ack guard
+    const red = controller.triggerDangerScreen(["convulsions"]);
+    const cardId = red.actionCard!.card_id;
+    expect(controller.acknowledgeCard(cardId)).not.toBeNull();
+    expect(controller.acknowledgeCard(cardId)).toBeNull();
+    expect(controller.getOutboxCount()).toBe(3);
+
+    // 3. SOS double-tap guard
+    controller.setMode("PATIENT_FAMILY");
+    controller.setTab("sos");
+    const sosP1 = controller.submitSos({ transcriptHint: "Need help" });
+    const sosP2 = controller.submitSos({ transcriptHint: "Need help" });
+    const [e1, e2] = await Promise.all([sosP1, sosP2]);
+    expect(e1.event_id).toBe(e2.event_id);
+    expect(controller.getOutboxCount()).toBe(4);
+
+    // 4. Sync double-tap coalescing
+    const p1 = controller.syncNow();
+    const p2 = controller.syncNow();
+    expect(controller.getIsSyncing()).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    resolveSyncFetch(
+      new Response(
+        JSON.stringify({
+          envelope_id: "hub-coalesce-1",
+          sender_manifest: {
+            node_id: "phc-hub-01",
+            tier: "TIER_2_HUB",
+            ram_mb: 16384,
+            cpu_cores: 8,
+            battery_pct: 100,
+            has_npu: true,
+            installed_models: [],
+            watch_mode: null,
+          },
+          sender_hlc: { wall_ms: Date.now(), logical: 1, node_id: "phc-hub-01" },
+          since_cursor: null,
+          next_cursor: "cursor-coalesce",
+          events: [],
+          ack_event_ids: [],
+          schema_version: CONTRACT_SCHEMA_VERSION,
+        } satisfies SyncEnvelope),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+    const [r1, r2] = await Promise.all([p1, p2]);
+    expect(r1).toBe(r2);
+    expect(syncCalls).toBe(1);
+    expect(controller.getIsSyncing()).toBe(false);
+  });
 });

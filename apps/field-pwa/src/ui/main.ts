@@ -79,6 +79,11 @@ async function boot() {
   await go(true);
   startSyncLoop(engine);
   registerServiceWorker(shell);
+
+  window.addEventListener("aarogya:hub-url-changed", () => {
+    engine.hubUrl = getHubUrl();
+    if (navigator.onLine) void runSync(engine);
+  });
 }
 
 function registerServiceWorker(shell: ReturnType<typeof buildShell>) {

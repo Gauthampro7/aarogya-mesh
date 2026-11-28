@@ -26,6 +26,7 @@ import { getLang, setLang, toggleLang, type Lang, type SetLangOptions } from "..
 import {
   DEFAULT_HUB_URL,
   WatchSyncClient,
+  isValidHubUrl,
   resolveDefaultHubUrl,
   type BrowserLocationLike,
   type VoiceSosInput,
@@ -104,11 +105,18 @@ export class WatchUiController {
   private dangerCategory: WatchDangerCategory = "PEDIATRIC";
   private pendingConfirmFlag: WatchDangerSignFlag | null = null;
   private patientIdInput = "";
+  private customDangerDraft = "";
+  private customDangerError = false;
   private lastTriage: TriageBannerState | null = null;
   private sosQueuedEvent: CrdtEvent | null = null;
   private sosTextDraft = "";
   private sosTextError = false;
+  private isSubmittingSos = false;
+  private inFlightSos: Promise<CrdtEvent> | null = null;
   private isSyncing = false;
+  private inFlightSync: Promise<WatchSyncResult> | null = null;
+  private hubUrlDraft: string | null = null;
+  private hubUrlError: string | null = null;
   private lastSyncResult: WatchSyncResult | null = null;
   private seededVaccinations: VaccinationDueItem[];
   private readonly location: BrowserLocationLike | null;
@@ -251,6 +259,21 @@ export class WatchUiController {
     this.patientIdInput = value;
   }
 
+  public getCustomDangerDraft(): string {
+    return this.customDangerDraft;
+  }
+
+  public setCustomDangerDraft(value: string): void {
+    this.customDangerDraft = value;
+    if (value.trim().length > 0) {
+      this.customDangerError = false;
+    }
+  }
+
+  public getCustomDangerError(): boolean {
+    return this.customDangerError;
+  }
+
   public getLastTriage(): TriageBannerState | null {
     return this.lastTriage;
   }
@@ -258,6 +281,7 @@ export class WatchUiController {
   public resetTriage(): void {
     this.lastTriage = null;
     this.pendingConfirmFlag = null;
+    this.customDangerError = false;
     this.emit();
   }
 
@@ -267,10 +291,11 @@ export class WatchUiController {
    * Passing an empty list evaluates a clean `GREEN_HOME` screen.
    */
   public triggerDangerScreen(
-    flags: readonly WatchDangerSignFlag[],
+    flags: readonly (WatchDangerSignFlag | string)[],
     patientIdOverride?: string,
   ): TriageBannerState {
     this.pendingConfirmFlag = null;
+    this.customDangerError = false;
     const patientId =
       (patientIdOverride ?? this.patientIdInput).trim() || DEFAULT_WALKIN_PATIENT_ID;
     const result = this.kernel.screenDangerSigns(
@@ -291,6 +316,25 @@ export class WatchUiController {
     return this.lastTriage;
   }
 
+  public submitCustomDangerSign(
+    rawSymptom?: string,
+    patientIdOverride?: string,
+  ): TriageBannerState | null {
+    const text = (rawSymptom ?? this.customDangerDraft).trim();
+    if (text.length === 0) {
+      this.customDangerError = true;
+      this.emit();
+      return null;
+    }
+    const items = text
+      .split(/[,;\n]+/)
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+    this.customDangerDraft = "";
+    this.customDangerError = false;
+    return this.triggerDangerScreen(items.length > 0 ? items : [text], patientIdOverride);
+  }
+
   public getVisibleActionCards(): ActionCard[] {
     return this.kernel.getVisibleActionCards();
   }
@@ -301,7 +345,11 @@ export class WatchUiController {
       .filter((card) => card.status === "OPEN").length;
   }
 
-  public acknowledgeCard(cardId: string): CrdtEvent {
+  public acknowledgeCard(cardId: string): CrdtEvent | null {
+    const existing = this.kernel.getStore().getActionCard(cardId);
+    if (existing && existing.status !== "OPEN") {
+      return null;
+    }
     const event = this.syncClient.ackActionCard(cardId);
     this.emit();
     return event;
@@ -348,7 +396,14 @@ export class WatchUiController {
     return this.sosQueuedEvent;
   }
 
+  public getIsSubmittingSos(): boolean {
+    return this.isSubmittingSos;
+  }
+
   public async submitTextSos(textOverride?: string): Promise<CrdtEvent | null> {
+    if (this.inFlightSos) {
+      return null;
+    }
     const trimmed = (textOverride ?? this.sosTextDraft).trim();
     if (trimmed.length === 0) {
       this.sosTextError = true;
@@ -360,27 +415,66 @@ export class WatchUiController {
   }
 
   public async submitSos(input: VoiceSosInput = {}): Promise<CrdtEvent> {
-    const event = await this.syncClient.enqueueVoiceSos({
-      patientId: input.patientId ?? (this.patientIdInput.trim() || null),
-      transcriptHint: input.transcriptHint ?? (this.sosTextDraft.trim() || undefined),
-      language: input.language ?? getLang(),
-      audioBlob: input.audioBlob ?? null,
-      mimeType: input.mimeType ?? null,
-      durationMs: input.durationMs ?? 0,
-    });
-    this.sosQueuedEvent = event;
-    this.sosTextDraft = "";
-    this.sosTextError = false;
+    if (this.inFlightSos) {
+      return this.inFlightSos;
+    }
+    this.isSubmittingSos = true;
     this.emit();
-    return event;
+    const run = (async () => {
+      try {
+        const event = await this.syncClient.enqueueVoiceSos({
+          patientId: input.patientId ?? (this.patientIdInput.trim() || null),
+          transcriptHint: input.transcriptHint ?? (this.sosTextDraft.trim() || undefined),
+          language: input.language ?? getLang(),
+          audioBlob: input.audioBlob ?? null,
+          mimeType: input.mimeType ?? null,
+          durationMs: input.durationMs ?? 0,
+        });
+        this.sosQueuedEvent = event;
+        this.sosTextDraft = "";
+        this.sosTextError = false;
+        return event;
+      } finally {
+        this.isSubmittingSos = false;
+        this.inFlightSos = null;
+        this.emit();
+      }
+    })();
+    this.inFlightSos = run;
+    return run;
   }
 
   public getHubUrl(): string {
     return this.syncClient.getHubUrl();
   }
 
+  public getHubUrlDraft(): string {
+    return this.hubUrlDraft ?? this.getHubUrl();
+  }
+
+  public getHubUrlError(): string | null {
+    return this.hubUrlError;
+  }
+
+  public setHubUrlDraft(value: string): void {
+    this.hubUrlDraft = value;
+    if (this.hubUrlError && (value.trim().length === 0 || isValidHubUrl(value))) {
+      this.hubUrlError = null;
+    }
+  }
+
   public setHubUrl(hubUrl: string): string {
-    const normalized = this.syncClient.setHubUrl(hubUrl || DEFAULT_HUB_URL);
+    const trimmed = hubUrl.trim();
+    if (trimmed.length > 0 && !isValidHubUrl(trimmed)) {
+      this.hubUrlDraft = hubUrl;
+      this.hubUrlError = `Invalid Hub address "${trimmed}". Use http://IP:port (e.g. http://192.168.1.10:8000).`;
+      this.emit();
+      return this.syncClient.getHubUrl();
+    }
+
+    this.hubUrlDraft = null;
+    this.hubUrlError = null;
+    const normalized = this.syncClient.setHubUrl(trimmed || DEFAULT_HUB_URL);
     try {
       this.storage.setItem(this.hubUrlStorageKey, normalized);
     } catch {
@@ -398,6 +492,8 @@ export class WatchUiController {
       savedHubUrl = null;
     }
     const resolved = resolveDefaultHubUrl(this.location, savedHubUrl);
+    this.hubUrlDraft = null;
+    this.hubUrlError = null;
     const normalized = this.syncClient.setHubUrl(resolved);
     this.emit();
     return normalized;
@@ -416,15 +512,33 @@ export class WatchUiController {
   }
 
   public async syncNow(): Promise<WatchSyncResult> {
+    if (this.inFlightSync) {
+      return this.inFlightSync;
+    }
+    if (this.hubUrlError) {
+      const invalidResult: WatchSyncResult = {
+        ok: false,
+        status: "error",
+        reason: this.hubUrlError,
+      };
+      this.lastSyncResult = invalidResult;
+      this.emit();
+      return invalidResult;
+    }
     this.isSyncing = true;
     this.emit();
-    try {
-      const result = await this.syncClient.syncNow();
-      this.lastSyncResult = result;
-      return result;
-    } finally {
-      this.isSyncing = false;
-      this.emit();
-    }
+    const run = (async () => {
+      try {
+        const result = await this.syncClient.syncNow();
+        this.lastSyncResult = result;
+        return result;
+      } finally {
+        this.isSyncing = false;
+        this.inFlightSync = null;
+        this.emit();
+      }
+    })();
+    this.inFlightSync = run;
+    return run;
   }
 }

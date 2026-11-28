@@ -207,14 +207,36 @@ class EnrichmentPipeline:
         patient_id = voice_event.patient_id or context_kwargs.pop("patient_id", None)
         assessed_at_ms = context_kwargs.pop("assessed_at_ms", hlc.wall_ms)
 
+        normalized_flags = {
+            str(f).strip().lower().replace("-", "_").replace(" ", "_")
+            for f in (*danger_signs, *symptoms)
+            if str(f).strip()
+        }
+
+        # Populate structured clinical flags from extracted symptoms when vitals/context omit them
+        if not context_kwargs.get("fever_days") and (
+            normalized_flags & {"fever", "high_fever", "very_high_fever"}
+        ):
+            context_kwargs["fever_days"] = 1
+        if "has_cough_or_difficult_breathing" not in context_kwargs and (
+            normalized_flags
+            & {"cough", "fast_breathing", "severe_breathing_difficulty", "chest_indrawing"}
+        ):
+            context_kwargs["has_cough_or_difficult_breathing"] = True
+        if "chest_indrawing" not in context_kwargs and (
+            normalized_flags & {"chest_indrawing", "severe_breathing_difficulty"}
+        ):
+            context_kwargs["chest_indrawing"] = True
+        if "has_diarrhea" not in context_kwargs and (
+            normalized_flags & {"diarrhea", "blood_in_stool"}
+        ):
+            context_kwargs["has_diarrhea"] = True
+        if "blood_in_stool" not in context_kwargs and "blood_in_stool" in normalized_flags:
+            context_kwargs["blood_in_stool"] = True
+
         # Ensure maternal-only danger flags never silently downgrade to GREEN_HOME
         # when patient_context is omitted (matches Tier-2 Hub enrichment_worker.py).
         if "patient_category" not in context_kwargs and not context_kwargs.get("is_pregnant"):
-            normalized_flags = {
-                str(f).strip().lower().replace("-", "_").replace(" ", "_")
-                for f in (*danger_signs, *symptoms)
-                if str(f).strip()
-            }
             age_months = context_kwargs.get("age_months")
             is_pediatric_age = isinstance(age_months, (int, float)) and age_months < 60
             if (normalized_flags & _MATERNAL_ONLY_RED_FLAGS) and not is_pediatric_age:

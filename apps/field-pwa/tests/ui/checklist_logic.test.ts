@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CrdtEvent } from "../../../../packages/contracts/ts/index";
-import { latestCompletedChecks } from "../../src/ui/checklist_logic";
+import { buildChecklistPayload, evaluate, latestCompletedChecks } from "../../src/ui/checklist_logic";
 
 const T = "anc_trimester_3" as const;
 let n = 0;
@@ -46,5 +46,13 @@ describe("latestCompletedChecks", () => {
   it("drops non-string entries and tolerates a non-array", () => {
     expect([...latestCompletedChecks([ev(["a", 1, null, { x: 1 }, "b"], h(1))], "p1", T)]).toEqual(["a", "b"]);
     expect(latestCompletedChecks([ev("nope", h(1))], "p1", T).size).toBe(0);
+  });
+});
+
+describe("buildChecklistPayload additional_notes", () => {
+  it("includes trimmed additional_notes when non-empty and omits when blank", () => {
+    const evRes = evaluate("anc_trimester_1", ["anc_t1_bp_check"], "p1");
+    expect(buildChecklistPayload(evRes, "  Mother reported mild nausea  ").additional_notes).toBe("Mother reported mild nausea");
+    expect(buildChecklistPayload(evRes, "   ")).not.toHaveProperty("additional_notes");
   });
 });

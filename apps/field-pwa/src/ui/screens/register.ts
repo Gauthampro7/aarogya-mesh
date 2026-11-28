@@ -1,7 +1,8 @@
 import { t, getLang } from "../../i18n";
 import { checkbox, field, h, numberInput } from "../dom";
 import type { Ctx } from "../ctx";
-import { buildPatient, type RegErr, type RegisterForm } from "../register_logic";
+import { BASELINE_SYMPTOM_TAGS, ageFromDob, buildPatient, type RegErr, type RegisterForm } from "../register_logic";
+import { formatIntakeReasoning, renderStageTracker } from "../stage_tracker";
 import type { PatientSex } from "../../../../../packages/contracts/ts/index";
 
 const ERR_KEY: Record<RegErr, Parameters<typeof t>[0]> = {
@@ -47,9 +48,35 @@ export function register(ctx: Ctx): HTMLElement {
     ageField.querySelector("small")!.textContent = t(years ? "reg.ageHintYears" : "reg.ageHint");
   };
   unitSel.addEventListener("change", syncUnit);
+  const syncAgeFromDob = () => {
+    const derived = ageFromDob(dob.value);
+    if (!derived) return;
+    unitSel.value = derived.unit;
+    syncUnit();
+    age.value = String(derived.value);
+  };
+  dob.addEventListener("input", syncAgeFromDob);
+  dob.addEventListener("change", syncAgeFromDob);
+  const selectedSymptoms = new Set<string>();
+  const otherSymptoms = h("input", { type: "text", name: "other_symptoms", maxlength: 500 });
+  const clinicalNotes = h("textarea", { name: "clinical_notes", rows: 2, maxlength: 1000 });
+  const notesSection = h(
+    "fieldset",
+    {},
+    h("legend", {}, t("reg.notesSection")),
+    BASELINE_SYMPTOM_TAGS.map((tag) =>
+      checkbox(t(`reg.sym.${tag}` as const), `init_${tag}`, false, (c) => {
+        if (c) selectedSymptoms.add(tag);
+        else selectedSymptoms.delete(tag);
+      }),
+    ),
+    field(t("reg.otherSymptoms"), otherSymptoms),
+    field(t("reg.clinicalNotes"), clinicalNotes),
+  );
   const errors = h("div", { class: "error", role: "alert", "aria-live": "assertive" });
   const ok = h("div", { class: "ok", role: "status" });
 
+  const submitBtn = h("button", { type: "submit", class: "primary" }, t("reg.save"));
   const form = h(
     "form",
     { novalidate: true },
@@ -58,16 +85,17 @@ export function register(ctx: Ctx): HTMLElement {
     field(t("reg.dob"), dob),
     h("div", { class: "agerow" }, ageField, field(t("reg.ageUnit"), unitSel)),
     field(t("reg.village"), village),
-    field(t("reg.household"), hh),
     preg,
     weeksField,
+    h("details", { class: "optional-group" }, h("summary", {}, t("reg.optionalDetails")), field(t("reg.household"), hh), notesSection),
     errors,
-    h("button", { type: "submit", class: "primary" }, t("reg.save")),
+    submitBtn,
     ok,
   );
   syncSex();
   form.addEventListener("submit", (ev) => {
     ev.preventDefault();
+    if (submitBtn.disabled) return;
     const f: RegisterForm = {
       full_name: name.value,
       sex: sex.value as PatientSex,
@@ -79,6 +107,9 @@ export function register(ctx: Ctx): HTMLElement {
       is_pregnant: pregInput.checked,
       gestational_weeks: weeks.value,
       preferred_language: getLang(),
+      initial_symptoms: [...selectedSymptoms],
+      other_symptoms: otherSymptoms.value,
+      clinical_notes: clinicalNotes.value,
     };
     const r = buildPatient(f, ctx.nodeId);
     errors.replaceChildren();
@@ -88,6 +119,7 @@ export function register(ctx: Ctx): HTMLElement {
       return;
     }
     const p = r.patient;
+    submitBtn.disabled = true;
     // Persist locally first; UI never awaits the network.
     void ctx.engine
       .enqueue({ event_type: "PATIENT_REGISTERED", patient_id: p.patient_id, payload: { ...p } })
@@ -95,14 +127,33 @@ export function register(ctx: Ctx): HTMLElement {
         ctx.syncSoon();
         ok.append(
           h("p", {}, t("reg.saved", { name: p.full_name })),
-          h("a", { class: "bigbtn danger", href: `#/triage/${encodeURIComponent(p.patient_id)}` }, t("reg.startTriage")),
+          renderStageTracker({
+            completedSteps: 1,
+            activeStep: 2,
+            headline: t("reg.stageHeadline"),
+            reasoningNode: h(
+              "div",
+              { class: "provenance-box", "data-provenance": "intake" },
+              h("p", { class: "prov-line" }, h("strong", {}, `${t("prov.intakeTitle")}: `), formatIntakeReasoning(p)),
+            ),
+            nextCue: t("reg.stageNext"),
+            actions: [
+              h("a", { class: "bigbtn danger", href: `#/triage/${encodeURIComponent(p.patient_id)}` }, t("reg.nextCheck")),
+              h("a", { class: "bigbtn", href: `#/voice/${encodeURIComponent(p.patient_id)}` }, t("reg.nextVoice")),
+              h("a", { class: "bigbtn", href: `#/vaccines/${encodeURIComponent(p.patient_id)}` }, t("nav.vaccines")),
+            ],
+          }),
           h("a", { class: "bigbtn", href: "#/register", onclick: () => ctx.rerender() }, t("reg.another")),
         );
         form.reset();
+        selectedSymptoms.clear();
         syncSex();
         syncUnit();
       })
-      .catch((e) => errors.append(h("p", {}, String(e))));
+      .catch((e) => errors.append(h("p", {}, String(e))))
+      .finally(() => {
+        submitBtn.disabled = false;
+      });
   });
   return h("section", {}, h("h1", {}, t("reg.title")), form);
 }

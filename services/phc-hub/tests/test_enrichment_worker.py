@@ -1073,4 +1073,171 @@ def test_active_stages_cleared_on_error_and_skipped_blob(tmp_path: Path) -> None
     assert err_worker.get_status().active_stages == {}
 
 
+def test_voice_note_with_fever_symptom_escalates_to_yellow_without_vitals(tmp_path: Path) -> None:
+    """Voice notes reporting fever/diarrhea/breathing symptoms without numeric vitals escalate to YELLOW_PHC."""
+    store = EventStore(":memory:")
+    blob_store = LocalBlobStore(tmp_path / "blobs")
+    clock = HlcClock("phc-hub-escalation")
+    manifest = _make_hub_manifest("phc-hub-escalation")
+
+    # General adult patient (no age_months, no numeric vitals) with fever voice note
+    store.append(
+        CrdtEvent(
+            event_id="evt-voice-gen-fever",
+            hlc=HlcTimestamp(wall_ms=_BASE_DAY_MS + 80_000, logical=0, node_id="phone-asha-01"),
+            origin_node_id="phone-asha-01",
+            patient_id="pat-gen-fever",
+            event_type=EventType.VOICE_NOTE_RECORDED,
+            enrichment_state=EnrichmentState.PENDING,
+            payload={"transcript_hint": "Patient has fever since yesterday.", "language": "en"},
+        )
+    )
+    # Pediatric patient with fever voice note and no thermometer reading
+    _register_patient(store, patient_id="pat-ped-fever", age_months=24)
+    store.append(
+        CrdtEvent(
+            event_id="evt-voice-ped-fever",
+            hlc=HlcTimestamp(wall_ms=_BASE_DAY_MS + 81_000, logical=0, node_id="phone-asha-01"),
+            origin_node_id="phone-asha-01",
+            patient_id="pat-ped-fever",
+            event_type=EventType.VOICE_NOTE_RECORDED,
+            enrichment_state=EnrichmentState.PENDING,
+            payload={"transcript_hint": "Child has fever and cough.", "language": "en"},
+        )
+    )
+
+    worker = EnrichmentWorker(store, blob_store, clock, manifest)
+    summary = worker.run_once()
+    assert summary.processed == 2
+
+    projected = project_state(store.get_all_events())
+    for evt_id in ("evt-voice-gen-fever", "evt-voice-ped-fever"):
+        triage = TriageAssessment.model_validate(
+            projected.enrichments[evt_id].payload["triage_assessment"]
+        )
+        assert triage.severity == TriageSeverity.YELLOW_PHC
+        assert triage.referral_required is True
+
+
+def test_calm_followup_on_red_patient_never_mentions_home_care_thresholds(tmp_path: Path) -> None:
+    """Calm follow-up voice note or triage on an existing RED_EMERGENCY patient must replace
+    the GREEN_HOME rationale and never leak 'within home-care thresholds' into
+    ENRICHMENT_COMPLETED or ACTION_CARD_ISSUED.
+    """
+    store = EventStore(":memory:")
+    blob_store = LocalBlobStore(tmp_path / "blobs")
+    clock = HlcClock("phc-hub-floor-rationale")
+    manifest = _make_hub_manifest("phc-hub-floor-rationale")
+
+    # Patient 1: Prior RED_EMERGENCY triage followed by a calm VOICE_NOTE_RECORDED.
+    _register_patient(store, patient_id="pat-red-voice-calm", age_months=30)
+    prior_red = evaluate_triage(
+        TriageInput(
+            patient_id="pat-red-voice-calm",
+            age_months=30,
+            danger_signs=["convulsions"],
+            assessed_at_ms=_BASE_DAY_MS + 90_000,
+        )
+    )
+    assert prior_red.severity == TriageSeverity.RED_EMERGENCY
+    store.append(
+        CrdtEvent(
+            event_id="evt-prior-red-voice",
+            hlc=HlcTimestamp(wall_ms=_BASE_DAY_MS + 90_000, logical=0, node_id="phone-asha-01"),
+            origin_node_id="phone-asha-01",
+            patient_id="pat-red-voice-calm",
+            event_type=EventType.TRIAGE_COMPLETED,
+            payload=prior_red.model_dump(mode="json"),
+        )
+    )
+    store.append(
+        CrdtEvent(
+            event_id="evt-calm-voice-after-red",
+            hlc=HlcTimestamp(wall_ms=_BASE_DAY_MS + 95_000, logical=0, node_id="phone-asha-01"),
+            origin_node_id="phone-asha-01",
+            patient_id="pat-red-voice-calm",
+            event_type=EventType.VOICE_NOTE_RECORDED,
+            enrichment_state=EnrichmentState.PENDING,
+            payload={
+                "transcript_hint": "Patient is resting comfortably and drinking water.",
+                "language": "en",
+            },
+        )
+    )
+
+    # Patient 2: Prior RED_EMERGENCY with empty immediate_actions followed by calm TRIAGE_COMPLETED.
+    _register_patient(store, patient_id="pat-red-triage-calm", age_months=36)
+    prior_red_minimal = TriageAssessment(
+        patient_id="pat-red-triage-calm",
+        severity=TriageSeverity.RED_EMERGENCY,
+        matched_rules=["WATCH_SOS_EMERGENCY"],
+        immediate_actions=[],
+        referral_required=True,
+        rationale="Watch SOS emergency triggered.",
+        assessed_at_ms=_BASE_DAY_MS + 91_000,
+    )
+    store.append(
+        CrdtEvent(
+            event_id="evt-prior-red-triage",
+            hlc=HlcTimestamp(wall_ms=_BASE_DAY_MS + 91_000, logical=0, node_id="watch-01"),
+            origin_node_id="watch-01",
+            patient_id="pat-red-triage-calm",
+            event_type=EventType.TRIAGE_COMPLETED,
+            payload=prior_red_minimal.model_dump(mode="json"),
+        )
+    )
+    calm_triage = evaluate_triage(
+        TriageInput(
+            patient_id="pat-red-triage-calm",
+            age_months=36,
+            temperature_c=36.8,
+            spo2_pct=98,
+            assessed_at_ms=_BASE_DAY_MS + 96_000,
+        )
+    )
+    assert calm_triage.severity == TriageSeverity.GREEN_HOME
+    assert "within home-care thresholds" in calm_triage.rationale.lower()
+    store.append(
+        CrdtEvent(
+            event_id="evt-calm-triage-after-red",
+            hlc=HlcTimestamp(wall_ms=_BASE_DAY_MS + 96_000, logical=0, node_id="phone-asha-01"),
+            origin_node_id="phone-asha-01",
+            patient_id="pat-red-triage-calm",
+            event_type=EventType.TRIAGE_COMPLETED,
+            enrichment_state=EnrichmentState.PENDING,
+            payload=calm_triage.model_dump(mode="json"),
+        )
+    )
+
+    worker = EnrichmentWorker(store, blob_store, clock, manifest)
+    summary = worker.run_once()
+    assert summary.processed == 2
+
+    projected = project_state(store.get_all_events())
+
+    for evt_id, patient_id in (
+        ("evt-calm-voice-after-red", "pat-red-voice-calm"),
+        ("evt-calm-triage-after-red", "pat-red-triage-calm"),
+    ):
+        enrichment = projected.enrichments[evt_id]
+        triage = TriageAssessment.model_validate(enrichment.payload["triage_assessment"])
+        assert triage.severity == TriageSeverity.RED_EMERGENCY
+        assert triage.referral_required is True
+        assert "within home-care thresholds" not in triage.rationale.lower()
+        assert "Monotonic clinical safety floor preserved RED_EMERGENCY" in triage.rationale
+        assert any(
+            any(tok in action.lower() for tok in ("108", "fru", "refer", "emergency"))
+            for action in triage.immediate_actions
+        )
+
+        cards = projected.action_cards_for_patient(patient_id)
+        assert len(cards) == 1
+        card = cards[0]
+        assert card.severity == TriageSeverity.RED_EMERGENCY
+        assert card.priority == ActionCardPriority.CRITICAL
+        assert "within home-care thresholds" not in card.summary.lower()
+        assert "Monotonic clinical safety floor preserved RED_EMERGENCY" in card.summary
+
+
+
 

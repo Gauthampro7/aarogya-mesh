@@ -53,20 +53,25 @@ export async function vaccines(ctx: Ctx, params: string[]): Promise<HTMLElement>
                 h("div", { class: "muted" }, i.status === "COMPLETED" ? `${t("vac.given")}: ${i.administered_date}` : `${t("vac.due")}: ${i.due_date}`),
                 i.status === "COMPLETED"
                   ? null
-                  : h("div", { class: "row" }, date, h("button", { type: "button", onclick: () => log(i.vaccine_code, date.value) }, t("vac.log"))),
+                  : (() => {
+                      const logBtn = h("button", { type: "button", onclick: () => log(i.vaccine_code, date.value, logBtn) }, t("vac.log"));
+                      return h("div", { class: "row" }, date, logBtn);
+                    })(),
               );
             }),
           ),
         ),
       );
     }
-    function log(code: string, date: string) {
+    function log(code: string, date: string, logBtn: HTMLButtonElement) {
+      if (logBtn.disabled) return;
       clear(msg);
       const payload = buildVaccinationPayload(dob, code, date, todayIso());
       if (!payload) {
         msg.append(h("p", { class: "error", role: "alert" }, t("vac.badDate")));
         return;
       }
+      logBtn.disabled = true;
       ctx.engine
         .enqueue({ event_type: "VACCINATION_LOGGED", patient_id: p!.patient_id, payload: { ...payload } })
         .then(() => {
@@ -74,7 +79,10 @@ export async function vaccines(ctx: Ctx, params: string[]): Promise<HTMLElement>
           msg.append(h("p", { class: "ok" }, t("vac.saved")));
           return draw(); // recompute from the event log
         })
-        .catch((e) => msg.append(h("p", { class: "error" }, String(e))));
+        .catch((e) => msg.append(h("p", { class: "error" }, String(e))))
+        .finally(() => {
+          logBtn.disabled = false;
+        });
     }
   }
   sel.addEventListener("change", () => {

@@ -24,6 +24,31 @@ export function mountWatchUi(root: HTMLElement, controller: WatchUiController): 
   let recordingTimer: ReturnType<typeof setInterval> | null = null;
   let activeRecBtn: HTMLButtonElement | null = null;
   let micError = false;
+  let recBusy = false;
+  let hubDetailsOpen = false;
+
+  const renderSyncFeedback = (): HTMLElement | null => {
+    const lastSync = controller.getLastSyncResult();
+    if (!lastSync) {
+      return null;
+    }
+    if (lastSync.ok) {
+      return el(
+        "div",
+        "status-ok",
+        t("sync.success", {
+          sent: lastSync.ackedCount,
+          received: lastSync.appliedCount,
+        }),
+      );
+    }
+    const detail = lastSync.reason.trim();
+    const message =
+      detail.length > 0 && !detail.includes(t("sync.offlineFail"))
+        ? `${t("sync.offlineFail")} — ${detail}`
+        : t("sync.offlineFail");
+    return el("div", "status-warn", message);
+  };
 
   const formatRecLabel = (recording: boolean): string =>
     recording
@@ -116,6 +141,23 @@ export function mountWatchUi(root: HTMLElement, controller: WatchUiController): 
         banner.append(call108);
       }
 
+      const syncBannerBtn = el(
+        "button",
+        "action-btn btn-teal",
+        controller.getIsSyncing() ? t("sync.syncing") : t("sync.now"),
+      );
+      syncBannerBtn.type = "button";
+      syncBannerBtn.disabled = controller.getIsSyncing();
+      syncBannerBtn.addEventListener("click", () => {
+        void controller.syncNow();
+      });
+      banner.append(syncBannerBtn);
+
+      const bannerSyncFeedback = renderSyncFeedback();
+      if (bannerSyncFeedback) {
+        banner.append(bannerSyncFeedback);
+      }
+
       const resetBtn = el("button", "action-btn btn-secondary", t("danger.reset"));
       resetBtn.type = "button";
       resetBtn.addEventListener("click", () => controller.resetTriage());
@@ -196,11 +238,48 @@ export function mountWatchUi(root: HTMLElement, controller: WatchUiController): 
       list.append(btn);
     }
 
+    const customWrap = el("div", "custom-danger-box");
+    const customInput = el("input", "watch-input");
+    customInput.type = "text";
+    customInput.setAttribute("data-role", "custom-danger-input");
+    customInput.placeholder = t("danger.otherPlaceholder");
+    customInput.value = controller.getCustomDangerDraft();
+
+    const customWarn = el("div", "status-warn", t("danger.otherRequired"));
+    customWarn.hidden = !controller.getCustomDangerError();
+
+    customInput.addEventListener("input", () => {
+      controller.setCustomDangerDraft(customInput.value);
+      if (customInput.value.trim().length > 0) {
+        customWarn.hidden = true;
+      }
+    });
+
+    const customBtn = el("button", "action-btn btn-amber", t("danger.otherSubmit"));
+    customBtn.type = "button";
+    customBtn.setAttribute("data-role", "custom-danger-btn");
+    customBtn.addEventListener("click", () => controller.submitCustomDangerSign(customInput.value));
+
+    customWrap.append(customInput, customWarn, customBtn);
+
     const greenBtn = el("button", "action-btn btn-green", t("danger.noneBtn"));
     greenBtn.type = "button";
     greenBtn.addEventListener("click", () => controller.triggerDangerScreen([]));
 
-    wrap.append(catRow, pidInput, list, greenBtn);
+    const optionalDetails = el("details", "watch-optional");
+    if (
+      controller.getCustomDangerError() ||
+      controller.getCustomDangerDraft().trim().length > 0 ||
+      controller.getPatientIdInput().trim().length > 0
+    ) {
+      optionalDetails.open = true;
+    }
+    optionalDetails.append(el("summary", undefined, t("danger.optionalSummary")));
+    const optionalBody = el("div", "watch-optional-body");
+    optionalBody.append(pidInput, customWrap);
+    optionalDetails.append(optionalBody);
+
+    wrap.append(catRow, list, greenBtn, optionalDetails);
     return wrap;
   };
 
@@ -268,6 +347,8 @@ export function mountWatchUi(root: HTMLElement, controller: WatchUiController): 
           ackBtn.type = "button";
           ackBtn.addEventListener("click", () => controller.acknowledgeCard(rem.sourceCardId!));
           item.append(ackBtn);
+        } else if (rem.sourceCardId) {
+          item.append(el("div", "acked-tag", t("cards.acked")));
         }
         wrap.append(item);
       }
@@ -296,34 +377,44 @@ export function mountWatchUi(root: HTMLElement, controller: WatchUiController): 
         formatRecLabel(recording),
       );
       recBtn.type = "button";
+      recBtn.disabled = recBusy || controller.getIsSubmittingSos();
       recBtn.setAttribute("data-role", "sos-rec-btn");
       activeRecBtn = recBtn;
       recBtn.addEventListener("click", async () => {
-        if (recorder.isRecording()) {
-          clearRecordingTimer();
-          const result = await recorder.stop();
-          await controller.submitSos({
-            audioBlob: result?.blob ?? null,
-            mimeType: result?.mimeType ?? null,
-            durationMs: result?.durationMs ?? 0,
-          });
-          render();
-        } else {
-          try {
-            await recorder.start();
-            recordingSeconds = 0;
-            recordingTimer = setInterval(() => {
-              recordingSeconds += 1;
-              if (activeRecBtn) {
-                activeRecBtn.textContent = formatRecLabel(true);
-              }
-            }, 1000);
-            render();
-          } catch {
+        if (recBusy || controller.getIsSubmittingSos()) {
+          return;
+        }
+        recBusy = true;
+        recBtn.disabled = true;
+        try {
+          if (recorder.isRecording()) {
             clearRecordingTimer();
-            micError = true;
+            const result = await recorder.stop();
+            await controller.submitSos({
+              audioBlob: result?.blob ?? null,
+              mimeType: result?.mimeType ?? null,
+              durationMs: result?.durationMs ?? 0,
+            });
             render();
+          } else {
+            try {
+              await recorder.start();
+              recordingSeconds = 0;
+              recordingTimer = setInterval(() => {
+                recordingSeconds += 1;
+                if (activeRecBtn) {
+                  activeRecBtn.textContent = formatRecLabel(true);
+                }
+              }, 1000);
+              render();
+            } catch {
+              clearRecordingTimer();
+              micError = true;
+              render();
+            }
           }
+        } finally {
+          recBusy = false;
         }
       });
       wrap.append(recBtn);
@@ -348,7 +439,12 @@ export function mountWatchUi(root: HTMLElement, controller: WatchUiController): 
 
     const sendTextBtn = el("button", "action-btn btn-amber", t("sos.sendText"));
     sendTextBtn.type = "button";
+    sendTextBtn.disabled = controller.getIsSubmittingSos();
     sendTextBtn.addEventListener("click", async () => {
+      if (controller.getIsSubmittingSos()) {
+        return;
+      }
+      sendTextBtn.disabled = true;
       await controller.submitTextSos(textInput.value);
     });
 
@@ -356,6 +452,21 @@ export function mountWatchUi(root: HTMLElement, controller: WatchUiController): 
 
     if (controller.getLastSosEvent()) {
       wrap.append(el("div", "status-ok", t("sos.queued")));
+      const syncSosBtn = el(
+        "button",
+        "action-btn btn-teal",
+        controller.getIsSyncing() ? t("sync.syncing") : t("sync.now"),
+      );
+      syncSosBtn.type = "button";
+      syncSosBtn.disabled = controller.getIsSyncing();
+      syncSosBtn.addEventListener("click", () => {
+        void controller.syncNow();
+      });
+      wrap.append(syncSosBtn);
+      const sosSyncFeedback = renderSyncFeedback();
+      if (sosSyncFeedback) {
+        wrap.append(sosSyncFeedback);
+      }
     }
     return wrap;
   };
@@ -373,10 +484,12 @@ export function mountWatchUi(root: HTMLElement, controller: WatchUiController): 
 
     const urlLabel = el("label", "field-label", t("sync.hubLabel"));
     const urlInput = el("input", "watch-input");
-    urlInput.type = "url";
+    urlInput.type = "text";
+    urlInput.inputMode = "url";
     urlInput.setAttribute("data-hub-url", "1");
     urlInput.placeholder = t("sync.hubHint");
-    urlInput.value = controller.getHubUrl();
+    urlInput.value = controller.getHubUrlDraft();
+    urlInput.addEventListener("input", () => controller.setHubUrlDraft(urlInput.value));
     urlInput.addEventListener("change", () => controller.setHubUrl(urlInput.value));
 
     const syncBtn = el(
@@ -391,25 +504,27 @@ export function mountWatchUi(root: HTMLElement, controller: WatchUiController): 
       await controller.syncNow();
     });
 
-    wrap.append(urlLabel, urlInput, syncBtn);
+    wrap.append(syncBtn);
 
-    const lastSync = controller.getLastSyncResult();
-    if (lastSync) {
-      if (lastSync.ok) {
-        wrap.append(
-          el(
-            "div",
-            "status-ok",
-            t("sync.success", {
-              sent: lastSync.ackedCount,
-              received: lastSync.appliedCount,
-            }),
-          ),
-        );
-      } else {
-        wrap.append(el("div", "status-warn", t("sync.offlineFail")));
-      }
+    const syncFeedback = renderSyncFeedback();
+    if (syncFeedback) {
+      wrap.append(syncFeedback);
     }
+
+    const hubUrlError = controller.getHubUrlError();
+    const hubDetails = el("details", "watch-optional");
+    hubDetails.open = hubDetailsOpen || hubUrlError !== null;
+    hubDetails.addEventListener("toggle", () => {
+      hubDetailsOpen = hubDetails.open;
+    });
+    hubDetails.append(el("summary", undefined, t("sync.hubSummary")));
+    const hubBody = el("div", "watch-optional-body");
+    hubBody.append(urlLabel, urlInput);
+    if (hubUrlError) {
+      hubBody.append(el("div", "status-warn", hubUrlError));
+    }
+    hubDetails.append(hubBody);
+    wrap.append(hubDetails);
 
     return wrap;
   };

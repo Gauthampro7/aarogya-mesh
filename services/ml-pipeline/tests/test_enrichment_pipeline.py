@@ -596,3 +596,40 @@ def test_binary_webm_audio_without_whisper_never_fabricates_fever_or_cough() -> 
     assert extracted == []
     assert "fever" not in card_evt.payload["summary"].lower()
     assert "cough" not in card_evt.payload["summary"].lower()
+
+
+def test_pipeline_populates_clinical_flags_from_extracted_symptoms() -> None:
+    """Extracted fever/cough/diarrhea symptoms populate TriageInput flags when vitals are omitted."""
+    captured_features: dict[str, Any] = {}
+
+    class SpyRiskScorer(LightGbmRiskScorer):
+        def score_risk(self, features: dict[str, Any]) -> RiskScoreResult:
+            captured_features.update(features)
+            return super().score_risk(features)
+
+    pipeline = EnrichmentPipeline(
+        structurer=LlamaCppSlmStructurer(model_path=None),
+        risk_scorer=SpyRiskScorer(),
+    )
+    voice_event = _make_voice_event(
+        event_id="evt-fever-diarrhea",
+        patient_id="pat-sym-01",
+        payload={
+            "language": "en",
+            "transcript_hint": "Patient has fever, cough, and diarrhea.",
+        },
+    )
+    emitted = pipeline.process_voice_note(
+        voice_event,
+        hub_node_id="hub-01",
+        hlc=HlcTimestamp(wall_ms=1_700_002_400_000, logical=0, node_id="hub-01"),
+        patient_context=None,
+    )
+    assert len(emitted) == 2
+    enrichment_evt = emitted[0]
+    extracted = enrichment_evt.payload["structured_note"]["extracted_symptoms"]
+    assert "fever" in extracted
+    assert "cough" in extracted
+    assert "diarrhea" in extracted
+    assert captured_features.get("fever_days") == 1
+    assert captured_features.get("symptom_count") == 3

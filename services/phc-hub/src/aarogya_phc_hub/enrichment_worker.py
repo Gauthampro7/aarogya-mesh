@@ -13,8 +13,10 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+import re
 import threading
 from collections import defaultdict
+from collections.abc import Collection
 from typing import Any
 from uuid import uuid4
 
@@ -204,13 +206,22 @@ def _build_triage_input(
     hemoglobin_g_dl = _safe_float(payload.get("hemoglobin_g_dl"), min_val=1.0, max_val=25.0)
     muac_cm = _safe_float(payload.get("muac_cm"), min_val=5.0, max_val=50.0)
     fever_days = _safe_int(payload.get("fever_days"), min_val=0, max_val=365) or 0
-    if fever_days == 0 and "fever" in all_flags:
+    if fever_days == 0 and ("fever" in all_flags or "high_fever" in all_flags):
         fever_days = 1
 
     has_cough_or_breathing = bool(
         payload.get("has_cough_or_difficult_breathing") is True
-        or "cough" in all_flags
-        or "fast_breathing" in all_flags
+        or bool(
+            all_flags
+            & {
+                "cough",
+                "fast_breathing",
+                "breathing_difficulty",
+                "difficulty_breathing",
+                "shortness_of_breath",
+                "breathlessness",
+            }
+        )
     )
 
     triage_input = TriageInput(
@@ -229,10 +240,16 @@ def _build_triage_input(
         hemoglobin_g_dl=hemoglobin_g_dl,
         muac_cm=muac_cm,
         has_cough_or_difficult_breathing=has_cough_or_breathing,
-        chest_indrawing=bool(payload.get("chest_indrawing") is True),
-        has_diarrhea=bool(payload.get("has_diarrhea") is True or "diarrhea" in all_flags),
+        chest_indrawing=bool(payload.get("chest_indrawing") is True or "chest_indrawing" in all_flags),
+        has_diarrhea=bool(
+            payload.get("has_diarrhea") is True or "diarrhea" in all_flags or "dysentery" in all_flags
+        ),
         diarrhea_days=_safe_int(payload.get("diarrhea_days"), min_val=0, max_val=365) or 0,
-        blood_in_stool=bool(payload.get("blood_in_stool") is True),
+        blood_in_stool=bool(
+            payload.get("blood_in_stool") is True
+            or "blood_in_stool" in all_flags
+            or "dysentery" in all_flags
+        ),
         fever_days=fever_days,
         assessed_at_ms=voice_event.hlc.wall_ms,
     )
@@ -269,10 +286,11 @@ def _apply_monotonic_severity_floor(
     new_triage: TriageAssessment,
     existing_triage: TriageAssessment | None,
 ) -> TriageAssessment:
-    """Ensure voice-note enrichment never downgrades an active higher-severity patient triage."""
+    """Ensure enrichment never downgrades an active higher-severity patient triage."""
     if existing_triage is None:
         return new_triage
-    if _SEVERITY_RANK[existing_triage.severity] <= _SEVERITY_RANK[new_triage.severity]:
+    floor_severity = existing_triage.severity
+    if _SEVERITY_RANK[floor_severity] <= _SEVERITY_RANK[new_triage.severity]:
         return new_triage
 
     merged_rules = _dedupe_preserve_order(
@@ -288,14 +306,37 @@ def _apply_monotonic_severity_floor(
             [*existing_triage.immediate_actions, *new_triage.immediate_actions]
         )
 
-    merged_rationale = (
-        f"Preserved active {existing_triage.severity.value} triage floor: "
-        f"{existing_triage.rationale} (Voice note screen: {new_triage.rationale})"
+    if floor_severity == TriageSeverity.RED_EMERGENCY and not any(
+        any(tok in action.lower() for tok in ("108", "fru", "refer", "emergency"))
+        for action in merged_actions
+    ):
+        merged_actions.append("Arrange immediate 108 ambulance / FRU emergency referral.")
+
+    is_green_or_home_care = (
+        new_triage.severity == TriageSeverity.GREEN_HOME
+        or "home-care thresholds" in new_triage.rationale.lower()
     )
+    if is_green_or_home_care:
+        if floor_severity == TriageSeverity.RED_EMERGENCY:
+            merged_rationale = (
+                "Monotonic clinical safety floor preserved RED_EMERGENCY from prior "
+                "danger-sign/triage assessment; immediate 108/FRU referral remains mandatory."
+            )
+        else:
+            merged_rationale = (
+                "Monotonic clinical safety floor preserved YELLOW_PHC from prior "
+                "assessment; PHC Medical Officer review remains required."
+            )
+    else:
+        merged_rationale = (
+            f"Preserved active {floor_severity.value} triage floor: "
+            f"{existing_triage.rationale} (Follow-up screen: {new_triage.rationale})"
+        )
+
     return TriageAssessment.model_validate(
         new_triage.model_copy(
             update={
-                "severity": existing_triage.severity,
+                "severity": floor_severity,
                 "referral_required": True,
                 "matched_rules": merged_rules,
                 "immediate_actions": merged_actions,
@@ -305,21 +346,286 @@ def _apply_monotonic_severity_floor(
     )
 
 
+_BP_PAIR_RE = re.compile(r"\b(\d{2,3})\s*/\s*(\d{2,3})\s*mmHg\b", re.IGNORECASE)
+_SYSTOLIC_ONLY_RE = re.compile(r"\bsystolic\s+bp\s+(\d{2,3})\s*mmHg\b", re.IGNORECASE)
+_SPO2_RE = re.compile(r"\bSpO2\s+(\d{2,3})\s*%", re.IGNORECASE)
+_HB_RE = re.compile(r"\bHemoglobin\s+(\d+(?:\.\d+)?)\s*g/dL\b", re.IGNORECASE)
+_MUAC_RE = re.compile(r"\bMUAC\s+(\d+(?:\.\d+)?)\s*cm\b", re.IGNORECASE)
+_RR_RE = re.compile(r"\brespiratory\s+rate\s+(\d{1,3})\s*/\s*min\b", re.IGNORECASE)
+_TEMP_RE = re.compile(r"\b(3[0-9](?:\.\d+)?|4[0-5](?:\.\d+)?)\s*°?\s*C\b")
+_ML_ENGINE_PROVENANCE = (
+    "28-Tree Monotone GBDT + Exact TreeSHAP (clinical_gbdt_v1.json, AUROC 0.8318)"
+)
+
+
+def _build_reasoning_provenance(
+    *,
+    triage: TriageAssessment,
+    is_pregnant: bool,
+    risk_score: float,
+) -> dict[str, Any]:
+    """Build explicit reasoning provenance separating WHO/NHM rules from Laptop ML analytics."""
+    is_maternal = is_pregnant or any(
+        rule.upper().startswith("MAT_") or "MATERNAL" in rule.upper()
+        for rule in triage.matched_rules
+    )
+    clinical_protocol = (
+        "NHM ASHA Maternal (NHM_ASHA_MATERNAL_ANC_PNC_2024)"
+        if is_maternal
+        else "WHO IMNCI (WHO_IMNCI_INDIA_2024)"
+    )
+    risk_pct = round(risk_score * 100)
+    return {
+        "stage": "HOST_LAPTOP_ML_ANALYTICS",
+        "clinical_protocol": clinical_protocol,
+        "matched_rule_ids": list(triage.matched_rules),
+        "clinical_parameters": triage.rationale,
+        "ml_engine": _ML_ENGINE_PROVENANCE,
+        "ml_summary": (
+            f"Laptop GBDT combined 13 vitals & flags -> Risk {risk_pct}% "
+            f"(WHO {triage.severity.value} safety floor enforced)"
+        ),
+    }
+
+
+def _top_shap_features(
+    shap_attributions: dict[str, float],
+    *,
+    limit: int = 5,
+) -> list[dict[str, Any]]:
+    """Return the top SHAP drivers ordered by absolute contribution magnitude."""
+    ranked = sorted(
+        ((str(k), float(v)) for k, v in shap_attributions.items()),
+        key=lambda item: (-abs(item[1]), item[0]),
+    )
+    non_zero = [item for item in ranked if abs(item[1]) > 1e-6]
+    chosen = non_zero[:limit] if non_zero else ranked[:limit]
+    return [
+        {
+            "feature": name,
+            "contribution": round(val, 4),
+            "direction": "risk" if val >= 0.0 else "protective",
+        }
+        for name, val in chosen
+    ]
+
+
+def _extract_embedded_triage(payload: dict[str, Any]) -> TriageAssessment | None:
+    """Safely parse a TriageAssessment embedded in a TRIAGE_COMPLETED payload."""
+    if "severity" not in payload or "rationale" not in payload:
+        return None
+    known = {key: payload[key] for key in TriageAssessment.model_fields if key in payload}
+    with contextlib.suppress(Exception):
+        return TriageAssessment.model_validate(known)
+    return None
+
+
+def _recommended_follow_up_for_triage(triage: TriageAssessment, risk_band: str) -> str:
+    """Derive a concise, clinically safe follow-up recommendation for triage enrichment."""
+    if triage.severity == TriageSeverity.RED_EMERGENCY:
+        if triage.immediate_actions:
+            return triage.immediate_actions[0]
+        return "Immediate emergency referral to PHC / FRU required."
+    if triage.severity == TriageSeverity.YELLOW_PHC:
+        if triage.immediate_actions:
+            return triage.immediate_actions[0]
+        return "Schedule PHC / ANM clinical evaluation today."
+    if risk_band == "HIGH":
+        return "Elevated ML risk score — schedule close ASHA follow-up within 24 hours."
+    if risk_band == "MODERATE":
+        return "Monitor symptoms closely and re-assess within 24–48 hours."
+    if triage.immediate_actions:
+        return triage.immediate_actions[0]
+    return "Continue home care and routine ASHA follow-up."
+
+
+def _build_triage_input_from_triage_event(
+    triage_event: CrdtEvent,
+    patient: PatientRecord | None,
+) -> tuple[TriageInput, dict[str, float | int | bool], TriageAssessment | None]:
+    """Build ``TriageInput`` and tabular ML features from a ``TRIAGE_COMPLETED`` event."""
+    payload = triage_event.payload
+    nested_vitals = (
+        payload.get("vitals")
+        if isinstance(payload.get("vitals"), dict)
+        else (
+            payload.get("triage_input")
+            if isinstance(payload.get("triage_input"), dict)
+            else {}
+        )
+    )
+
+    def _get(key: str) -> Any:
+        if key in payload and payload[key] is not None:
+            return payload[key]
+        return nested_vitals.get(key)
+
+    incoming_triage = _extract_embedded_triage(payload)
+    rationale = str(payload.get("rationale") or (incoming_triage.rationale if incoming_triage else ""))
+    raw_matched_rules = payload.get("matched_rules")
+    matched_rules = (
+        [str(r) for r in raw_matched_rules if isinstance(r, str)]
+        if isinstance(raw_matched_rules, list)
+        else (list(incoming_triage.matched_rules) if incoming_triage else [])
+    )
+
+    raw_danger = _get("danger_signs")
+    raw_symptoms = _get("symptoms")
+    danger_signs = _normalize_slm_flags(
+        [str(x) for x in raw_danger if isinstance(x, str)] if isinstance(raw_danger, list) else []
+    )
+    symptoms = _normalize_slm_flags(
+        [str(x) for x in raw_symptoms if isinstance(x, str)] if isinstance(raw_symptoms, list) else []
+    )
+    all_flags = set(danger_signs) | set(symptoms)
+
+    age_months = (
+        _safe_int(_get("age_months"), min_val=0, max_val=1500)
+        if _get("age_months") is not None
+        else (patient.age_months if patient is not None else None)
+    )
+    is_pregnant = bool(
+        (patient is not None and patient.is_pregnant) or _get("is_pregnant") is True
+    )
+    gestational_weeks = (
+        _safe_int(_get("gestational_weeks"), min_val=0, max_val=45)
+        if _get("gestational_weeks") is not None
+        else (patient.gestational_weeks if patient is not None else None)
+    )
+
+    temperature_c = _safe_float(_get("temperature_c"), min_val=30.0, max_val=45.0)
+    respiratory_rate_bpm = _safe_int(_get("respiratory_rate_bpm"), min_val=0, max_val=160)
+    spo2_pct = _safe_int(_get("spo2_pct"), min_val=0, max_val=100)
+    systolic_bp = _safe_int(_get("systolic_bp"), min_val=40, max_val=300)
+    diastolic_bp = _safe_int(_get("diastolic_bp"), min_val=20, max_val=200)
+    hemoglobin_g_dl = _safe_float(_get("hemoglobin_g_dl"), min_val=1.0, max_val=25.0)
+    muac_cm = _safe_float(_get("muac_cm"), min_val=5.0, max_val=50.0)
+
+    # Fallback vital extraction from deterministic rationale when phone sends pure TriageAssessment
+    if rationale:
+        if systolic_bp is None or diastolic_bp is None:
+            bp_match = _BP_PAIR_RE.search(rationale)
+            if bp_match:
+                if systolic_bp is None:
+                    systolic_bp = _safe_int(int(bp_match.group(1)), min_val=40, max_val=300)
+                if diastolic_bp is None:
+                    diastolic_bp = _safe_int(int(bp_match.group(2)), min_val=20, max_val=200)
+            elif systolic_bp is None:
+                sys_match = _SYSTOLIC_ONLY_RE.search(rationale)
+                if sys_match:
+                    systolic_bp = _safe_int(int(sys_match.group(1)), min_val=40, max_val=300)
+        if spo2_pct is None:
+            spo2_match = _SPO2_RE.search(rationale)
+            if spo2_match:
+                spo2_pct = _safe_int(int(spo2_match.group(1)), min_val=0, max_val=100)
+        if hemoglobin_g_dl is None:
+            hb_match = _HB_RE.search(rationale)
+            if hb_match:
+                hemoglobin_g_dl = _safe_float(float(hb_match.group(1)), min_val=1.0, max_val=25.0)
+        if muac_cm is None:
+            muac_match = _MUAC_RE.search(rationale)
+            if muac_match:
+                muac_cm = _safe_float(float(muac_match.group(1)), min_val=5.0, max_val=50.0)
+        if respiratory_rate_bpm is None:
+            rr_match = _RR_RE.search(rationale)
+            if rr_match:
+                respiratory_rate_bpm = _safe_int(int(rr_match.group(1)), min_val=0, max_val=160)
+        if temperature_c is None:
+            temp_match = _TEMP_RE.search(rationale)
+            if temp_match:
+                temperature_c = _safe_float(float(temp_match.group(1)), min_val=30.0, max_val=45.0)
+
+    fever_days = _safe_int(_get("fever_days"), min_val=0, max_val=365) or 0
+    if fever_days == 0 and (
+        "fever" in all_flags
+        or "high_fever" in all_flags
+        or any("FEVER" in r.upper() for r in matched_rules)
+    ):
+        fever_days = 1
+
+    patient_category: PatientCategory | None = None
+    if is_pregnant or (all_flags & _MATERNAL_ONLY_RED_FLAGS) or any(
+        "MATERNAL" in r.upper() or r.upper().startswith("MAT_") for r in matched_rules
+    ):
+        patient_category = PatientCategory.MATERNAL
+
+    has_cough_or_breathing = bool(
+        _get("has_cough_or_difficult_breathing") is True
+        or bool(
+            all_flags
+            & {
+                "cough",
+                "fast_breathing",
+                "breathing_difficulty",
+                "difficulty_breathing",
+                "shortness_of_breath",
+                "breathlessness",
+            }
+        )
+        or any("RESP" in r.upper() for r in matched_rules)
+    )
+
+    triage_input = TriageInput(
+        patient_id=triage_event.patient_id,
+        patient_category=patient_category,
+        age_months=age_months,
+        is_pregnant=is_pregnant,
+        gestational_weeks=gestational_weeks if is_pregnant else None,
+        danger_signs=danger_signs,
+        symptoms=symptoms,
+        temperature_c=temperature_c,
+        respiratory_rate_bpm=respiratory_rate_bpm,
+        spo2_pct=spo2_pct,
+        systolic_bp=systolic_bp,
+        diastolic_bp=diastolic_bp,
+        hemoglobin_g_dl=hemoglobin_g_dl,
+        muac_cm=muac_cm,
+        has_cough_or_difficult_breathing=has_cough_or_breathing,
+        chest_indrawing=bool(_get("chest_indrawing") is True or "chest_indrawing" in all_flags),
+        has_diarrhea=bool(
+            _get("has_diarrhea") is True
+            or "diarrhea" in all_flags
+            or "dysentery" in all_flags
+            or any("DIARRHEA" in r.upper() for r in matched_rules)
+        ),
+        diarrhea_days=_safe_int(_get("diarrhea_days"), min_val=0, max_val=365) or 0,
+        blood_in_stool=bool(
+            _get("blood_in_stool") is True
+            or "blood_in_stool" in all_flags
+            or "dysentery" in all_flags
+        ),
+        fever_days=fever_days,
+        assessed_at_ms=triage_event.hlc.wall_ms,
+    )
+
+    features = extract_risk_features(triage_input)
+    non_green_rules = [r for r in matched_rules if r not in _GREEN_DEFAULT_RULES]
+    if int(features.get("symptom_count", 0)) == 0 and non_green_rules:
+        features["symptom_count"] = len(non_green_rules)
+    return triage_input, features, incoming_triage
+
+
 def _card_from_deterministic_triage(
     *,
     patient_id: str | None,
     triage: TriageAssessment,
-    structured: StructuredClinicalNote,
+    structured: StructuredClinicalNote | None = None,
+    recommended_follow_up: str | None = None,
     risk_band: str,
     risk_score: float,
     source_event_id: str,
     language: str,
 ) -> ActionCard:
     """Build an ``ActionCard`` whose severity and floor priority come strictly from ``triage``."""
+    green_title = (
+        "GREEN: Voice Note Clinical Summary"
+        if structured is not None
+        else "GREEN: Clinical AI Risk Summary"
+    )
     title_map = {
         TriageSeverity.RED_EMERGENCY: "RED EMERGENCY: Immediate Referral",
         TriageSeverity.YELLOW_PHC: "YELLOW: PHC / ANM Visit Required",
-        TriageSeverity.GREEN_HOME: "GREEN: Voice Note Clinical Summary",
+        TriageSeverity.GREEN_HOME: green_title,
     }
     if triage.severity == TriageSeverity.RED_EMERGENCY:
         priority = ActionCardPriority.CRITICAL
@@ -331,11 +637,14 @@ def _card_from_deterministic_triage(
         priority = ActionCardPriority.LOW
 
     steps: list[str] = list(triage.immediate_actions)
-    if structured.extracted_symptoms:
+    if structured is not None and structured.extracted_symptoms:
         steps.append(f"Observed symptoms: {', '.join(structured.extracted_symptoms)}")
     steps.append(f"ML risk band: {risk_band} ({risk_score:.2f})")
-    if structured.recommended_follow_up not in steps:
-        steps.append(structured.recommended_follow_up)
+    follow_up = (
+        structured.recommended_follow_up if structured is not None else recommended_follow_up
+    )
+    if follow_up and follow_up not in steps:
+        steps.append(follow_up)
 
     return ActionCard(
         patient_id=patient_id,
@@ -532,13 +841,26 @@ class EnrichmentWorker:
                 or bool(structured.candidate_danger_flags)
             )
             risk = self._risk_scorer.score_risk(risk_features)
+            top_features = _top_shap_features(risk.shap_attributions)
+            reasoning_provenance = _build_reasoning_provenance(
+                triage=triage_assessment,
+                is_pregnant=triage_input.is_pregnant,
+                risk_score=risk.risk_score,
+            )
 
             enrichment_payload: dict[str, Any] = {
+                "source_type": "voice_note",
+                "severity": triage_assessment.severity.value,
                 "audio_source": audio_source,
                 "transcription": asr_result.model_dump(mode="json"),
                 "structured_note": structured.model_dump(mode="json"),
                 "triage_assessment": triage_assessment.model_dump(mode="json"),
                 "risk_score": risk.model_dump(mode="json"),
+                "risk_band": risk.risk_band,
+                "shap_attributions": dict(risk.shap_attributions),
+                "top_features": top_features,
+                "recommended_follow_up": structured.recommended_follow_up,
+                "reasoning_provenance": reasoning_provenance,
             }
             if blob_key is not None:
                 enrichment_payload["audio_blob_key"] = blob_key
@@ -576,6 +898,101 @@ class EnrichmentWorker:
             return [enrichment_event, card_event], triage_assessment
         finally:
             self._clear_active_stage(voice_event.event_id)
+
+    def _enrich_single_triage_event(
+        self,
+        triage_event: CrdtEvent,
+        projected: ProjectedState,
+        in_batch_triages: dict[str, TriageAssessment],
+    ) -> tuple[list[CrdtEvent], TriageAssessment]:
+        """Run tabular GBDT + TreeSHAP risk enrichment for a PENDING TRIAGE_COMPLETED event."""
+        try:
+            self._set_active_stage(triage_event.event_id, "scoring_risk")
+            patient = (
+                projected.patients.get(triage_event.patient_id)
+                if triage_event.patient_id is not None
+                else None
+            )
+            default_lang = patient.preferred_language if patient is not None else "en"
+            language_hint = _clean_language(
+                triage_event.payload.get("language"), default=default_lang
+            )
+
+            triage_input, risk_features, incoming_triage = _build_triage_input_from_triage_event(
+                triage_event, patient
+            )
+            raw_triage = evaluate_triage(triage_input)
+            existing_triage = self._existing_patient_triage(
+                triage_event.patient_id,
+                projected,
+                in_batch_triages,
+            )
+            # Enforce deterministic WHO monotonic severity floor across local + incoming + prior triages.
+            floor_triage = _highest_severity_triage(
+                [t for t in (incoming_triage, existing_triage) if t is not None]
+            )
+            triage_assessment = _apply_monotonic_severity_floor(raw_triage, floor_triage)
+
+            risk_features["has_danger_sign"] = (
+                triage_assessment.severity == TriageSeverity.RED_EMERGENCY
+                or bool(triage_input.danger_signs)
+            )
+            risk = self._risk_scorer.score_risk(risk_features)
+            top_features = _top_shap_features(risk.shap_attributions)
+            recommended_follow_up = _recommended_follow_up_for_triage(
+                triage_assessment, risk.risk_band
+            )
+            reasoning_provenance = _build_reasoning_provenance(
+                triage=triage_assessment,
+                is_pregnant=triage_input.is_pregnant,
+                risk_score=risk.risk_score,
+            )
+
+            enrichment_payload: dict[str, Any] = {
+                "source_type": "triage",
+                "severity": triage_assessment.severity.value,
+                "triage_assessment": triage_assessment.model_dump(mode="json"),
+                "risk_score": risk.model_dump(mode="json"),
+                "risk_band": risk.risk_band,
+                "shap_attributions": dict(risk.shap_attributions),
+                "top_features": top_features,
+                "recommended_follow_up": recommended_follow_up,
+                "reasoning_provenance": reasoning_provenance,
+            }
+            enrichment_event = CrdtEvent(
+                event_id=str(uuid4()),
+                hlc=self._clock.tick(),
+                origin_node_id=self._manifest.node_id,
+                patient_id=triage_event.patient_id,
+                event_type=EventType.ENRICHMENT_COMPLETED,
+                enrichment_state=EnrichmentState.COMPLETED,
+                ref_event_id=triage_event.event_id,
+                payload=enrichment_payload,
+            )
+
+            card = _card_from_deterministic_triage(
+                patient_id=triage_event.patient_id,
+                triage=triage_assessment,
+                structured=None,
+                recommended_follow_up=recommended_follow_up,
+                risk_band=risk.risk_band,
+                risk_score=risk.risk_score,
+                source_event_id=enrichment_event.event_id,
+                language=language_hint,
+            )
+            card_event = CrdtEvent(
+                event_id=str(uuid4()),
+                hlc=self._clock.tick(),
+                origin_node_id=self._manifest.node_id,
+                patient_id=triage_event.patient_id,
+                event_type=EventType.ACTION_CARD_ISSUED,
+                enrichment_state=EnrichmentState.COMPLETED,
+                ref_event_id=triage_event.event_id,
+                payload=card.model_dump(mode="json"),
+            )
+            return [enrichment_event, card_event], triage_assessment
+        finally:
+            self._clear_active_stage(triage_event.event_id)
 
     def _run_outbreak_sweep(self) -> list[CrdtEvent]:
         """Aggregate unique village daily syndrome cases and emit deduplicated outbreak alerts."""
@@ -730,7 +1147,12 @@ class EnrichmentWorker:
 
         return emitted_alerts
 
-    def run_once(self) -> EnrichmentRunSummary:
+    def run_once(
+        self,
+        *,
+        max_jobs: int | None = None,
+        event_types: Collection[EventType] | None = None,
+    ) -> EnrichmentRunSummary:
         """Execute one synchronous enrichment + outbreak-detection sweep."""
         with self._run_lock:
             processed = 0
@@ -740,27 +1162,50 @@ class EnrichmentWorker:
 
             asr_target = route_workload(self._manifest, WorkloadKind.VOICE_ASR)
             slm_target = route_workload(self._manifest, WorkloadKind.CLINICAL_SLM_STRUCTURING)
+            risk_target = route_workload(self._manifest, WorkloadKind.TINY_RISK_CHECK)
 
-            if (
+            can_enrich_voice = (
                 asr_target != ExecutionTarget.DEFER_TO_HUB
                 and slm_target != ExecutionTarget.DEFER_TO_HUB
-            ):
+            )
+            can_enrich_triage = risk_target != ExecutionTarget.DEFER_TO_HUB
+            allowed_types = set(event_types) if event_types is not None else None
+
+            if (can_enrich_voice or can_enrich_triage) and (max_jobs is None or max_jobs > 0):
                 pending = self._store.get_pending_enrichments()
                 offloadable = select_offloadable_jobs(self._manifest, pending)
                 if offloadable:
                     projected = project_state(self._store.get_all_events())
                     in_batch_triages: dict[str, TriageAssessment] = {}
                     for job in offloadable:
-                        if job.event_type != EventType.VOICE_NOTE_RECORDED:
+                        if max_jobs is not None and processed >= max_jobs:
+                            break
+                        if allowed_types is not None and job.event_type not in allowed_types:
                             continue
-                        enriched = self._enrich_single_voice_event(
-                            job,
-                            projected,
-                            in_batch_triages,
-                        )
-                        if enriched is None:
-                            skipped_missing_blob += 1
+
+                        enriched: tuple[list[CrdtEvent], TriageAssessment] | None = None
+                        if job.event_type == EventType.VOICE_NOTE_RECORDED:
+                            if not can_enrich_voice:
+                                continue
+                            enriched = self._enrich_single_voice_event(
+                                job,
+                                projected,
+                                in_batch_triages,
+                            )
+                            if enriched is None:
+                                skipped_missing_blob += 1
+                                continue
+                        elif job.event_type == EventType.TRIAGE_COMPLETED:
+                            if not can_enrich_triage:
+                                continue
+                            enriched = self._enrich_single_triage_event(
+                                job,
+                                projected,
+                                in_batch_triages,
+                            )
+                        else:
                             continue
+
                         emitted, triage_assessment = enriched
                         for evt in emitted:
                             if self._store.append(evt):

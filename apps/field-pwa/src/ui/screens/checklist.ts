@@ -4,11 +4,23 @@ import { checkbox, clear, field, h } from "../dom";
 import type { Ctx } from "../ctx";
 import { autoChecklistType, buildChecklistPayload, checklistItems, checklistTypes, evaluate, latestCompletedChecks } from "../checklist_logic";
 
-export async function checklist(ctx: Ctx): Promise<HTMLElement> {
+export async function checklist(ctx: Ctx, params: string[] = []): Promise<HTMLElement> {
   const [patients, events] = await Promise.all([ctx.store.listPatients(), ctx.store.getAllEvents()]);
-  const pSel = h("select", { name: "patient" }, h("option", { value: "" }, t("triage.anon")), patients.map((p) => h("option", { value: p.patient_id }, p.full_name)));
+  const presetPid = params[0] ?? "";
+  const pSel = h(
+    "select",
+    { name: "patient" },
+    h("option", { value: "" }, t("triage.anon")),
+    patients.map((p) => h("option", { value: p.patient_id, selected: p.patient_id === presetPid }, p.full_name)),
+  );
   const tSel = h("select", { name: "type" }, checklistTypes().map((c) => h("option", { value: c }, t(`ck.${c}` as const))));
+  const presetPatient = presetPid ? patients.find((x) => x.patient_id === presetPid) : undefined;
+  if (presetPatient?.is_pregnant) {
+    const auto = autoChecklistType(presetPatient.gestational_weeks);
+    if (auto) tSel.value = auto;
+  }
   const done = new Set<string>();
+  const notesInput = h("textarea", { name: "additional_notes", rows: 2, maxlength: 1000 });
   const list = h("div");
   const out = h("div", { "aria-live": "polite" });
 
@@ -22,6 +34,7 @@ export async function checklist(ctx: Ctx): Promise<HTMLElement> {
     const count = h("p", { class: "ckcount", "aria-live": "polite" });
     const recount = () => (count.textContent = t("ck.score", { done: done.size, total: items.length }));
     recount();
+    const saveBtn = h("button", { type: "button", class: "primary", onclick: () => save(saveBtn) }, t("ck.save"));
     list.append(
       h("fieldset", {}, h("legend", {}, t(`ck.${type}` as const)), items.map((i) =>
         checkbox(i.critical ? `${tx(`cki.${i.id}`, i.label)} *` : tx(`cki.${i.id}`, i.label), i.id, done.has(i.id), (c) => {
@@ -33,10 +46,13 @@ export async function checklist(ctx: Ctx): Promise<HTMLElement> {
       count,
       ...(done.size ? [h("p", { class: "muted" }, t("ck.prefilled"))] : []),
       h("p", { class: "muted" }, t("ck.criticalNote")),
-      h("button", { type: "button", class: "primary", onclick: save }, t("ck.save")),
+      h("details", { class: "optional-group" }, h("summary", {}, t("ck.additionalNotes")), field(t("ck.additionalNotesHint"), notesInput)),
+      saveBtn,
     );
   }
-  function save() {
+  function save(saveBtn: HTMLButtonElement) {
+    if (saveBtn.disabled) return;
+    saveBtn.disabled = true;
     clear(out);
     const type = tSel.value as ChecklistType;
     const pid = pSel.value || null;
@@ -66,7 +82,7 @@ export async function checklist(ctx: Ctx): Promise<HTMLElement> {
     const saved = h("p", { class: "muted", role: "status" }, t("triage.saving"));
     out.append(saved);
     ctx.engine
-      .enqueue({ event_type: "CHECKLIST_RECORDED", patient_id: pid, payload: buildChecklistPayload(ev) })
+      .enqueue({ event_type: "CHECKLIST_RECORDED", patient_id: pid, payload: buildChecklistPayload(ev, notesInput.value) })
       .then((rec) => {
         events.push(rec);
         saved.textContent = t("ck.saved");
@@ -75,6 +91,9 @@ export async function checklist(ctx: Ctx): Promise<HTMLElement> {
       .catch((e) => {
         saved.className = "error";
         saved.textContent = String(e);
+      })
+      .finally(() => {
+        saveBtn.disabled = false;
       });
   }
   pSel.addEventListener("change", () => {

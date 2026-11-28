@@ -35,7 +35,8 @@ public final class LocalAssetServer {
      * origin stays stable across normal app restarts (preserving IndexedDB & localStorage).
      * Automatically falls back to OS-assigned ephemeral port 0 if busy.
      */
-    private static final int PREFERRED_PORT = 49842;
+    private static final int PREFERRED_PORT_START = 49842;
+    private static final int PREFERRED_PORT_COUNT = 10;
     private static final int SOCKET_TIMEOUT_MS = 10_000;
 
     /** Suggested LAN PHC Hub address shown as a placeholder in the native Hub URL dialog. */
@@ -57,13 +58,25 @@ public final class LocalAssetServer {
             return boundPort;
         }
         InetAddress loopback = InetAddress.getByName("127.0.0.1");
-        ServerSocket ss = new ServerSocket();
-        ss.setReuseAddress(true);
-        try {
-            ss.bind(new InetSocketAddress(loopback, PREFERRED_PORT), 64);
-        } catch (IOException busy) {
-            Log.w(TAG, "Preferred port " + PREFERRED_PORT + " unavailable; falling back to ephemeral port", busy);
-            ss.close();
+        ServerSocket ss = null;
+        for (int offset = 0; offset < PREFERRED_PORT_COUNT; offset++) {
+            int candidatePort = PREFERRED_PORT_START + offset;
+            ServerSocket attempt = new ServerSocket();
+            attempt.setReuseAddress(true);
+            try {
+                attempt.bind(new InetSocketAddress(loopback, candidatePort), 64);
+                ss = attempt;
+                break;
+            } catch (IOException busy) {
+                try {
+                    attempt.close();
+                } catch (IOException ignored) {
+                }
+            }
+        }
+        if (ss == null) {
+            Log.w(TAG, "Preferred ports " + PREFERRED_PORT_START + "-" + (PREFERRED_PORT_START + PREFERRED_PORT_COUNT - 1)
+                    + " unavailable; falling back to ephemeral port");
             ss = new ServerSocket();
             ss.setReuseAddress(true);
             ss.bind(new InetSocketAddress(loopback, 0), 64);
@@ -214,6 +227,13 @@ public final class LocalAssetServer {
             writeTextResponse(out, 404, "Not Found", "text/plain; charset=utf-8", "Not Found: " + cleanPath, headOnly);
         } catch (IOException ignored) {
             // Client disconnected or timed out
+        } catch (Exception e) {
+            Log.w(TAG, "Unexpected error handling request: " + e.getMessage());
+            try {
+                writeTextResponse(socket.getOutputStream(), 500, "Internal Server Error",
+                        "text/plain; charset=utf-8", "Internal Server Error", false);
+            } catch (IOException ignored) {
+            }
         } finally {
             try {
                 socket.close();
@@ -321,6 +341,7 @@ public final class LocalAssetServer {
         String resp = "HTTP/1.1 302 Found\r\n"
                 + "Location: " + location + "\r\n"
                 + "Content-Length: 0\r\n"
+                + "Cache-Control: no-store\r\n"
                 + "Connection: close\r\n\r\n";
         out.write(resp.getBytes(StandardCharsets.US_ASCII));
         out.flush();
@@ -330,6 +351,7 @@ public final class LocalAssetServer {
         String resp = "HTTP/1.1 204 No Content\r\n"
                 + "Allow: GET, HEAD, OPTIONS\r\n"
                 + "Content-Length: 0\r\n"
+                + "Cache-Control: no-store\r\n"
                 + "Connection: close\r\n\r\n";
         out.write(resp.getBytes(StandardCharsets.US_ASCII));
         out.flush();
@@ -342,10 +364,11 @@ public final class LocalAssetServer {
 
     private static void writeBytesResponse(OutputStream out, int code, String reason, String contentType, byte[] body, boolean headOnly)
             throws IOException {
+        String cacheControl = code >= 400 ? "no-store" : "no-cache";
         String header = "HTTP/1.1 " + code + " " + reason + "\r\n"
                 + "Content-Type: " + contentType + "\r\n"
                 + "Content-Length: " + body.length + "\r\n"
-                + "Cache-Control: no-cache\r\n"
+                + "Cache-Control: " + cacheControl + "\r\n"
                 + "X-Content-Type-Options: nosniff\r\n"
                 + "Connection: close\r\n\r\n";
         out.write(header.getBytes(StandardCharsets.US_ASCII));

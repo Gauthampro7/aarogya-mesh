@@ -66,6 +66,7 @@ export class SyncEngine {
   private phase: SyncPhase = "idle";
   private uploadingBlobs = new Set<string>();
   private heldBlobs = new Set<string>();
+  private errorMsg: string | null = null;
 
   constructor(readonly store: FieldStore, private readonly opts: SyncEngineOptions = {}) {
     this.hubUrl = opts.hubUrl ?? "http://127.0.0.1:8000";
@@ -73,6 +74,10 @@ export class SyncEngine {
 
   get status(): SyncState {
     return this.state;
+  }
+
+  get lastError(): string | null {
+    return this.errorMsg;
   }
 
   /** Current network phase within a sync exchange. */
@@ -125,7 +130,7 @@ export class SyncEngine {
       try {
         await this.ensureViews();
         const { env, failure } = await this.prepareEnvelope();
-        const wasUploading = this.phase === "uploading_blobs";
+        const wasUploading = (this.phase as SyncPhase) === "uploading_blobs";
         this.phase = "syncing_events";
         if (wasUploading) await this.setState("syncing");
         const reply = await postSync(this.hubUrl, env, this.fetchImpl);
@@ -168,7 +173,7 @@ export class SyncEngine {
       this.phase = "idle";
       this.uploadingBlobs.clear();
       const { env, failure } = await this.prepareEnvelope();
-      const wasUploading = this.phase === "uploading_blobs";
+      const wasUploading = (this.phase as SyncPhase) === "uploading_blobs";
       this.phase = "syncing_events";
       if (wasUploading) await this.setState("syncing");
       if (!this.mesh?.send(env)) {
@@ -267,6 +272,7 @@ export class SyncEngine {
 
   private async setState(state: SyncState, error?: string, rejected = 0): Promise<void> {
     this.state = state;
+    this.errorMsg = error ?? null;
     this.events.emit("status", {
       state,
       pendingCount: await this.pendingCount(),

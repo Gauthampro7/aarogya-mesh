@@ -31,6 +31,10 @@ export const ta: Record<Key, string> = {
   "danger.anon": "பதிவு இல்லாத நோயாளி",
   "danger.submit": "இப்போது பரிசோதி",
   "danger.noneBtn": "ஆபத்து அறிகுறிகள் இல்லை",
+  "danger.otherPlaceholder": "பிற ஆபத்து அறிகுறியை எழுதவும்...",
+  "danger.otherSubmit": "பிற அறிகுறியை அனுப்பு",
+  "danger.otherRequired": "முதலில் பிற அறிகுறியை எழுதவும்.",
+  "danger.optionalSummary": "+ நோயாளி எண் / பிற",
   "danger.confirmPrompt": "சிவப்பு அவசரத்தை உறுதிப்படுத்தவா?",
   "danger.confirmBtn": "சிவப்பு உறுதி",
   "danger.cancelBtn": "ரத்து",
@@ -83,6 +87,7 @@ export const ta: Record<Key, string> = {
 
   "sync.title": "மைய ஒத்திசைவு",
   "sync.hubLabel": "ஆரம்ப சுகாதார நிலைய முகவரி",
+  "sync.hubSummary": "நிலைய முகவரி",
   "sync.hubHint": "http://127.0.0.1:8000",
   "sync.now": "இப்போது ஒத்திசை",
   "sync.syncing": "ஒத்திசைக்கிறது...",

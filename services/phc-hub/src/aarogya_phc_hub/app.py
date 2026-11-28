@@ -18,6 +18,7 @@ from aarogya_clinical_engine import TriageInput, evaluate_triage
 from aarogya_contracts import (
     ActionCard,
     CrdtEvent,
+    EnrichmentState,
     EventType,
     HardwareCapabilityManifest,
     NodeTier,
@@ -179,9 +180,36 @@ def create_app(
         store.append(triage_event)
         return assessment
 
+    def _is_voice_event_ready(event: CrdtEvent) -> bool:
+        raw_blob_key = event.payload.get("audio_blob_key")
+        if isinstance(raw_blob_key, str) and raw_blob_key.strip():
+            try:
+                return blob_store.exists(raw_blob_key.strip())
+            except ValueError:
+                return False
+        return True
+
     @hub_app.post("/api/v1/sync", response_model=SyncEnvelope)
     def sync_envelope(incoming: SyncEnvelope) -> SyncEnvelope:
         peer_registry.record_peer(incoming.sender_manifest, source="sync_http")
+        has_pending_triage = any(
+            evt.event_type == EventType.TRIAGE_COMPLETED
+            and evt.enrichment_state == EnrichmentState.PENDING
+            for evt in incoming.events
+        )
+        has_ready_voice = enable_enrichment_worker and any(
+            evt.event_type == EventType.VOICE_NOTE_RECORDED
+            and evt.enrichment_state == EnrichmentState.PENDING
+            and _is_voice_event_ready(evt)
+            for evt in incoming.events
+        )
+        if has_pending_triage or has_ready_voice:
+            clock.receive(incoming.sender_hlc)
+            for evt in incoming.events:
+                clock.receive(evt.hlc)
+            store.apply_remote_events(incoming.events)
+            auto_types = None if enable_enrichment_worker else {EventType.TRIAGE_COMPLETED}
+            enrichment_worker.run_once(max_jobs=10, event_types=auto_types)
         outcome = reconcile_envelopes(store, clock, manifest, incoming)
         return outcome.response_envelope
 
@@ -264,6 +292,7 @@ def create_app(
             get_peers=lambda: [
                 p.model_dump(mode="json") for p in peer_registry.list_peers()
             ],
+            hub_port=port,
         )
     )
     hub_app.include_router(

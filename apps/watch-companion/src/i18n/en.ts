@@ -29,6 +29,10 @@ export const en = {
   "danger.anon": "Walk-in patient",
   "danger.submit": "Screen Now",
   "danger.noneBtn": "No Danger Signs",
+  "danger.otherPlaceholder": "Other symptom / danger sign...",
+  "danger.otherSubmit": "Report Other Sign",
+  "danger.otherRequired": "Enter a symptom or danger sign first.",
+  "danger.optionalSummary": "+ Patient ID / Other",
   "danger.confirmPrompt": "Confirm RED Emergency?",
   "danger.confirmBtn": "Confirm RED",
   "danger.cancelBtn": "Cancel",
@@ -51,10 +55,10 @@ export const en = {
   "cards.acked": "Acknowledged",
   "cards.due": "Due: {date}",
 
-  "priority.CRITICAL": "CRITICAL",
-  "priority.HIGH": "HIGH",
-  "priority.MEDIUM": "MEDIUM",
-  "priority.LOW": "LOW",
+  "priority.CRITICAL": "Critical",
+  "priority.HIGH": "High",
+  "priority.MEDIUM": "Medium",
+  "priority.LOW": "Low",
 
   "rem.title": "Health Reminders",
   "rem.empty": "No due vaccines or medicines.",
@@ -81,6 +85,7 @@ export const en = {
 
   "sync.title": "Hub Sync",
   "sync.hubLabel": "Health Centre Address",
+  "sync.hubSummary": "Hub address",
   "sync.hubHint": "http://127.0.0.1:8000",
   "sync.now": "Sync Now",
   "sync.syncing": "Syncing...",

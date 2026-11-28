@@ -41,7 +41,7 @@ export function isValidBlobKey(blobKey: string): boolean {
 }
 
 function normalizeBaseUrl(hubUrl: string): string {
-  return hubUrl.replace(/\/+$/, "");
+  return hubUrl.trim().replace(/\/+$/, "");
 }
 
 function getBlobSize(blob: Blob | Uint8Array): number {

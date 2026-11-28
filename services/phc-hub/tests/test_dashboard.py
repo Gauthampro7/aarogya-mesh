@@ -562,3 +562,65 @@ def test_dashboard_summary_exposes_crdt_merge_proofs_and_engineering_proof() -> 
     assert enr["triage_confidence"] == 1.0
     assert enr["shap_attributions"]["high_bp"] > 0
     assert enr["shap_attributions"]["spo2_normal"] < 0
+
+
+def test_hub_lan_url_info_and_offline_qr_svg() -> None:
+    """Verify hub_lan_url, /api/v1/hub-info, /api/v1/hub-qr.svg, and connect UI elements."""
+    from aarogya_phc_hub.qr_svg import build_qr_matrix
+
+    client, _ = _build_test_client()
+
+    summary_resp = client.get("/api/v1/dashboard/summary")
+    assert summary_resp.status_code == 200
+    summary = summary_resp.json()
+    assert summary["hub_lan_url"].startswith("http://")
+    assert summary["hub_lan_url"].endswith(":8000")
+
+    info_resp = client.get("/api/v1/hub-info")
+    assert info_resp.status_code == 200
+    info = info_resp.json()
+    assert info["node_id"] == "phc-hub-test"
+    assert info["port"] == 8000
+    assert info["hub_lan_url"] == f"http://{info['lan_ip']}:8000"
+
+    qr_resp = client.get("/api/v1/hub-qr.svg", params={"text": "http://192.168.36.182:8000"})
+    assert qr_resp.status_code == 200
+    assert "image/svg+xml" in qr_resp.headers["content-type"]
+    assert "<svg" in qr_resp.text
+    assert "<rect" in qr_resp.text
+
+    # Verify top-left 7x7 finder pattern on generated QR matrix
+    matrix = build_qr_matrix("http://192.168.36.182:8000")
+    size = len(matrix)
+    assert size in (21, 25, 29, 33, 37, 41)
+    assert matrix[0][:7] == [1, 1, 1, 1, 1, 1, 1]
+    assert matrix[1][:7] == [1, 0, 0, 0, 0, 0, 1]
+    assert matrix[3][:7] == [1, 0, 1, 1, 1, 0, 1]
+
+    html = client.get("/").text
+    assert 'id="hub-connect-card"' in html
+    assert 'id="hub-lan-url"' in html
+    assert 'id="btn-copy-hub-url"' in html
+    assert 'id="btn-toggle-qr"' in html
+    assert 'id="hub-qr-panel"' in html
+
+
+def test_dashboard_and_showcase_connectivity_feedback_and_i18n_parity() -> None:
+    """Verify Reconnecting.../Refreshing.../clipboard fallback and 4-language keys."""
+    client, _ = _build_test_client()
+    app_js = client.get("/static/app.js").text
+    showcase_js = client.get("/static/showcase.js").text
+
+    for key in ("reconnecting", "refreshing", "copyFailed"):
+        assert app_js.count(f"      {key}:") == 4, f"Expected 4 translations for {key} in app.js"
+
+    for key in ("reconnecting", "resetting"):
+        assert showcase_js.count(f"      {key}:") == 4, (
+            f"Expected 4 translations for {key} in showcase.js"
+        )
+
+    assert "preferred_url" in app_js
+    assert 'execCommand("copy")' in app_js
+    assert "state.reconnecting" in app_js
+    assert "state.reconnecting" in showcase_js
+

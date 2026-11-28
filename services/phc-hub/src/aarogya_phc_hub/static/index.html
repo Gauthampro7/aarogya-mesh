@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Aarogya Mesh — Tier-2 PHC Command Center</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyOCAyOCI+PHJlY3QgeD0iMiIgeT0iMiIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiByeD0iNiIgZmlsbD0iIzBkOTQ4OCIvPjxwYXRoIGQ9Ik0xNCA3djE0TTcgMTRoMTQiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==" />
-  <link rel="stylesheet" href="/static/app.css" />
+  <link rel="stylesheet" href="/static/app.css?v=2" />
 </head>
 <body>
   <div class="app-shell">
@@ -41,6 +41,30 @@
       </div>
     </header>
 
+    <section id="hub-connect-card" class="hub-connect-card" aria-label="Connect Mobile Devices">
+      <div class="hub-connect-main">
+        <div class="hub-connect-info">
+          <span class="hub-connect-title" data-i18n="connectCardTitle">Connect Mobile / Watch to This Hub</span>
+          <p class="hub-connect-desc" data-i18n="connectCardDesc">Make sure your phone or watch is on the same Wi-Fi/hotspot, then enter this address or scan the QR code.</p>
+        </div>
+        <div class="hub-connect-actions">
+          <code id="hub-lan-url" class="hub-url-pill mono">--</code>
+          <button id="btn-copy-hub-url" class="btn btn-secondary" type="button" data-i18n="copyAddress">Copy Address</button>
+          <button id="btn-toggle-qr" class="btn btn-primary" type="button" aria-expanded="false" data-i18n="showQrCode">Show QR Code</button>
+        </div>
+      </div>
+      <div id="hub-qr-panel" class="hub-qr-panel hidden">
+        <div class="hub-qr-frame">
+          <img id="hub-qr-img" width="200" height="200" alt="Hub LAN QR Code" />
+        </div>
+        <div class="hub-qr-caption">
+          <strong data-i18n="qrScanTitle">Scan from Field PWA or Android App</strong>
+          <p data-i18n="qrScanHint">Open Sync → Set Hub Address → Scan QR to fill this address automatically.</p>
+          <code id="hub-qr-url-caption" class="mono">--</code>
+        </div>
+      </div>
+    </section>
+
     <section class="demo-bar" aria-label="Interactive Clinical Demo Scenarios">
       <div class="demo-bar-left">
         <span class="demo-bar-label" data-i18n="demoBarLabel">Live Scenarios</span>
@@ -58,87 +82,10 @@
     </section>
 
     <div id="demo-status-banner" class="demo-status hidden" role="status" aria-live="polite"></div>
-
-    <section id="engineering-proof-strip" class="proof-strip" aria-label="Live Engineering Proof Strip">
-      <span class="proof-chip proof-chip-green mono" id="dash-proof-cloud" data-i18n="proofCloudRpcs">0 Cloud RPCs</span>
-      <span class="proof-chip proof-chip-brand mono" id="dash-proof-safety" data-i18n="proofSafetyFloor">WHO Safety Floor · conf=1.00</span>
-      <span class="proof-chip mono" id="dash-proof-hlc">HLC --</span>
-      <span class="proof-chip proof-chip-accent mono" id="dash-proof-crdt">0 events → 0 patients</span>
-      <span class="proof-chip mono" id="dash-proof-bloat" data-i18n="proofZeroBloat">0 PyTorch · 0 CUDA</span>
-    </section>
-
     <section id="scenario-narrative-card" class="scenario-narrative hidden" aria-live="polite"></section>
-
     <section id="outbreak-banner" class="outbreak-banner hidden" role="alert" aria-live="polite"></section>
 
-    <section class="arch-bar" aria-label="Compute-Proportional 3-Tier Mesh Architecture">
-      <div class="arch-bar-header">
-        <span class="arch-bar-title" data-i18n="archTitle">Compute-Proportional 3-Tier Autonomous Mesh</span>
-        <span class="arch-sync-meta mono" id="arch-hlc-badge">HLC: --</span>
-      </div>
-      <div class="arch-tiers">
-        <article id="arch-tier-0" class="arch-tier-card">
-          <div class="arch-tier-head">
-            <span class="arch-tier-name" data-i18n="tier0Label">Tier-0 Watch</span>
-            <span class="arch-tier-spec mono">256 MB</span>
-          </div>
-          <p class="arch-tier-desc" data-i18n="tier0Desc">Standalone SOS &amp; Reminders for Normal Public &amp; CHW</p>
-          <div class="arch-tier-foot">
-            <span class="arch-peer-pill">
-              <span class="tier-dot" aria-hidden="true"></span>
-              <span id="tier0-count" class="mono">0</span>
-              <span data-i18n="activePeersShort">active</span>
-            </span>
-            <span class="arch-cap-tag" data-i18n="tier0CapTag">1-Tap SOS · BLE/LAN</span>
-          </div>
-        </article>
-
-        <div class="arch-connector" aria-hidden="true">
-          <span class="connector-line"></span>
-          <span class="connector-label mono">CRDT ↔</span>
-          <span class="connector-line"></span>
-        </div>
-
-        <article id="arch-tier-1" class="arch-tier-card">
-          <div class="arch-tier-head">
-            <span class="arch-tier-name" data-i18n="tier1Label">Tier-1 Phone</span>
-            <span class="arch-tier-spec mono">4 GB</span>
-          </div>
-          <p class="arch-tier-desc" data-i18n="tier1Desc">WHO IMNCI Deterministic Triage + Offline IndexedDB</p>
-          <div class="arch-tier-foot">
-            <span class="arch-peer-pill">
-              <span class="tier-dot" aria-hidden="true"></span>
-              <span id="tier1-count" class="mono">0</span>
-              <span data-i18n="activePeersShort">active</span>
-            </span>
-            <span class="arch-cap-tag" data-i18n="tier1CapTag">Voice Queue · Delta Sync</span>
-          </div>
-        </article>
-
-        <div class="arch-connector" aria-hidden="true">
-          <span class="connector-line"></span>
-          <span class="connector-label mono">CRDT ↔</span>
-          <span class="connector-line"></span>
-        </div>
-
-        <article id="arch-tier-2" class="arch-tier-card arch-tier-active">
-          <div class="arch-tier-head">
-            <span class="arch-tier-name" data-i18n="tier2Label">Tier-2 Hub</span>
-            <span id="arch-hub-ram" class="arch-tier-spec mono">32 GB</span>
-          </div>
-          <p class="arch-tier-desc" data-i18n="tier2Desc">Whisper + SLM + LightGBM SHAP + EWMA Outbreak</p>
-          <div class="arch-tier-foot">
-            <span class="arch-peer-pill arch-peer-online">
-              <span class="tier-dot" aria-hidden="true"></span>
-              <span class="mono">1</span>
-              <span data-i18n="hubOnlineShort">online</span>
-            </span>
-            <span id="arch-hub-node" class="arch-cap-tag mono">phc-hub-local</span>
-          </div>
-        </article>
-      </div>
-    </section>
-
+    <!-- Streamlined 5-Card KPI Strip -->
     <section class="kpi-grid" aria-label="Clinical Summary Metrics">
       <article class="kpi-card">
         <span class="kpi-label" data-i18n="patients">Registered Patients</span>
@@ -156,47 +103,61 @@
         <span class="kpi-label" data-i18n="triageGreen">GREEN Home</span>
         <strong id="kpi-green" class="kpi-value tabular">0</strong>
       </article>
-      <article class="kpi-card">
-        <span class="kpi-label" data-i18n="pendingEnrichments">Pending Enrichments</span>
-        <strong id="kpi-pending" class="kpi-value tabular">0</strong>
-      </article>
-      <article class="kpi-card">
-        <span class="kpi-label" data-i18n="completedEnrichments">Completed Enrichments</span>
-        <strong id="kpi-completed" class="kpi-value tabular">0</strong>
-      </article>
-      <article class="kpi-card">
-        <span class="kpi-label" data-i18n="totalEvents">CRDT Events</span>
-        <strong id="kpi-events" class="kpi-value tabular">0</strong>
+      <article class="kpi-card kpi-ml">
+        <span class="kpi-label" data-i18n="kpiMlAnalytics">ML Analytics &amp; Sync</span>
+        <div class="kpi-ml-row">
+          <strong id="kpi-completed" class="kpi-value tabular">0</strong>
+          <span class="kpi-sub-meta">
+            <span data-i18n="pendingShort">pending:</span>
+            <strong id="kpi-pending" class="tabular">0</strong>
+            ·
+            <span id="kpi-events" class="tabular">0</span>
+            <span data-i18n="eventsUnit">events</span>
+          </span>
+        </div>
       </article>
     </section>
 
-    <main class="main-grid">
-      <section class="panel panel-clinical" aria-labelledby="heading-clinical">
+    <!-- Centerpiece: Immediately Synced & Recent ML Analytics -->
+    <section class="centerpiece-grid" aria-label="Immediately Synced and Recent ML Analytics">
+      <article id="synced-feed-panel" class="panel centerpiece-panel">
         <div class="panel-header">
-          <h2 id="heading-clinical" class="panel-title" data-i18n="clinicalPanel">Clinical Triage, Action Cards &amp; SHAP Risk</h2>
+          <div>
+            <h2 class="panel-title" data-i18n="syncedFeedTitle">Immediately Synced Feed</h2>
+            <p class="panel-subtitle-inline" data-i18n="syncedFeedDesc">Newest registrations, triage checks, voice notes, checklists &amp; vaccines from field devices.</p>
+          </div>
+          <span id="synced-feed-count" class="badge badge-brand tabular">0</span>
+        </div>
+        <div id="synced-feed-list" class="card-stack"></div>
+      </article>
+
+      <article id="ml-analytics-panel" class="panel centerpiece-panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title" data-i18n="mlAnalyticsTitle">Recent ML Analytics (GBDT + TreeSHAP)</h2>
+            <p class="panel-subtitle-inline" data-i18n="mlAnalyticsDesc">WHO Clinical Safety Floor + 28-Tree GBDT risk scoring &amp; SHAP feature attributions.</p>
+          </div>
           <div class="panel-actions">
+            <span id="shap-count-badge" class="badge badge-accent tabular">0</span>
             <button id="btn-run-enrichment" class="btn btn-primary" type="button" data-i18n="runEnrichment">Run Hub Enrichment</button>
           </div>
         </div>
         <p id="enrichment-status" class="status-note hidden" role="status"></p>
+        <div id="shap-list" class="card-stack"></div>
+      </article>
+    </section>
 
-        <div id="crdt-merge-proof-section" class="subsection hidden">
-          <div class="subsection-head">
-            <h3 class="subsection-title" data-i18n="crdtMergeTitle">CRDT LWW Conflict-Free Merge Proof</h3>
-            <span class="badge badge-green" data-i18n="zeroDataLoss">0 data loss</span>
+    <!-- Clinical Operations & Mesh Roster -->
+    <main class="main-grid">
+      <section class="panel panel-clinical" aria-labelledby="heading-clinical">
+        <div class="panel-header">
+          <div>
+            <h2 id="heading-clinical" class="panel-title" data-i18n="clinicalOpsTitle">Clinical Triage, Action Cards &amp; Outbreaks</h2>
+            <p class="panel-subtitle-inline" data-i18n="clinicalPanelDesc">Urgent cases, ASHA follow-up cards, and village outbreak alerts.</p>
           </div>
-          <div id="crdt-merge-proof-list" class="card-stack"></div>
         </div>
 
         <div class="clinical-split">
-          <div class="subsection">
-            <div class="subsection-head">
-              <h3 class="subsection-title" data-i18n="triageFeedTitle">Active Triage Decisions</h3>
-              <span id="triage-count-badge" class="badge">0</span>
-            </div>
-            <div id="triage-list" class="card-stack"></div>
-          </div>
-
           <div class="subsection">
             <div class="subsection-head">
               <h3 class="subsection-title" data-i18n="actionCards">Action Cards</h3>
@@ -204,14 +165,14 @@
             </div>
             <div id="action-cards-list" class="card-stack"></div>
           </div>
-        </div>
 
-        <div class="subsection">
-          <div class="subsection-head">
-            <h3 class="subsection-title" data-i18n="shapTitle">SHAP Risk Attributions</h3>
-            <span id="shap-count-badge" class="badge">0</span>
+          <div class="subsection">
+            <div class="subsection-head">
+              <h3 class="subsection-title" data-i18n="triageFeedTitle">Active Triage Decisions</h3>
+              <span id="triage-count-badge" class="badge">0</span>
+            </div>
+            <div id="triage-list" class="card-stack"></div>
           </div>
-          <div id="shap-list" class="card-stack"></div>
         </div>
 
         <div class="subsection">
@@ -225,7 +186,10 @@
 
       <section class="panel panel-side" aria-labelledby="heading-roster">
         <div class="panel-header">
-          <h2 id="heading-roster" class="panel-title" data-i18n="patientsRosterTitle">Synced Patient Registry &amp; Peers</h2>
+          <div>
+            <h2 id="heading-roster" class="panel-title" data-i18n="patientsRosterTitle">Synced Patient Registry &amp; Peers</h2>
+            <p class="panel-subtitle-inline" data-i18n="patientsRosterDesc">Patients synced from field phones and connected mesh devices.</p>
+          </div>
           <span id="peer-count-badge" class="badge">0</span>
         </div>
 
@@ -238,42 +202,148 @@
           <h3 class="subsection-title" data-i18n="peerTopology">Live Mesh Peers</h3>
           <div id="peers-list" class="card-stack"></div>
         </div>
+      </section>
 
-        <div class="subsection">
-          <h3 class="subsection-title" data-i18n="hubTelemetryTitle">Hub Hardware &amp; LAN Discovery</h3>
-          <div class="telemetry-grid">
-            <div class="telemetry-item">
-              <span class="telemetry-label" data-i18n="nodeId">Node ID</span>
-              <span id="manifest-node-id" class="telemetry-value mono">--</span>
+      <!-- Collapsible CRDT Merge Proof -->
+      <section id="crdt-merge-proof-section" class="panel panel-wide hidden" aria-labelledby="heading-crdt-proof">
+        <div class="panel-header">
+          <div class="event-header-left">
+            <h2 id="heading-crdt-proof" class="panel-title" data-i18n="crdtMergeTitle">CRDT LWW Conflict-Free Merge Proof</h2>
+            <span class="badge badge-green" data-i18n="zeroDataLoss">0 data loss</span>
+            <span id="crdt-proof-count-badge" class="badge tabular">0</span>
+          </div>
+          <button id="btn-toggle-crdt" class="btn btn-secondary" type="button" aria-expanded="false" data-i18n="showDetails">Show Details</button>
+        </div>
+        <div id="crdt-collapsible" class="hidden">
+          <div id="crdt-merge-proof-list" class="card-stack"></div>
+        </div>
+      </section>
+
+      <!-- Collapsible System Architecture & Hardware Details -->
+      <section id="system-details-section" class="panel panel-wide" aria-labelledby="heading-sys-details">
+        <div class="panel-header">
+          <div class="event-header-left">
+            <h2 id="heading-sys-details" class="panel-title" data-i18n="sysDetailsTitle">System Architecture &amp; Hardware Details</h2>
+            <span class="proof-chip proof-chip-green mono" id="sys-summary-rpc" data-i18n="proofCloudRpcs">0 Cloud RPCs</span>
+            <span class="proof-chip proof-chip-brand mono" id="sys-summary-safety" data-i18n="proofSafetyFloor">WHO Safety Floor · conf=1.00</span>
+          </div>
+          <button id="btn-toggle-sys-details" class="btn btn-secondary" type="button" aria-expanded="false" data-i18n="showDetails">Show Details</button>
+        </div>
+
+        <div id="sys-details-collapsible" class="sys-details-body hidden">
+          <section id="engineering-proof-strip" class="proof-strip" aria-label="Live Engineering Proof Strip">
+            <span class="proof-chip proof-chip-green mono" id="dash-proof-cloud" data-i18n="proofCloudRpcs">0 Cloud RPCs</span>
+            <span class="proof-chip proof-chip-brand mono" id="dash-proof-safety" data-i18n="proofSafetyFloor">WHO Safety Floor · conf=1.00</span>
+            <span class="proof-chip mono" id="dash-proof-hlc">HLC --</span>
+            <span class="proof-chip proof-chip-accent mono" id="dash-proof-crdt">0 events → 0 patients</span>
+            <span class="proof-chip mono" id="dash-proof-bloat" data-i18n="proofZeroBloat">0 PyTorch · 0 CUDA</span>
+          </section>
+
+          <section class="arch-bar" aria-label="Compute-Proportional 3-Tier Mesh Architecture">
+            <div class="arch-bar-header">
+              <span class="arch-bar-title" data-i18n="archTitle">Compute-Proportional 3-Tier Autonomous Mesh</span>
+              <span class="arch-sync-meta mono" id="arch-hlc-badge">HLC: --</span>
             </div>
-            <div class="telemetry-item">
-              <span class="telemetry-label" data-i18n="ram">RAM</span>
-              <span id="manifest-ram" class="telemetry-value mono">--</span>
+            <div class="arch-tiers">
+              <article id="arch-tier-0" class="arch-tier-card">
+                <div class="arch-tier-head">
+                  <span class="arch-tier-name" data-i18n="tier0Label">Tier-0 Watch</span>
+                  <span class="arch-tier-spec mono">256 MB</span>
+                </div>
+                <p class="arch-tier-desc" data-i18n="tier0Desc">Standalone SOS &amp; Reminders for Normal Public &amp; CHW</p>
+                <div class="arch-tier-foot">
+                  <span class="arch-peer-pill">
+                    <span class="tier-dot" aria-hidden="true"></span>
+                    <span id="tier0-count" class="mono">0</span>
+                    <span data-i18n="activePeersShort">active</span>
+                  </span>
+                  <span class="arch-cap-tag" data-i18n="tier0CapTag">1-Tap SOS · BLE/LAN</span>
+                </div>
+              </article>
+
+              <div class="arch-connector" aria-hidden="true">
+                <span class="connector-line"></span>
+                <span class="connector-label mono">CRDT ↔</span>
+                <span class="connector-line"></span>
+              </div>
+
+              <article id="arch-tier-1" class="arch-tier-card">
+                <div class="arch-tier-head">
+                  <span class="arch-tier-name" data-i18n="tier1Label">Tier-1 Phone</span>
+                  <span class="arch-tier-spec mono">4 GB</span>
+                </div>
+                <p class="arch-tier-desc" data-i18n="tier1Desc">WHO IMNCI Deterministic Triage + Offline IndexedDB</p>
+                <div class="arch-tier-foot">
+                  <span class="arch-peer-pill">
+                    <span class="tier-dot" aria-hidden="true"></span>
+                    <span id="tier1-count" class="mono">0</span>
+                    <span data-i18n="activePeersShort">active</span>
+                  </span>
+                  <span class="arch-cap-tag" data-i18n="tier1CapTag">Voice Queue · Delta Sync</span>
+                </div>
+              </article>
+
+              <div class="arch-connector" aria-hidden="true">
+                <span class="connector-line"></span>
+                <span class="connector-label mono">CRDT ↔</span>
+                <span class="connector-line"></span>
+              </div>
+
+              <article id="arch-tier-2" class="arch-tier-card arch-tier-active">
+                <div class="arch-tier-head">
+                  <span class="arch-tier-name" data-i18n="tier2Label">Tier-2 Hub</span>
+                  <span id="arch-hub-ram" class="arch-tier-spec mono">32 GB</span>
+                </div>
+                <p class="arch-tier-desc" data-i18n="tier2Desc">Whisper + SLM + LightGBM SHAP + EWMA Outbreak</p>
+                <div class="arch-tier-foot">
+                  <span class="arch-peer-pill arch-peer-online">
+                    <span class="tier-dot" aria-hidden="true"></span>
+                    <span class="mono">1</span>
+                    <span data-i18n="hubOnlineShort">online</span>
+                  </span>
+                  <span id="arch-hub-node" class="arch-cap-tag mono">phc-hub-local</span>
+                </div>
+              </article>
             </div>
-            <div class="telemetry-item">
-              <span class="telemetry-label" data-i18n="cpu">CPU Cores</span>
-              <span id="manifest-cpu" class="telemetry-value mono">--</span>
-            </div>
-            <div class="telemetry-item">
-              <span class="telemetry-label" data-i18n="npu">NPU</span>
-              <span id="manifest-npu" class="telemetry-value mono">--</span>
-            </div>
-            <div class="telemetry-item telemetry-wide">
-              <span class="telemetry-label" data-i18n="connectUrl">LAN Connect URL</span>
-              <span id="connect-url" class="telemetry-value mono">--</span>
-            </div>
-            <div class="telemetry-item telemetry-wide">
-              <span class="telemetry-label" data-i18n="wsUrl">Mesh WebSocket</span>
-              <span id="connect-ws" class="telemetry-value mono">--</span>
-            </div>
-            <div class="telemetry-item telemetry-wide">
-              <span class="telemetry-label" data-i18n="lastUpdated">Last Updated</span>
-              <span id="last-updated" class="telemetry-value mono">--</span>
+          </section>
+
+          <div class="subsection">
+            <h3 class="subsection-title" data-i18n="hubTelemetryTitle">Hub Hardware &amp; LAN Discovery</h3>
+            <div class="telemetry-grid">
+              <div class="telemetry-item">
+                <span class="telemetry-label" data-i18n="nodeId">Node ID</span>
+                <span id="manifest-node-id" class="telemetry-value mono">--</span>
+              </div>
+              <div class="telemetry-item">
+                <span class="telemetry-label" data-i18n="ram">RAM</span>
+                <span id="manifest-ram" class="telemetry-value mono">--</span>
+              </div>
+              <div class="telemetry-item">
+                <span class="telemetry-label" data-i18n="cpu">CPU Cores</span>
+                <span id="manifest-cpu" class="telemetry-value mono">--</span>
+              </div>
+              <div class="telemetry-item">
+                <span class="telemetry-label" data-i18n="npu">NPU</span>
+                <span id="manifest-npu" class="telemetry-value mono">--</span>
+              </div>
+              <div class="telemetry-item">
+                <span class="telemetry-label" data-i18n="connectUrl">LAN Connect URL</span>
+                <span id="connect-url" class="telemetry-value mono">--</span>
+              </div>
+              <div class="telemetry-item">
+                <span class="telemetry-label" data-i18n="wsUrl">Mesh WebSocket</span>
+                <span id="connect-ws" class="telemetry-value mono">--</span>
+              </div>
+              <div class="telemetry-item">
+                <span class="telemetry-label" data-i18n="lastUpdated">Last Updated</span>
+                <span id="last-updated" class="telemetry-value mono">--</span>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
+      <!-- Collapsible Raw CRDT Event Log -->
       <section class="panel panel-wide" aria-labelledby="heading-events">
         <div class="panel-header">
           <div class="event-header-left">
@@ -318,6 +388,6 @@
     </main>
   </div>
 
-  <script src="/static/app.js" defer></script>
+  <script src="/static/app.js?v=2" defer></script>
 </body>
 </html>

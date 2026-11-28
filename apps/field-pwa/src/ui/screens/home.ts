@@ -2,6 +2,7 @@ import { t } from "../../i18n";
 import { h } from "../dom";
 import type { Ctx } from "../ctx";
 import { patientAgeMonths } from "../triage_map";
+import { derivePatientStage } from "../stage_tracker";
 import { compareHlc } from "../../core/hlc";
 import type { CrdtEvent, PatientRecord, TriageSeverity } from "../../../../../packages/contracts/ts/index";
 
@@ -51,21 +52,30 @@ export function filterRoster(rows: readonly RosterRow[], query: string): RosterR
 }
 
 export async function home(ctx: Ctx): Promise<HTMLElement> {
-  const [pending, enrich, patients, events] = await Promise.all([
+  const [pending, enrich, patients, events, pendingEvents] = await Promise.all([
     ctx.engine.pendingCount(),
     ctx.engine.pendingEnrichmentCount(),
     ctx.store.listPatients(),
     ctx.store.getAllEvents(),
+    ctx.store.getPendingEvents(),
   ]);
+  const outboxIds = new Set(pendingEvents.map((e) => e.event_id));
   const rows = buildRoster(patients, events);
   const SEV_KEY = { RED_EMERGENCY: "sev.red", YELLOW_PHC: "sev.yellow", GREEN_HOME: "sev.green" } as const;
   const item = ({ patient: p, severity }: RosterRow) => {
     const m = patientAgeMonths(p);
     const age = m === null ? null : m >= 24 ? t("roster.ageYm", { y: Math.floor(m / 12), m: m % 12 }) : t("age.months", { n: m });
+    const stage = derivePatientStage(p.patient_id, events, outboxIds);
+    const stagePill =
+      stage.kind === "ai_ready"
+        ? h("span", { class: "stage-pill stage-ai" }, t("stage.pillAi", { pct: stage.riskPct }))
+        : stage.kind === "offline"
+          ? h("span", { class: "stage-pill stage-offline" }, t("stage.pillOffline"))
+          : h("span", { class: "stage-pill stage-synced" }, t("stage.pillSynced"));
     return h(
       "li",
       {},
-      h("a", { href: `#/triage/${encodeURIComponent(p.patient_id)}` }, h("strong", {}, p.full_name), h("span", { class: "muted" }, t("roster.village", { v: p.village_id })), age ? h("span", { class: "muted" }, age) : null, severity ? h("span", { class: `sevbadge sev-${severity}` }, t(SEV_KEY[severity])) : null),
+      h("a", { href: `#/triage/${encodeURIComponent(p.patient_id)}` }, h("strong", {}, p.full_name), h("span", { class: "muted" }, t("roster.village", { v: p.village_id })), age ? h("span", { class: "muted" }, age) : null, stagePill, severity ? h("span", { class: `sevbadge sev-${severity}` }, t(SEV_KEY[severity])) : null),
     );
   };
   const list = h("ul", { class: "list roster" });
