@@ -417,6 +417,10 @@ export const ta: Record<Key, string> = {
   "riskBand.MODERATE": "நடுத்தரம்",
   "riskBand.HIGH": "அதிகம்",
   "riskBand.CRITICAL": "மிகத் தீவிரம்",
+  "prov.aboutSourcesTitle": "இந்த மருத்துவ ஆதாரங்களின் பொருள் என்ன?",
+  "prov.aboutWho": "WHO IMNCI: உலக சுகாதார அமைப்பின் (WHO) 0–5 வயது குழந்தைகளின் அவசர அபாய அறிகுறிகளைக் கண்டறியும் அதிகாரப்பூர்வ கையேடு.",
+  "prov.aboutNhm": "NHM ஆஷா & UIP: இந்திய அரசின் கர்ப்பிணி/பச்சிளம் குழந்தை பாதுகாப்பு விதிகள் மற்றும் தேசிய தடுப்பூசி அட்டவணை.",
+  "prov.aboutMl": "மடிக்கணினி ML அபாய மதிப்பெண் (GBDT + TreeSHAP): 13 அளவீடுகளைக் கொண்டு முன்னுரிமையைக் காட்டுகிறது — இது WHO/NHM அவசர விதிகளை ஒருபோதும் மாற்றாது.",
 };
 
 /** Display-only Tamil for engine triage output (stored English strings stay exact). */

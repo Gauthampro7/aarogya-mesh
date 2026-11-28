@@ -1478,3 +1478,7 @@ body {
 .btn-highlight {
   box-shadow: 0 0 0 2px var(--brand-bg);
 }
+
+.source-help { margin: 6px 0 10px; border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; font-size: 0.84rem; background: var(--surface-alt, rgba(255,255,255,0.02)); }
+.source-help summary { cursor: pointer; font-weight: 600; color: var(--accent, var(--brand)); }
+.source-help-list { margin: 6px 0 2px; padding-left: 18px; display: grid; gap: 4px; color: var(--text-muted); }

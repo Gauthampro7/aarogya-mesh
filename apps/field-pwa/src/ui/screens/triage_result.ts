@@ -4,7 +4,7 @@ import { HI_TRIAGE_ACTIONS, HI_TRIAGE_RATIONALE } from "../../i18n/hi";
 import { KN_TRIAGE_ACTIONS, KN_TRIAGE_RATIONALE } from "../../i18n/kn";
 import { TA_TRIAGE_ACTIONS, TA_TRIAGE_RATIONALE } from "../../i18n/ta";
 import { h } from "../dom";
-import { deriveTriageProtocol } from "../stage_tracker";
+import { deriveTriageProtocol, renderSourcesHelp } from "../stage_tracker";
 
 const SEV = {
   RED_EMERGENCY: { cls: "sev-red", icon: "⛔", title: "sev.red", sub: "sev.redSub" },
@@ -117,6 +117,7 @@ export function renderTriageResult(a: TriageAssessment, options?: TriageResultOp
             ...proof.matchedRules.map((id) => h("code", { class: "rule-badge", lang: "en" }, id)),
           )
         : null,
+      renderSourcesHelp(),
     ),
     h("h3", {}, t("result.actions")),
     h("ul", {}, a.immediate_actions.map((x) => h("li", {}, localizeTriageAction(x)))),

@@ -417,6 +417,10 @@ export const kn: Record<Key, string> = {
   "riskBand.MODERATE": "ಮಧ್ಯಮ",
   "riskBand.HIGH": "ಹೆಚ್ಚು",
   "riskBand.CRITICAL": "ಅತ್ಯಂತ ಗಂಭೀರ",
+  "prov.aboutSourcesTitle": "ಈ ವೈದ್ಯಕೀಯ ಮೂಲಗಳ ಅರ್ಥವೇನು?",
+  "prov.aboutWho": "WHO IMNCI: ವಿಶ್ವ ಆರೋಗ್ಯ ಸಂಸ್ಥೆಯ (WHO) 0–5 ವರ್ಷದ ಮಕ್ಕಳ ತುರ್ತು ಅಪಾಯದ ಲಕ್ಷಣಗಳನ್ನು ಗುರುತಿಸುವ ಅಧಿಕೃತ ಮಾರ್ಗದರ್ಶಿ.",
+  "prov.aboutNhm": "NHM ಆಶಾ ಮತ್ತು UIP: ಭಾರತ ಸರ್ಕಾರದ ಗರ್ಭಿಣಿ/ನವಜಾತ ಶಿಶು ಸುರಕ್ಷತಾ ನಿಯಮಗಳು ಹಾಗೂ ರಾಷ್ಟ್ರೀಯ ಲಸಿಕೆ ವೇಳಾಪಟ್ಟಿ.",
+  "prov.aboutMl": "ಲ್ಯಾಪ್‌ಟಾಪ್ ML ಅಪಾಯ ಅಂಕ (GBDT + TreeSHAP): 13 ಆರೋಗ್ಯ ಅಂಶಗಳಿಂದ ಆದ್ಯತೆಯನ್ನು ತೋರಿಸುತ್ತದೆ — ಇದು WHO/NHM ತುರ್ತು ನಿಯಮಗಳನ್ನು ಎಂದಿಗೂ ಬದಲಾಯಿಸುವುದಿಲ್ಲ.",
 };
 
 /** Display-only Kannada for engine triage output (stored English strings stay exact). */

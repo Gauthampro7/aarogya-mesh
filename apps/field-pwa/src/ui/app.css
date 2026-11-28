@@ -159,3 +159,7 @@ details.optional-group[open] { border-style: solid; padding-bottom: 12px; }
 .provenance-box.provenance-ml { border-color: var(--teal); }
 .prov-details { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
 .prov-line { margin: 3px 0; font-size: 0.84rem; line-height: 1.35; }
+
+.source-help { margin-top: 8px; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; font-size: 0.85rem; }
+.source-help summary { cursor: pointer; font-weight: 600; color: var(--brand); }
+.source-help-list { margin: 6px 0 2px; padding-left: 18px; display: grid; gap: 4px; color: var(--muted); }

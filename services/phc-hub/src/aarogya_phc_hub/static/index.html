@@ -142,6 +142,14 @@
             <button id="btn-run-enrichment" class="btn btn-primary" type="button" data-i18n="runEnrichment">Run Hub Enrichment</button>
           </div>
         </div>
+        <details class="source-help">
+          <summary data-i18n="aboutSourcesTitle">What do these medical sources mean?</summary>
+          <ul class="source-help-list">
+            <li data-i18n="aboutWho">WHO IMNCI: World Health Organization's official handbook used across India to spot urgent danger signs in babies and children (0–5 years).</li>
+            <li data-i18n="aboutNhm">NHM ASHA &amp; UIP: Government of India's pregnancy/newborn safety rules and child vaccination calendar.</li>
+            <li data-i18n="aboutMl">Laptop ML Risk Score: Trained 28-tree GBDT + TreeSHAP model combining 13 vitals to rank priority — it never overrides WHO/NHM emergency rules.</li>
+          </ul>
+        </details>
         <p id="enrichment-status" class="status-note hidden" role="status"></p>
         <div id="shap-list" class="card-stack"></div>
       </article>

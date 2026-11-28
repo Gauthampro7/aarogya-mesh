@@ -335,6 +335,22 @@ export function derivePatientStage(
   return { kind: "synced" };
 }
 
+/** Compact collapsible plain-English guide explaining WHO, NHM, and Laptop ML sources. */
+export function renderSourcesHelp(): HTMLElement {
+  return h(
+    "details",
+    { class: "source-help" },
+    h("summary", {}, t("prov.aboutSourcesTitle")),
+    h(
+      "ul",
+      { class: "source-help-list" },
+      h("li", {}, t("prov.aboutWho")),
+      h("li", {}, t("prov.aboutNhm")),
+      h("li", {}, t("prov.aboutMl")),
+    ),
+  );
+}
+
 /** Map a raw ML risk band enum (LOW/MODERATE/HIGH/CRITICAL) to a localized label. */
 export function localizeRiskBand(band: string): string {
   switch (band.toUpperCase()) {
